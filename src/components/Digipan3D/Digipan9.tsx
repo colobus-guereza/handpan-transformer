@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import Digipan3D from './Digipan3D';
+import DigipanAutoPlayer from './DigipanAutoPlayer';
 import { Scale } from '../../data/handpanScales';
 import { getNoteFrequency } from '../../constants/noteFrequencies';
 import { DIGIPAN_VIEW_CONFIG } from '../../constants/digipanViewConfig';
@@ -25,6 +26,12 @@ export interface Digipan9Props {
     forceCompactView?: boolean;
     showAxes?: boolean;
     onIsRecordingChange?: (isRecording: boolean) => void;
+    // AutoPlayer Props
+    isAutoPlay?: boolean;
+    demoActiveNoteId?: number | null;
+    backgroundImage?: string | null;
+    centerX?: number;
+    centerY?: number;
 }
 
 const Digipan9 = React.forwardRef<Digipan3DHandle, Digipan9Props>(({
@@ -44,7 +51,12 @@ const Digipan9 = React.forwardRef<Digipan3DHandle, Digipan9Props>(({
     showLabelToggle = false,
     forceCompactView = false,
     showAxes = false,
-    onIsRecordingChange
+    onIsRecordingChange,
+    isAutoPlay = false,
+    demoActiveNoteId,
+    backgroundImage,
+    centerX = 500,
+    centerY = 500
 }, ref) => {
 
     // Internal Note Generation (Standard 9-Note D Kurd Layout)
@@ -113,6 +125,20 @@ const Digipan9 = React.forwardRef<Digipan3DHandle, Digipan9Props>(({
     // Use external notes if provided (Editor Mode), otherwise use internal default (Standard Component)
     const notesToRender = externalNotes || internalNotes;
 
+    // === AutoPlayer Mode ===
+    if (isAutoPlay) {
+        return (
+            <DigipanAutoPlayer
+                notes={notesToRender}
+                scale={scale}
+                centerX={centerX}
+                centerY={centerY}
+                backgroundImage={backgroundImage || "/images/9notes.png"}
+                demoActiveNoteId={demoActiveNoteId}
+            />
+        );
+    } // End AutoPlayer Mode
+
     return (
         <Digipan3D
             ref={ref}
@@ -121,7 +147,9 @@ const Digipan9 = React.forwardRef<Digipan3DHandle, Digipan9Props>(({
             isCameraLocked={isCameraLocked}
             onNoteClick={onNoteClick}
             onScaleSelect={onScaleSelect}
-            backgroundImage="/images/9notes.png"
+            centerX={centerX}
+            centerY={centerY}
+            backgroundImage={backgroundImage || "/images/9notes.png"}
             extraControls={extraControls}
             noteCountFilter={9}
             showControls={showControls}

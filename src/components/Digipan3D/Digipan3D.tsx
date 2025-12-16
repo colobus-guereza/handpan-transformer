@@ -105,7 +105,7 @@ const CameraHandler = ({
 
 // ... (HandpanBody, ToneFieldMesh components remain the same)
 
-import { HandpanData, NoteData, SCALES } from '@/data/handpanScales';
+import { NoteData, SCALES } from '@/data/handpanScales';
 
 interface Digipan3DProps {
     notes: NoteData[];
@@ -566,7 +566,7 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
 
             notes.forEach(targetNote => {
                 if (targetNote.id === sourceNote.id) return;
-                if (!targetNote.frequency) return;
+                if (!targetNote.frequency || !sourceNote.frequency) return;
 
                 const ratio = targetNote.frequency / sourceNote.frequency;
                 const tolerance = 0.03;
@@ -705,7 +705,7 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
         // This handles both cases:
         // - Type 1 (D Kurd 12): Ding is lowest, starts from Ding
         // - Type 2 (E Equinox 12): Bottom notes are lower than Ding, starts from bottom
-        const sortedNotes = [...notes].sort((a, b) => a.frequency - b.frequency);
+        const sortedNotes = [...notes].filter(n => n.frequency).sort((a, b) => (a.frequency || 0) - (b.frequency || 0));
 
         // The LOWEST frequency note gets the root emphasis (not necessarily Ding)
         const lowestNoteId = sortedNotes.length > 0 ? sortedNotes[0].id : -1;

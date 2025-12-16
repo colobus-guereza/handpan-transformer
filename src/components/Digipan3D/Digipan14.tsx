@@ -2,6 +2,7 @@
 
 import React, { useMemo } from 'react';
 import Digipan3D, { svgTo3D, getTonefieldDimensions, Digipan3DHandle } from './Digipan3D';
+import DigipanAutoPlayer from './DigipanAutoPlayer';
 import { Scale } from '../../data/handpanScales';
 import { getNoteFrequency } from '../../constants/noteFrequencies';
 import { DIGIPAN_VIEW_CONFIG } from '../../constants/digipanViewConfig';
@@ -29,6 +30,12 @@ interface Digipan14Props {
     notes?: any[]; // Allow passing notes for editor mode override
     showAxes?: boolean;
     onIsRecordingChange?: (isRecording: boolean) => void;
+    // AutoPlayer Props
+    isAutoPlay?: boolean;
+    demoActiveNoteId?: number | null;
+    backgroundImage?: string | null;
+    centerX?: number;
+    centerY?: number;
 }
 
 // Composite Background Component for Digipan 14 (10 notes image + 4 visual tonefields)
@@ -107,7 +114,12 @@ const Digipan14 = React.forwardRef<Digipan3DHandle, Digipan14Props>(({
     forceCompactView = false,
     notes: externalNotes,
     showAxes = false,
-    onIsRecordingChange
+    onIsRecordingChange,
+    isAutoPlay = false,
+    demoActiveNoteId,
+    backgroundImage,
+    centerX = 500,
+    centerY = 500
 }, ref) => {
 
     // 10-Note Base Coordinates (from Digipan10.tsx)
@@ -326,6 +338,20 @@ const Digipan14 = React.forwardRef<Digipan3DHandle, Digipan14Props>(({
     const visualNotes = useMemo(() => {
         return notesToRender.filter(n => n.id >= 10);
     }, [notesToRender]);
+
+    // === AutoPlayer Mode ===
+    if (isAutoPlay) {
+        return (
+            <DigipanAutoPlayer
+                notes={notesToRender}
+                scale={scale}
+                centerX={centerX}
+                centerY={centerY}
+                backgroundImage={backgroundImage || "/images/10notes.png"} // Base image for 14 is same as 10
+                demoActiveNoteId={demoActiveNoteId}
+            />
+        );
+    }
 
     return (
         <Digipan3D

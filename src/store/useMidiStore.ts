@@ -25,6 +25,8 @@ export interface MatchResult {
     matchedNotes: string[];
     missedNotes: string[];
     originalKeyNotes: string[];
+    noteCount?: number;
+    rawScore?: number;
 }
 
 export interface ProcessedSong {
@@ -38,14 +40,18 @@ export interface ProcessedSong {
 
 interface MidiState {
     midiData: ProcessedSong | null;
+    matchingAlgorithm: 'standard' | 'pro';
     setMidiData: (data: ProcessedSong) => void;
+    setMatchingAlgorithm: (algo: 'standard' | 'pro') => void;
     updateTrackRole: (trackId: number, newRole: TrackRole) => void;
     reset: () => void;
 }
 
 export const useMidiStore = create<MidiState>((set) => ({
     midiData: null,
+    matchingAlgorithm: 'standard', // Default
     setMidiData: (data) => set({ midiData: data }),
+    setMatchingAlgorithm: (algo) => set({ matchingAlgorithm: algo }),
     updateTrackRole: (trackId, newRole) =>
         set((state) => {
             if (!state.midiData) return {};
@@ -54,5 +60,5 @@ export const useMidiStore = create<MidiState>((set) => ({
             );
             return { midiData: { ...state.midiData, tracks: updatedTracks } };
         }),
-    reset: () => set({ midiData: null }),
+    reset: () => set({ midiData: null, matchingAlgorithm: 'standard' }),
 }));

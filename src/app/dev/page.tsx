@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 // import { Canvas } from '@react-three/fiber'; // Removed: Digipan3D implements its own Canvas
 // import { OrbitControls, Sphere } from '@react-three/drei';
-import { parseMidi } from '@/lib/midiUtils';
+import { parseMidi, findBestMatchScale } from '@/lib/midiUtils';
 import { useMidiStore, TrackRole } from '@/store/useMidiStore';
 import DigiPanModel from '@/components/DigiPanModel';
 import * as Tone from 'tone';
@@ -12,7 +12,7 @@ export default function DevDashboard() {
     const [logs, setLogs] = useState<string[]>([]);
 
     // Zustand Store
-    const { midiData, setMidiData, updateTrackRole } = useMidiStore();
+    const { midiData, setMidiData, updateTrackRole, matchingAlgorithm, setMatchingAlgorithm } = useMidiStore();
 
     const addLog = (msg: string) => {
         setLogs(prev => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...prev]);
@@ -27,7 +27,7 @@ export default function DevDashboard() {
         try {
             const arrayBuffer = await file.arrayBuffer();
             // Use core logic to parse and classify
-            const processedSong = await parseMidi(arrayBuffer, file.name);
+            const processedSong = await parseMidi(arrayBuffer, file.name, matchingAlgorithm);
 
             setMidiData(processedSong);
             addLog(`MIDI Parsed & Classified: ${processedSong.midiName} (${processedSong.tracks.length} tracks)`);
@@ -50,6 +50,46 @@ export default function DevDashboard() {
                 <div>
                     <h2 className="text-xl font-bold mb-4 text-emerald-400">1. Input & Control</h2>
                     <div className="bg-neutral-800 p-4 rounded-lg border border-neutral-700 space-y-4">
+                        {/* Mode Toggle */}
+                        <div>
+                            <label className="block mb-2 text-sm text-neutral-400">Matching Mode</label>
+                            <div className="flex bg-neutral-900 p-1 rounded-lg border border-neutral-700 relative">
+                                <button
+                                    onClick={() => {
+                                        setMatchingAlgorithm('standard');
+                                        addLog('[Mode] Switched to Standard Mode (Waterfall)');
+                                        if (midiData) {
+                                            const { scaleId: suggestedScale, matchResult } = findBestMatchScale(midiData.tracks, 'standard');
+                                            setMidiData({ ...midiData, suggestedScale, matchResult });
+                                            addLog(`[Re-Match] New Scale: ${matchResult?.scaleName}`);
+                                        }
+                                    }}
+                                    className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all z-10 ${matchingAlgorithm === 'standard' ? 'bg-emerald-600 text-white shadow-sm' : 'text-neutral-500 hover:text-white'}`}
+                                >
+                                    Standard
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setMatchingAlgorithm('pro');
+                                        addLog('[Mode] Switched to Pro Mode (Max Score)');
+                                        if (midiData) {
+                                            const { scaleId: suggestedScale, matchResult } = findBestMatchScale(midiData.tracks, 'pro');
+                                            setMidiData({ ...midiData, suggestedScale, matchResult });
+                                            addLog(`[Re-Match] New Scale: ${matchResult?.scaleName}`);
+                                        }
+                                    }}
+                                    className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all z-10 ${matchingAlgorithm === 'pro' ? 'bg-red-600 text-white shadow-sm' : 'text-neutral-500 hover:text-white'}`}
+                                >
+                                    Pro
+                                </button>
+                            </div>
+                            <div className="mt-2 text-[10px] text-neutral-500 leading-tight">
+                                {matchingAlgorithm === 'standard'
+                                    ? "🔵 Picks 9-10 note scales (Tier 1) if possible. Best for beginners."
+                                    : "🔴 Picks precise match even if it's a complex Mutant scale."}
+                            </div>
+                        </div>
+
                         <div>
                             <label className="block mb-2 text-sm text-neutral-400">Upload MIDI File (.mid)</label>
                             <input
@@ -60,7 +100,8 @@ export default function DevDashboard() {
                             />
                         </div>
 
-                        <div className="border-t border-neutral-700 pt-4 space-y-2">
+                        <div className="border-t border-neutral-700 pt-4 space-y-4">
+
                             <button
                                 onClick={() => {
                                     setMidiData({

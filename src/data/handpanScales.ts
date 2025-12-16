@@ -22,6 +22,7 @@ export interface NoteData {
     textColor?: string;
     outlineColor?: string;
     hideGuide?: boolean; // Hide bottom guide dot
+    offset?: [number, number, number]; // 3D position offset
 }
 export interface Scale {
     id: string;

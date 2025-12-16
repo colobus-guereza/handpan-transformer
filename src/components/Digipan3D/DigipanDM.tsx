@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import Digipan3D from './Digipan3D';
+import DigipanAutoPlayer from './DigipanAutoPlayer';
 import { Scale } from '../../data/handpanScales';
 import { getNoteFrequency } from '../../constants/noteFrequencies';
 import { DIGIPAN_VIEW_CONFIG } from '../../constants/digipanViewConfig';
@@ -27,6 +28,12 @@ export interface DigipanDMProps {
     forceCompactView?: boolean;
     showAxes?: boolean;
     onIsRecordingChange?: (isRecording: boolean) => void;
+    // AutoPlayer Props
+    isAutoPlay?: boolean;
+    demoActiveNoteId?: number | null;
+    backgroundImage?: string | null;
+    centerX?: number;
+    centerY?: number;
 }
 
 const DigipanDM = React.forwardRef<Digipan3DHandle, DigipanDMProps>(({
@@ -46,7 +53,12 @@ const DigipanDM = React.forwardRef<Digipan3DHandle, DigipanDMProps>(({
     showLabelToggle = false,
     forceCompactView = false,
     showAxes = false,
-    onIsRecordingChange
+    onIsRecordingChange,
+    isAutoPlay = false,
+    demoActiveNoteId,
+    backgroundImage,
+    centerX = 500,
+    centerY = 500
 }, ref) => {
 
     // 1. Digital Harmonics Engine is now in Digipan3D
@@ -139,6 +151,20 @@ const DigipanDM = React.forwardRef<Digipan3DHandle, DigipanDMProps>(({
     // Use external notes if provided (Editor Mode), otherwise use internal default (Standard Component)
     const notesToRender = externalNotes || internalNotes;
 
+    // === AutoPlayer Mode ===
+    if (isAutoPlay) {
+        return (
+            <DigipanAutoPlayer
+                notes={notesToRender}
+                scale={scale}
+                centerX={centerX}
+                centerY={centerY}
+                backgroundImage={backgroundImage || "/images/10notes.png"}
+                demoActiveNoteId={demoActiveNoteId}
+            />
+        );
+    } // End AutoPlayer Mode
+
 
     // 3. Resonance Logic Wrapper
     // DEPRECATED: Logic moved to Digipan3D. 
@@ -175,7 +201,9 @@ const DigipanDM = React.forwardRef<Digipan3DHandle, DigipanDMProps>(({
             isCameraLocked={isCameraLocked}
             onNoteClick={handleNoteClick}
             onScaleSelect={onScaleSelect}
-            backgroundImage="/images/10notes.png"
+            centerX={centerX}
+            centerY={centerY}
+            backgroundImage={backgroundImage || "/images/10notes.png"}
             harmonicSettings={harmonicSettings} // Pass Controlled Settings
             extraControls={extraControls}
             noteCountFilter={10}

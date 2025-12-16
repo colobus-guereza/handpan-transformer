@@ -29,8 +29,14 @@ const transposeNote = (note: string, semitones: number): string => {
     return NOTE_NAMES[newIndex];
 };
 
-const findBestMatchScale = (tracks: ProcessedTrack[]): { scaleId: string, matchResult?: MatchResult } => {
+/**
+ * Dual Mode Scale Matching Logic
+ * - Standard Mode (Waterfall): Prioritizes 9-10 note scales (Tier 1) if score >= 85, then Tier 2 (<=13) if score >= 90.
+ * - Pro Mode: Pure Max Score (Complexity allowed).
+ */
+export const findBestMatchScale = (tracks: ProcessedTrack[], mode: 'standard' | 'pro' = 'standard'): { scaleId: string, matchResult?: MatchResult } => {
     // 1. Identify Melody Track
+    // Priority: Explicit 'melody' role > 'vocal/melody' name > weighted scoring
     const melodyTrack = tracks.find(t => t.role === 'melody') || tracks.find(t => t.role !== 'rhythm' && t.role !== 'ignore');
 
     // Default fallback
@@ -45,9 +51,8 @@ const findBestMatchScale = (tracks: ProcessedTrack[]): { scaleId: string, matchR
     const uniqueMidiNotes = Array.from(midiNotesMap);
     if (uniqueMidiNotes.length === 0) return { scaleId: SCALES[0].id };
 
-    // 3. Brute Force Simulation: Check all Scales x all Transpositions (-6 to +6)
-    let bestMatch: MatchResult | null = null;
-    let bestScore = -1;
+    // 3. Score Calculation for ALL Candidates
+    const candidates: MatchResult[] = [];
 
     SCALES.forEach((scale) => {
         // Prepare Scale Notes Set
@@ -55,6 +60,9 @@ const findBestMatchScale = (tracks: ProcessedTrack[]): { scaleId: string, matchR
         scaleNotesSet.add(getPitchClass(scale.notes.ding));
         scale.notes.top.forEach(n => scaleNotesSet.add(getPitchClass(n)));
         scale.notes.bottom.forEach(n => scaleNotesSet.add(getPitchClass(n)));
+
+        // Count total notes (Ding + Top + Bottom) for Economy Logic
+        const scaleTotalNotes = 1 + scale.notes.top.length + scale.notes.bottom.length;
         const scaleNotesArray = Array.from(scaleNotesSet);
 
         // Try Transpositions from -6 to +6
@@ -76,52 +84,133 @@ const findBestMatchScale = (tracks: ProcessedTrack[]): { scaleId: string, matchR
             // Score Calculation
             // Base: Coverage %
             const coverage = matchedNotes.length / uniqueMidiNotes.length;
-
-            // Weighted Score: Coverage (Main) + Scale Popularity (Tie-breaker)
-            // We prioritize coverage heavily (x100)
             let currentScore = coverage * 100;
-
-            // Small bonus for "popular" scales to break ties
-            if (scale.vector?.rarePopular) {
-                currentScore += scale.vector.rarePopular * 5;
-            }
 
             // Small penalty for transposition distance (prefer 0 shift if possible)
             currentScore -= Math.abs(t) * 0.1;
 
-            // Normalize to max 100
-            currentScore = Math.min(100, currentScore);
+            // Economy Penalty (Standard Mode Logic, but calculated for all)
+            // (Notes - 9) * 1.5
+            // Note: This penalty is applied differently based on mode in the selection phase? 
+            // Wait, the user request implied the score calculation itself stays similar but the SELECTION logic changes.
+            // However, "Economy Score" was requested as a penalty.
+            // Let's implement the penalty in the score for Standard Mode sorting purposes or apply it generally?
+            // User Prompt: "Implement 'Economy Score'... Penalty = (ScaleTotalNotes - 9) * 1.5".
+            // AND "Add 'Popularity Bonus' +3".
 
-            if (currentScore > bestScore) {
-                bestScore = currentScore;
-                bestMatch = {
-                    scaleName: scale.name,
-                    scaleNotes: scaleNotesArray,
-                    transposition: t,
-                    score: currentScore,
-                    inputNotes: uniqueMidiNotes,         // Original
-                    shiftedNotes: currentShiftedNotes,   // Transposed
-                    matchedNotes,
-                    missedNotes,
-                    originalKeyNotes: uniqueMidiNotes,
-                };
-            }
+            // We'll calculate a "StandardScore" and a "RawScore".
+            // Since the function signatures are usually singular, we'll store metadata in the candidate.
+
+            /* 
+               Actually, the Waterfall logic uses "Score" thresholds. 
+               The user said Pro Mode = "Raw Score". 
+               Standard Mode = "Waterfall" (Tier 1 check score >= 85).
+               
+               Crucial: Does the "85" threshold include the penalty? 
+               The prompt says: "FinalScore = MatchScore - Penalty". 
+               So yes, for Standard Mode, we use the penalized score.
+               For Pro Mode, we use the raw coverage score.
+            */
+
+            // --- Popularity Bonus ---
+            // If scale is popular (rarePopular >= 0.7), +3 points.
+            // This applies to both modes generally as a "quality" bias, but mostly for Standard.
+            // Let's apply it to the base score for now, but keep Raw pure Coverage?
+            // "Standard Mode: ... 9~10 note preferred ... slightly wrong is ok"
+            // "Pro Mode: ... 100% precision ... mutant ok"
+
+            // We will calculate a 'FinalScore' used for sorting/thresholds.
+            let finalScore = currentScore;
+
+            // Popularity Bonus
+            const isPopular = (scale.vector?.rarePopular ?? 0) >= 0.7;
+            if (isPopular) finalScore += 3;
+
+            // Economy Penalty (Only meaningfully affects ranking if we subtract it)
+            // But the Waterfall logic separates by TIER (Note Count), so we don't necessarily need to subtract penalty 
+            // from the score IF we use the Waterfall steps. 
+            // HOWEVER, the user asked to "Implement Economy Score". 
+            // Let's apply valid penalties to the score used for Standard Mode.
+
+            const economyPenalty = Math.max(0, (scaleTotalNotes - 9) * 1.5);
+            const standardScore = finalScore - economyPenalty; // Score for Standard Mode
+
+            candidates.push({
+                scaleName: scale.name,
+                scaleNotes: scaleNotesArray,
+                transposition: t,
+                score: standardScore, // Default 'score' field uses Standard Score
+                rawScore: finalScore, // Store raw (coverage + pop) for Pro Mode or debug
+                inputNotes: uniqueMidiNotes,
+                shiftedNotes: currentShiftedNotes,
+                matchedNotes,
+                missedNotes,
+                originalKeyNotes: uniqueMidiNotes,
+                noteCount: scaleTotalNotes // Needed for Waterfall
+            } as any); // Type assertion for extra fields
         }
     });
 
-    if (bestMatch) {
-        console.log(`[ScaleMatch] Best: ${bestMatch.scaleName} (${bestMatch.transposition > 0 ? '+' : ''}${bestMatch.transposition}) Score: ${bestScore.toFixed(1)}`);
-    } else {
-        console.log(`[ScaleMatch] No match found.`);
+    // 4. Selection Strategy
+    let bestMatch: MatchResult | undefined;
+
+    // Use TypeScript 'any' casting for the extended properties if not in interface yet
+    // Or we should update the interface. For now, we trust the flow.
+
+    // Sort Helper
+    const byStandardScore = (a: any, b: any) => b.score - a.score;
+    const byRawScore = (a: any, b: any) => b.rawScore - a.rawScore;
+
+    if (mode === 'pro') {
+        // [Pro Mode]: Highest Raw Score wins.
+        // If tied, prefer popular, then fewer notes (tie-breaker).
+        candidates.sort((a: any, b: any) => {
+            if (Math.abs(b.rawScore - a.rawScore) > 0.1) return b.rawScore - a.rawScore;
+            // Tie-breaker
+            return a.noteCount - b.noteCount;
+        });
+        bestMatch = candidates[0];
+        console.log(`[Matching] Pro Mode selected: ${bestMatch?.scaleName} (Raw: ${bestMatch?.rawScore?.toFixed(1)})`);
+    }
+    else {
+        // [Standard Mode]: Waterfall Logic
+
+        // Tier 1: <= 10 notes
+        const tier1 = candidates.filter((c: any) => c.noteCount <= 10);
+        tier1.sort(byStandardScore);
+        const bestTier1 = tier1[0];
+
+        // Tier 2: <= 13 notes
+        const tier2 = candidates.filter((c: any) => c.noteCount <= 13);
+        tier2.sort(byStandardScore);
+        const bestTier2 = tier2[0];
+
+        // Global best (fallback)
+        candidates.sort(byStandardScore);
+        const bestOverall = candidates[0];
+
+        // Logic
+        if (bestTier1 && bestTier1.score >= 85) {
+            bestMatch = bestTier1;
+            console.log(`[Matching] Standard Mode: Tier 1 Winner (${bestTier1.scaleName}, Score: ${bestTier1.score.toFixed(1)})`);
+        }
+        else if (bestTier2 && bestTier2.score >= 90) {
+            bestMatch = bestTier2;
+            console.log(`[Matching] Standard Mode: Tier 2 Winner (${bestTier2.scaleName}, Score: ${bestTier2.score.toFixed(1)})`);
+        }
+        else {
+            bestMatch = bestOverall;
+            console.log(`[Matching] Standard Mode: Fallback Winner (${bestOverall?.scaleName}, Score: ${bestOverall?.score.toFixed(1)})`);
+        }
     }
 
     return {
         scaleId: bestMatch ? SCALES.find(s => s.name === bestMatch?.scaleName)?.id || SCALES[0].id : SCALES[0].id,
-        matchResult: bestMatch || undefined
+        matchResult: bestMatch
     };
 };
 
-export const parseMidi = async (arrayBuffer: ArrayBuffer, fileName: string): Promise<ProcessedSong> => {
+export const parseMidi = async (arrayBuffer: ArrayBuffer, fileName: string, mode: 'standard' | 'pro' = 'standard'): Promise<ProcessedSong> => {
     const midi = new Midi(arrayBuffer);
     const processedTracks: ProcessedTrack[] = [];
 
@@ -150,9 +239,9 @@ export const parseMidi = async (arrayBuffer: ArrayBuffer, fileName: string): Pro
         });
     });
 
-    // 2. Intelligent Classification Logic
-    let melodyCandidateIndex = -1;
-    let maxNoteCount = -1;
+    // 2. Intelligent Classification Logic (Updated)
+    let bestCandidateIndex = -1;
+    let maxWeightedScore = -1;
 
     processedTracks.forEach((track, i) => {
         // A. Detect Rhythm
@@ -163,22 +252,40 @@ export const parseMidi = async (arrayBuffer: ArrayBuffer, fileName: string): Pro
             return;
         }
 
-        // B. Find Melody Candidate (Max Notes)
-        if (track.noteCount > maxNoteCount) {
-            maxNoteCount = track.noteCount;
-            melodyCandidateIndex = i;
+        // B. Weighted Melody Detection
+        let score = track.noteCount; // Base score
+
+        // Penalty: Bass
+        if (track.instrumentFamily === 'bass' || nameLower.includes('bass')) {
+            score *= 0.1; // Heavy penalty
+        }
+
+        // Bonus: Vocal / Melody keywords
+        if (nameLower.includes('vocal') || nameLower.includes('melody') || nameLower.includes('lead')) {
+            score *= 2.0;
+        }
+
+        // Bonus: Melodic Instrument Families
+        const melodicFamilies = ['piano', 'organ', 'synth', 'strings', 'brass', 'reed', 'pipe'];
+        if (melodicFamilies.includes(track.instrumentFamily)) {
+            score *= 1.2;
+        }
+
+        if (score > maxWeightedScore) {
+            maxWeightedScore = score;
+            bestCandidateIndex = i;
         }
     });
 
     // Assign Melody Role
-    if (melodyCandidateIndex !== -1) {
-        processedTracks[melodyCandidateIndex].role = 'melody';
-        processedTracks[melodyCandidateIndex].color = '#10b981'; // Emerald/Green
+    if (bestCandidateIndex !== -1) {
+        processedTracks[bestCandidateIndex].role = 'melody';
+        processedTracks[bestCandidateIndex].color = '#10b981'; // Emerald/Green
     }
 
     // 3. Find Best Scale
     const { suggestedScale, matchResult } = (() => {
-        const result = findBestMatchScale(processedTracks);
+        const result = findBestMatchScale(processedTracks, mode);
         return { suggestedScale: result.scaleId, matchResult: result.matchResult };
     })();
 
