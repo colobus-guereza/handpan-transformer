@@ -132,8 +132,9 @@ export const findBestMatchScale = (tracks: ProcessedTrack[], mode: 'standard' | 
             // HOWEVER, the user asked to "Implement Economy Score". 
             // Let's apply valid penalties to the score used for Standard Mode.
 
+            // Normalize to max 100 and Min 0
             const economyPenalty = Math.max(0, (scaleTotalNotes - 9) * 1.5);
-            const standardScore = finalScore - economyPenalty; // Score for Standard Mode
+            const standardScore = Math.max(0, Math.min(100, finalScore - economyPenalty)); // Score for Standard Mode
 
             candidates.push({
                 scaleName: scale.name,
@@ -278,14 +279,70 @@ export const parseMidi = async (arrayBuffer: ArrayBuffer, fileName: string, mode
     });
 
     // Assign Melody Role
+    let melodyTrackNodes: any[] = [];
     if (bestCandidateIndex !== -1) {
         processedTracks[bestCandidateIndex].role = 'melody';
         processedTracks[bestCandidateIndex].color = '#10b981'; // Emerald/Green
+        melodyTrackNodes = processedTracks[bestCandidateIndex].notes;
     }
+
+    // --- Key Detection Logic ---
+    const detectKey = (notes: any[]): string => {
+        if (!notes || notes.length === 0) return "Unknown";
+
+        // Krumhansl-Schmuckler Profiles
+        const majorProfile = [6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88];
+        const minorProfile = [6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17];
+
+        const durationWeights = new Array(12).fill(0);
+
+        notes.forEach(note => {
+            const pc = getNoteIndex(note.name); // 0-11
+            if (pc !== -1) {
+                durationWeights[pc] += note.duration;
+            }
+        });
+
+        // Normalize weights
+        const totalDuration = durationWeights.reduce((a, b) => a + b, 0);
+        if (totalDuration === 0) return "Unknown";
+        const normalizedWeights = durationWeights.map(w => w / totalDuration);
+
+        // Correlate
+        let bestKey = "";
+        let bestCorrelation = -Infinity;
+
+        for (let i = 0; i < 12; i++) {
+            // Major
+            let corrMajor = 0;
+            for (let j = 0; j < 12; j++) {
+                corrMajor += normalizedWeights[(i + j) % 12] * majorProfile[j];
+            }
+            if (corrMajor > bestCorrelation) {
+                bestCorrelation = corrMajor;
+                bestKey = `${NOTE_NAMES[i]} Major`;
+            }
+
+            // Minor
+            let corrMinor = 0;
+            for (let j = 0; j < 12; j++) {
+                corrMinor += normalizedWeights[(i + j) % 12] * minorProfile[j];
+            }
+            if (corrMinor > bestCorrelation) {
+                bestCorrelation = corrMinor;
+                bestKey = `${NOTE_NAMES[i]} Minor`;
+            }
+        }
+        return bestKey;
+    };
+
+    const detectedKey = detectKey(melodyTrackNodes);
 
     // 3. Find Best Scale
     const { suggestedScale, matchResult } = (() => {
         const result = findBestMatchScale(processedTracks, mode);
+        // Inject original key into matchResult if possible, or we perform a merge logic
+        // But matchResult type is in store. We can attach it to processedSong top level.
         return { suggestedScale: result.scaleId, matchResult: result.matchResult };
     })();
 
@@ -295,6 +352,6 @@ export const parseMidi = async (arrayBuffer: ArrayBuffer, fileName: string, mode
         duration: midi.duration,
         tracks: processedTracks,
         suggestedScale,
-        matchResult // Pass details to store
+        matchResult: { ...matchResult!, originalKey: detectedKey } as MatchResult // Force cast/inject
     };
 };

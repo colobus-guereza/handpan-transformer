@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import Digipan3D from './Digipan3D';
-import DigipanAutoPlayer from './DigipanAutoPlayer';
 import { Scale } from '../../data/handpanScales';
 import { getNoteFrequency } from '../../constants/noteFrequencies';
 import { DIGIPAN_VIEW_CONFIG } from '../../constants/digipanViewConfig';
@@ -151,21 +150,6 @@ const DigipanDM = React.forwardRef<Digipan3DHandle, DigipanDMProps>(({
     // Use external notes if provided (Editor Mode), otherwise use internal default (Standard Component)
     const notesToRender = externalNotes || internalNotes;
 
-    // === AutoPlayer Mode ===
-    if (isAutoPlay) {
-        return (
-            <DigipanAutoPlayer
-                notes={notesToRender}
-                scale={scale}
-                centerX={centerX}
-                centerY={centerY}
-                backgroundImage={backgroundImage || "/images/10notes.png"}
-                demoActiveNoteId={demoActiveNoteId}
-            />
-        );
-    } // End AutoPlayer Mode
-
-
     // 3. Resonance Logic Wrapper
     // DEPRECATED: Logic moved to Digipan3D. 
     // We only need to pass the clicked ID through.
@@ -204,11 +188,17 @@ const DigipanDM = React.forwardRef<Digipan3DHandle, DigipanDMProps>(({
             centerX={centerX}
             centerY={centerY}
             backgroundImage={backgroundImage || "/images/10notes.png"}
+
+            // AutoPlay Support
+            isAutoPlay={isAutoPlay}
+            demoActiveNoteId={demoActiveNoteId}
+            showControls={showControls && !isAutoPlay}
+            showInfoPanel={showInfoPanel && !isAutoPlay}
+
             harmonicSettings={harmonicSettings} // Pass Controlled Settings
             extraControls={extraControls}
             noteCountFilter={10}
-            showControls={showControls}
-            showInfoPanel={showInfoPanel}
+
             initialViewMode={initialViewMode}
             viewMode={viewMode}
             onViewModeChange={onViewModeChange}

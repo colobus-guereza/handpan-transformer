@@ -136,6 +136,8 @@ interface Digipan3DProps {
     harmonicSettings?: DigipanHarmonicConfig; // Optional override for harmonics
     onIsRecordingChange?: (isRecording: boolean) => void;
     cameraZoom?: number; // Optional override for initial camera zoom
+    isAutoPlay?: boolean; // New: Clean AutoPlayer View Mode
+    demoActiveNoteId?: number | null; // New: External control for note highlighting
 }
 
 export interface Digipan3DHandle {
@@ -264,7 +266,9 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
     showAxes = false, // Default to false, will be controlled by parent
     harmonicSettings, // Optional Override
     onIsRecordingChange,
-    cameraZoom // Destructure new prop
+    cameraZoom, // Destructure new prop
+    isAutoPlay = false,
+    demoActiveNoteId: externalDemoNoteId // Destructure external demo control
 }, ref) => {
     const pathname = usePathname();
     // ScaleInfoPanel은 /digipan-3d-test 경로에서만 표시
@@ -276,6 +280,7 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
     const [isInfoExpanded, setIsInfoExpanded] = useState(!forceCompactView);
     const [isSelectorOpen, setIsSelectorOpen] = useState(false);
     const [demoNoteId, setDemoNoteId] = useState<number | null>(null);
+    const activeHighlightId = externalDemoNoteId ?? demoNoteId; // Prefer external if present, else internal
     const [isPlaying, setIsPlaying] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [drumTimer, setDrumTimer] = useState<number | null>(null);
@@ -449,7 +454,9 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
 
     const [isIdle, setIsIdle] = useState(true); // Default to True
     const [showIdleBoat, setShowIdleBoat] = useState(false); // Default to OFF for DigiBall
-    const [showTouchText, setShowTouchText] = useState(true); // New State for Touch Text
+    // Default showTouchText to true unless isAutoPlay is active
+    const [showTouchText, setShowTouchText] = useState(!isAutoPlay);
+
     const lastInteractionTime = useRef(Date.now() - 6000); // Allow immediate idle
     const IDLE_TIMEOUT = 5000; // 5 seconds
     const idleCheckInterval = useRef<NodeJS.Timeout | null>(null);
@@ -847,7 +854,8 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
             )}
 
             {/* Home Screen Only: Top-Right - 피치/번호, 자동재생, 캐슬링(세로: 녹화) */}
-            {!isDevPage && (
+            {/* AutoPlay Only: Hide ALL Buttons */}
+            {!isDevPage && !isAutoPlay && (
                 <div className={`absolute ${isMobileButtonLayout ? 'top-2' : 'top-4'} right-4 z-50 flex flex-row items-start gap-2`}>
                     {/* 1. View Mode Toggle (피치/순서 표시/숨김) */}
                     <button
@@ -936,7 +944,7 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
                     {/* Pass combined idle state: Only true if system is idle AND user wants to show it */}
                     <CyberBoat isIdle={isIdle && showIdleBoat} />
                     <TouchText
-                        isIdle={isIdle && !isJamPlaying && showTouchText}
+                        isIdle={isIdle && !isJamPlaying && showTouchText && !isAutoPlay} // Hide in AutoPlay
                         suppressExplosion={false}
                         overrideText={introCountdown}
                         interactionTrigger={interactionCount}
@@ -1033,7 +1041,7 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
                             centerY={centerY}
                             onClick={handleToneFieldClick}
                             viewMode={viewMode}
-                            demoActive={demoNoteId === note.id}
+                            demoActive={activeHighlightId === note.id}
                             playNote={playNote}
                             offset={note.offset || tonefieldOffset} // Prefer note offset, fallback to global
                         />

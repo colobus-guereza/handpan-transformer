@@ -194,15 +194,11 @@ export default function DevDashboard() {
                       Fix: Digipan3D (inside DigiPanModel) brings its own <Canvas>. 
                       We must NOT wrap it in another <Canvas>.
                     */}
-                    {midiData?.suggestedScale ? (
-                        <DigiPanModel scaleId={midiData.suggestedScale} isAutoPlay={true} />
-                    ) : (
-                        // Fallback Placeholder if no MIDI loaded
-                        <div className="flex items-center justify-center w-full h-full flex-col text-neutral-500 gap-4">
-                            <div className="w-16 h-16 rounded-full border-4 border-neutral-700 animate-pulse"></div>
-                            <p>Load a MIDI file to generate 3D Model</p>
-                        </div>
-                    )}
+                    {/* 
+                      Fix: Always render DigiPanModel to show the Visual Stage (white bg + axes) immediately.
+                      Pass a default scaleId if none exists.
+                    */}
+                    <DigiPanModel scaleId={midiData?.suggestedScale || 'd_kurd_10'} isAutoPlay={true} />
                 </div>
             </div>
 
@@ -261,21 +257,30 @@ export default function DevDashboard() {
                         </div>
 
                         {/* Reasoning */}
-                        <div className="bg-neutral-900/50 p-3 rounded text-xs text-neutral-400 italic border border-neutral-800">
+                        <div className="bg-neutral-900/50 p-3 rounded text-xs text-neutral-400 italic border border-neutral-800 space-y-2">
+                            {/* Original Key Info */}
+                            <div className="border-b border-neutral-800 pb-2 mb-2">
+                                <span className="block text-neutral-500 text-[10px] uppercase font-bold">Original Key Detection</span>
+                                <span className="text-emerald-300 font-bold text-sm">
+                                    {midiData.matchResult.originalKey || 'Unknown'}
+                                </span>
+                            </div>
+
+                            {/* Transposition Logic */}
                             {midiData.matchResult.transposition === 0 ? (
                                 midiData.matchResult.score >= 100 ? (
-                                    <span className="text-emerald-400">✨ 오리지널 키가 핸드팬 스케일과 완벽하게 일치합니다.</span>
+                                    <div className="text-emerald-400">✨ 오리지널 키가 핸드팬 스케일과 완벽하게 일치합니다.</div>
                                 ) : (
-                                    <span>오리지널 키에서 가장 높은 매칭률을 보입니다.</span>
+                                    <div>오리지널 키에서 가장 높은 매칭률을 보입니다.</div>
                                 )
                             ) : (
-                                <>
-                                    Original Key에서는 매칭률이 낮아,
+                                <div>
+                                    Original Key <span className="text-emerald-300">({midiData.matchResult.originalKey})</span>에서는 매칭률이 낮아,
                                     <span className="text-emerald-400 font-bold mx-1">
                                         {midiData.matchResult.transposition > 0 ? '+' : ''}{midiData.matchResult.transposition}키
                                     </span>
-                                    조옮김(Transpose)하여 최적의 스케일을 찾았습니다.
-                                </>
+                                    조옮김(Transpose)하여 <span className="text-emerald-300">{midiData.suggestedScale?.replace(/_/g, ' ')}</span>에 최적화했습니다.
+                                </div>
                             )}
                         </div>
                     </div>

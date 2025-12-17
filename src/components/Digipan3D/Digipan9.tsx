@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import Digipan3D from './Digipan3D';
-import DigipanAutoPlayer from './DigipanAutoPlayer';
 import { Scale } from '../../data/handpanScales';
 import { getNoteFrequency } from '../../constants/noteFrequencies';
 import { DIGIPAN_VIEW_CONFIG } from '../../constants/digipanViewConfig';
@@ -125,20 +124,6 @@ const Digipan9 = React.forwardRef<Digipan3DHandle, Digipan9Props>(({
     // Use external notes if provided (Editor Mode), otherwise use internal default (Standard Component)
     const notesToRender = externalNotes || internalNotes;
 
-    // === AutoPlayer Mode ===
-    if (isAutoPlay) {
-        return (
-            <DigipanAutoPlayer
-                notes={notesToRender}
-                scale={scale}
-                centerX={centerX}
-                centerY={centerY}
-                backgroundImage={backgroundImage || "/images/9notes.png"}
-                demoActiveNoteId={demoActiveNoteId}
-            />
-        );
-    } // End AutoPlayer Mode
-
     return (
         <Digipan3D
             ref={ref}
@@ -152,8 +137,12 @@ const Digipan9 = React.forwardRef<Digipan3DHandle, Digipan9Props>(({
             backgroundImage={backgroundImage || "/images/9notes.png"}
             extraControls={extraControls}
             noteCountFilter={9}
-            showControls={showControls}
-            showInfoPanel={showInfoPanel}
+
+            // AutoPlay Support
+            isAutoPlay={isAutoPlay}
+            showControls={showControls && !isAutoPlay}
+            showInfoPanel={showInfoPanel && !isAutoPlay}
+
             initialViewMode={initialViewMode}
             viewMode={viewMode}
             onViewModeChange={onViewModeChange}

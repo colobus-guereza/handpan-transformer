@@ -27,6 +27,7 @@ export interface MatchResult {
     originalKeyNotes: string[];
     noteCount?: number;
     rawScore?: number;
+    originalKey?: string;
 }
 
 export interface ProcessedSong {
