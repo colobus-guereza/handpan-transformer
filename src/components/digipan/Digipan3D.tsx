@@ -1333,7 +1333,7 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
 
             {/* Home Screen Only: Top-Right - 피치/번호, 자동재생, 녹화, 캐슬링 (가로 한줄) - 현재 숨김 처리 (hidden) */}
             {!isDevPage && (
-                <div className={`hidden absolute ${isMobileButtonLayout ? 'top-2' : 'top-4'} right-4 z-50 flex flex-row items-center gap-2`}>
+                <div className={`absolute ${isMobileButtonLayout ? 'top-2' : 'top-4'} right-4 z-50 flex flex-row items-center gap-2`}>
                     {/* 1. View Mode Toggle (피치/순서 표시/숨김) */}
                     <button
                         onClick={() => {

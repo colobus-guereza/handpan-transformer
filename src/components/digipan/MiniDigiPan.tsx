@@ -82,7 +82,7 @@ const MiniDigiPan = React.forwardRef<Digipan3DHandle, MiniDigiPanProps>(({ scale
         return () => window.removeEventListener('resize', checkLayout);
     }, []);
 
-    const containerClass = is14Notes || is15Notes || is18Notes
+    const containerClass = is9Notes || is10Notes || is14Notes || is15Notes || is18Notes
         ? "w-full aspect-[10/11] max-h-[550px] md:max-h-[800px] relative rounded-2xl overflow-hidden bg-white -mt-2"
         : "w-full aspect-square max-h-[500px] md:max-h-[700px] relative rounded-2xl overflow-hidden bg-white -mt-2";
 
