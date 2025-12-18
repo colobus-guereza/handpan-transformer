@@ -2,13 +2,13 @@
 
 import React, { useMemo } from 'react';
 import Digipan3D, { svgTo3D, getTonefieldDimensions, Digipan3DHandle } from './Digipan3D';
-import { Scale } from '../../data/handpanScales';
-import { getNoteFrequency } from '../../constants/noteFrequencies';
-import { DIGIPAN_VIEW_CONFIG } from '../../constants/digipanViewConfig';
+import { Scale } from '@/data/handpanScales';
+import { getNoteFrequency } from '@/constants/noteFrequencies';
+import { DIGIPAN_VIEW_CONFIG } from '@/constants/digipanViewConfig';
 import * as THREE from 'three';
 import { VisualTonefield } from './VisualTonefield';
 import { useTexture } from '@react-three/drei';
-import { HANDPAN_CONFIG } from '../../constants/handpanConfig';
+import { HANDPAN_CONFIG } from '@/constants/handpanConfig';
 
 interface Digipan14Props {
     scale?: Scale | null;
@@ -29,18 +29,13 @@ interface Digipan14Props {
     notes?: any[]; // Allow passing notes for editor mode override
     showAxes?: boolean;
     onIsRecordingChange?: (isRecording: boolean) => void;
-    // AutoPlayer Props
-    isAutoPlay?: boolean;
-    demoActiveNoteId?: number | null;
-    backgroundImage?: string | null;
-    centerX?: number;
-    centerY?: number;
+    hideTouchText?: boolean;
 }
 
 // Composite Background Component for Digipan 14 (10 notes image + 4 visual tonefields)
 const Digipan14Background = ({ centerX = 500, centerY = 500, visualNotes = [], viewMode }: { centerX?: number; centerY?: number; visualNotes?: any[]; viewMode?: number }) => {
     // Load texture (Using 10notes.png as base)
-    const tex1 = useTexture('/images/10notes.png');
+    const tex1 = useTexture('/images/digipan/10notes.png');
 
     const size = HANDPAN_CONFIG.OUTER_RADIUS * 2; // 57cm
 
@@ -114,11 +109,7 @@ const Digipan14 = React.forwardRef<Digipan3DHandle, Digipan14Props>(({
     notes: externalNotes,
     showAxes = false,
     onIsRecordingChange,
-    isAutoPlay = false,
-    demoActiveNoteId,
-    backgroundImage,
-    centerX = 500,
-    centerY = 500
+    hideTouchText = false
 }, ref) => {
 
     // 10-Note Base Coordinates (from Digipan10.tsx)
@@ -338,46 +329,33 @@ const Digipan14 = React.forwardRef<Digipan3DHandle, Digipan14Props>(({
         return notesToRender.filter(n => n.id >= 10);
     }, [notesToRender]);
 
-    // === AutoPlayer Mode (Integrated) ===
-    // Use Digipan3D but with Clean View Props
-    // if (isAutoPlay) uses same component now.
-
     return (
         <Digipan3D
             ref={ref}
-            notes={notesToRender}
+            onIsRecordingChange={onIsRecordingChange}
+            hideTouchText={hideTouchText}
             scale={scale}
-            isCameraLocked={isCameraLocked}
+            notes={notesToRender.length > 0 ? notesToRender : baseNotes10.map(n => ({ ...n, label: '', frequency: 440, visualFrequency: 440, offset: [0, 0, 0] as [number, number, number] }))}
             onNoteClick={onNoteClick}
-            // ... Standard Props
-            // AutoPlayer Overrides
-            isAutoPlay={isAutoPlay}
-            showControls={showControls && !isAutoPlay} // Force hide if autoplay
-            showInfoPanel={showInfoPanel && !isAutoPlay} // Force hide if autoplay
-
-            // ... Other Props
-            onScaleSelect={onScaleSelect}
-            centerX={centerX}
-            centerY={centerY}
-            backgroundImage={backgroundImage || "/images/10notes.png"} // Base image for 14 is same as 10
+            isCameraLocked={isCameraLocked}
             extraControls={extraControls}
-            noteCountFilter={14}
+            showControls={showControls}
+            showInfoPanel={showInfoPanel}
             initialViewMode={initialViewMode}
             viewMode={viewMode}
             onViewModeChange={onViewModeChange}
             enableZoom={enableZoom}
             enablePan={enablePan}
             showLabelToggle={showLabelToggle}
+            backgroundContent={<Digipan14Background visualNotes={visualNotes} viewMode={viewMode} />}
             forceCompactView={forceCompactView}
-            showAxes={showAxes}
-            onIsRecordingChange={onIsRecordingChange}
-            sceneSize={forceCompactView ? { width: 66, height: 50 } : { width: 64, height: 60 }}
+            hideStaticLabels={true}
+            sceneSize={forceCompactView ? { width: 66, height: 66 } : { width: 64, height: 66 }} // Tighter vertical bounds (60 + 10%)
             cameraZoom={DIGIPAN_VIEW_CONFIG['14'].zoom}
             cameraTargetY={DIGIPAN_VIEW_CONFIG['14'].targetY}
-            backgroundContent={<Digipan14Background visualNotes={visualNotes} centerX={centerX} centerY={centerY} />}
+            showAxes={showAxes}
         />
     );
-    // REMOVED LEGACY IF BLOCK BELOW
 });
 
 export default Digipan14;

@@ -2,15 +2,15 @@
 
 import React, { useMemo } from 'react';
 import Digipan3D, { svgTo3D, getTonefieldDimensions, Digipan3DHandle } from './Digipan3D';
-import { Scale } from '../../data/handpanScales';
-import { getNoteFrequency } from '../../constants/noteFrequencies';
-import { DIGIPAN_VIEW_CONFIG } from '../../constants/digipanViewConfig';
+import { Scale } from '@/data/handpanScales';
+import { getNoteFrequency } from '@/constants/noteFrequencies';
+import { DIGIPAN_VIEW_CONFIG } from '@/constants/digipanViewConfig';
 import * as THREE from 'three';
 import { VisualTonefield } from './VisualTonefield';
 import { useTexture } from '@react-three/drei';
-import { HANDPAN_CONFIG } from '../../constants/handpanConfig';
+import { HANDPAN_CONFIG } from '@/constants/handpanConfig';
 
-interface Digipan18MProps {
+interface Digipan14MProps {
     scale?: Scale | null;
     onScaleSelect?: (scale: Scale) => void;
     onNoteClick?: (noteId: number) => void;
@@ -29,12 +29,13 @@ interface Digipan18MProps {
     notes?: any[]; // Allow passing notes for editor mode override
     showAxes?: boolean;
     onIsRecordingChange?: (isRecording: boolean) => void;
+    hideTouchText?: boolean;
 }
 
-// Composite Background Component for Digipan 18M (Currently same as 15M: Mutant image)
-const Digipan18MBackground = ({ centerX = 500, centerY = 500, visualNotes = [], viewMode }: { centerX?: number; centerY?: number; visualNotes?: any[]; viewMode?: number }) => {
-    // Load texture (Using 12notes_mutant.png) - Same as 14M/15M for now
-    const tex1 = useTexture('/images/12notes_mutant.png');
+// Composite Background Component for Digipan 14M (Mutant image + 4 visual tonefields)
+const Digipan14MBackground = ({ centerX = 500, centerY = 500, visualNotes = [], viewMode }: { centerX?: number; centerY?: number; visualNotes?: any[]; viewMode?: number }) => {
+    // Load texture (Using 12notes_mutant.png)
+    const tex1 = useTexture('/images/digipan/12notes_mutant.png');
 
     const size = HANDPAN_CONFIG.OUTER_RADIUS * 2; // 57cm
 
@@ -49,7 +50,7 @@ const Digipan18MBackground = ({ centerX = 500, centerY = 500, visualNotes = [], 
                 <meshBasicMaterial map={tex1} transparent opacity={1} />
             </mesh>
 
-            {/* Permanent Visual Tonefields for Bottom Notes (IDs >= 12) */}
+            {/* Permanent Visual Tonefields for Bottom Notes (N10, N11, N12, N13) */}
             {viewMode !== 4 && visualNotes.filter(n => !n.hideGuide).map((note) => {
                 const cx = note.cx ?? 500;
                 const cy = note.cy ?? 500;
@@ -90,7 +91,7 @@ const Digipan18MBackground = ({ centerX = 500, centerY = 500, visualNotes = [], 
 };
 
 
-const Digipan18M = React.forwardRef<Digipan3DHandle, Digipan18MProps>(({
+const Digipan14M = React.forwardRef<Digipan3DHandle, Digipan14MProps>(({
     scale,
     onScaleSelect,
     onNoteClick,
@@ -107,17 +108,12 @@ const Digipan18M = React.forwardRef<Digipan3DHandle, Digipan18MProps>(({
     forceCompactView = false,
     notes: externalNotes,
     showAxes = false,
-    onIsRecordingChange
+    onIsRecordingChange,
+    hideTouchText = false
 }, ref) => {
 
-    // 15-Note Base Coordinates (COPIED FROM 15M AS STARTING POINT)
-    // Note: User wants an 18-note template, but asked to duplicate 15M exactly first.
-    // The previous 18M attempt had 18 notes. Since this is a duplicate of 15M, it has 15 notes.
-    // I will keep it as 15 notes for now as per "15M 버튼을 그대로 복제해와서 ... 18M은 15M을 그대로 복제 해오되" instruction.
-    // The user can then ask to add more notes. Or implies I should support 18 notes?
-    // "18M의 변경사항이 15M에 연결되어 반영되면 안됨" -> Suggests I will mod it later.
-    // For now, exact clone of 15M logic.
-    const baseNotes18 = useMemo(() => [
+    // 10-Note Base Coordinates (from Digipan10.tsx) - Starting point for 14M as well
+    const baseNotes10 = useMemo(() => [
         {
             "id": 0,
             "cx": 503,
@@ -142,7 +138,7 @@ const Digipan18M = React.forwardRef<Digipan3DHandle, Digipan18MProps>(({
         },
         {
             "id": 2,
-            "cx": 376,
+            "cx": 377,
             "cy": 822,
             "scale": 0,
             "rotate": 108,
@@ -208,39 +204,62 @@ const Digipan18M = React.forwardRef<Digipan3DHandle, Digipan18MProps>(({
         },
         {
             "id": 8,
-            "cx": 264,
+            "cx": 258,
             "cy": 204,
             "scale": 0,
-            "rotate": 51,
+            "rotate": 54,
             "position": "top",
             "angle": 0,
-            "scaleX": 0.97,
-            "scaleY": 0.95
+            "scaleX": 0.98,
+            "scaleY": 0.99
         },
         {
             "id": 9,
-            "cx": 484,
+            "cx": 487,
             "cy": 135,
             "scale": 0,
             "rotate": 93,
             "position": "top",
             "angle": 0,
             "scaleX": 1.07,
-            "scaleY": 0.92
+            "scaleY": 1.05
         },
         {
             "id": 10,
-            "cx": 380,
+            "cx": 0,
+            "cy": 762,
+            "scale": 0,
+            "rotate": 158,
+            "position": "bottom",
+            "angle": 0,
+            "scaleX": 1.07,
+            "scaleY": 1.5
+        },
+        {
+            "id": 11,
+            "cx": 1003,
+            "cy": 762,
+            "scale": 0,
+            "rotate": 24,
+            "position": "bottom",
+            "angle": 0,
+            "scaleX": 1.13,
+            "scaleY": 1.44
+        },
+        {
+            "id": 12,
+            "cx": 383,
             "cy": 316,
             "scale": 0,
             "rotate": 58,
             "position": "top",
             "angle": 0,
             "scaleX": 0.9,
-            "scaleY": 0.89
+            "scaleY": 0.89,
+            "hideGuide": true
         },
         {
-            "id": 11,
+            "id": 13,
             "cx": 625,
             "cy": 311,
             "scale": 0,
@@ -248,97 +267,41 @@ const Digipan18M = React.forwardRef<Digipan3DHandle, Digipan18MProps>(({
             "position": "top",
             "angle": 0,
             "scaleX": 0.85,
-            "scaleY": 0.92
-        },
-        {
-            "id": 12,
-            "cx": 0,
-            "cy": 762,
-            "scale": 0,
-            "rotate": 158,
-            "position": "bottom",
-            "angle": 0,
-            "scaleX": 1.29,
-            "scaleY": 1.61
-        },
-        {
-            "id": 13,
-            "cx": 996,
-            "cy": 762,
-            "scale": 0,
-            "rotate": 25,
-            "position": "bottom",
-            "angle": 0,
-            "scaleX": 1.24,
-            "scaleY": 1.48
-        },
-        {
-            "id": 14,
-            "cx": 998,
-            "cy": 260,
-            "scale": 0,
-            "rotate": 155,
-            "position": "bottom",
-            "angle": 0,
-            "scaleX": 1.25,
-            "scaleY": 1.3800000000000001
-        },
-        {
-            "id": 15,
-            "cx": 2,
-            "cy": 260,
-            "scale": 0,
-            "rotate": 24,
-            "position": "bottom",
-            "angle": 0,
-            "scaleX": 1.2999999999999998,
-            "scaleY": 1.5
-        },
-        {
-            "id": 16,
-            "cx": 263,
-            "cy": 10,
-            "scale": 0,
-            "rotate": 64,
-            "position": "bottom",
-            "angle": 0,
-            "scaleX": 1.3,
-            "scaleY": 1.18
-        },
-        {
-            "id": 17,
-            "cx": 449,
-            "cy": -38,
-            "scale": 0,
-            "rotate": 77,
-            "position": "bottom",
-            "angle": 0,
-            "scaleX": 1.35,
-            "scaleY": 1.22
+            "scaleY": 0.9199999999999999,
+            "hideGuide": true
         }
     ], []);
 
     const internalNotes = useMemo(() => {
         if (externalNotes && externalNotes.length > 0) return externalNotes;
-        if (!scale) return baseNotes18.map(n => ({ ...n, label: '', frequency: 440, visualFrequency: 440, offset: [0, 0, 0] as [number, number, number] }));
+        if (!scale) return baseNotes10.map(n => ({ ...n, label: '', frequency: 440, visualFrequency: 440, offset: [0, 0, 0] as [number, number, number] }));
 
         // Template Notes for frequency lookup
-        const TEMPLATE_NOTES = ["D3", "A3", "Bb3", "C4", "D4", "E4", "F4", "G4", "A4", "C5", "D5", "E5", "G5", "A5", "B5", "C6", "D6", "E6"];
+        const TEMPLATE_NOTES = ["D3", "A3", "Bb3", "C4", "D4", "E4", "F4", "G4", "A4", "C5", "D5", "E5", "G5", "A5"];
 
         // Determine Scale Notes (Ding + Top + Bottom)
         const currentScaleNotes = [scale.notes.ding, ...scale.notes.top, ...(scale.notes.bottom || [])];
 
-        const generatedNotes = baseNotes18.map((n, i) => {
+        const generatedNotes = baseNotes10.map((n, i) => {
             const noteName = currentScaleNotes[i] || '';
             const frequency = getNoteFrequency(noteName);
-            const visualNoteName = TEMPLATE_NOTES[i] || "C5";
+            const visualNoteName = TEMPLATE_NOTES[i] || "A4";
             const visualFrequency = getNoteFrequency(visualNoteName);
+
+            let freqForVisual = visualFrequency;
+            // Manual overrides for Bottom Notes to match requirements
+            if (n.id === 10) freqForVisual = getNoteFrequency("C5"); // Match D12
+            if (n.id === 11) freqForVisual = getNoteFrequency("D5"); // Match D12
+
+            // New notes logic:
+            if (n.id === 12) freqForVisual = getNoteFrequency("D5");
+            if (n.id === 13) freqForVisual = getNoteFrequency("E5");
 
             return {
                 ...n,
                 label: noteName,
                 frequency: frequency || 440,
-                visualFrequency: visualFrequency || 440,
+                visualFrequency: freqForVisual || 440,
                 labelOffset: 25,
                 offset: [0, 0, 0] as [number, number, number]
             };
@@ -353,22 +316,22 @@ const Digipan18M = React.forwardRef<Digipan3DHandle, Digipan18MProps>(({
             return { ...n, subLabel };
         });
 
-    }, [scale, externalNotes, baseNotes18]);
+    }, [scale, externalNotes, baseNotes10]);
 
     const notesToRender = externalNotes || internalNotes;
 
-    // Filter notes for the Permanent Visual Layer (Bottom 4 notes: IDs >= 12)
-    // Same as 15M logic
+    // Filter notes for the Permanent Visual Layer (Bottom 4 notes: IDs >= 10)
     const visualNotes = useMemo(() => {
-        return notesToRender.filter(n => n.id >= 12);
+        return notesToRender.filter(n => n.id >= 10);
     }, [notesToRender]);
 
     return (
         <Digipan3D
             ref={ref}
             onIsRecordingChange={onIsRecordingChange}
+            hideTouchText={hideTouchText}
             scale={scale}
-            notes={notesToRender.length > 0 ? notesToRender : baseNotes18.map(n => ({ ...n, label: '', frequency: 440, visualFrequency: 440, offset: [0, 0, 0] as [number, number, number] }))}
+            notes={notesToRender.length > 0 ? notesToRender : baseNotes10.map(n => ({ ...n, label: '', frequency: 440, visualFrequency: 440, offset: [0, 0, 0] as [number, number, number] }))}
             onNoteClick={onNoteClick}
             isCameraLocked={isCameraLocked}
             extraControls={extraControls}
@@ -380,15 +343,15 @@ const Digipan18M = React.forwardRef<Digipan3DHandle, Digipan18MProps>(({
             enableZoom={enableZoom}
             enablePan={enablePan}
             showLabelToggle={showLabelToggle}
-            backgroundContent={<Digipan18MBackground visualNotes={visualNotes} viewMode={viewMode} />}
+            backgroundContent={<Digipan14MBackground visualNotes={visualNotes} viewMode={viewMode} />}
             forceCompactView={forceCompactView}
             hideStaticLabels={true}
-            cameraTargetY={DIGIPAN_VIEW_CONFIG['18M'].targetY}
-            sceneSize={forceCompactView ? { width: 66, height: 66 } : { width: 64, height: 66 }}
-            cameraZoom={DIGIPAN_VIEW_CONFIG['18M'].zoom}
+            cameraTargetY={DIGIPAN_VIEW_CONFIG['14M'].targetY}
+            sceneSize={forceCompactView ? { width: 66, height: 66 } : { width: 64, height: 66 }} // Tighter vertical bounds (60 + 10%)
+            cameraZoom={DIGIPAN_VIEW_CONFIG['14M'].zoom}
             showAxes={showAxes}
         />
     );
 });
 
-export default Digipan18M;
+export default Digipan14M;

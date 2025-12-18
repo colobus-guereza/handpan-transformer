@@ -2,17 +2,17 @@
 import React, { useMemo } from 'react';
 import Digipan3D, { svgTo3D, getTonefieldDimensions, Digipan3DHandle } from './Digipan3D';
 import { useTexture } from '@react-three/drei';
-import { HANDPAN_CONFIG } from '../../constants/handpanConfig';
-import { Scale } from '../../data/handpanScales';
-import { getNoteFrequency } from '../../constants/noteFrequencies';
-import { DIGIPAN_VIEW_CONFIG } from '../../constants/digipanViewConfig';
+import { HANDPAN_CONFIG } from '@/constants/handpanConfig';
+import { Scale } from '@/data/handpanScales';
+import { getNoteFrequency } from '@/constants/noteFrequencies';
+import { DIGIPAN_VIEW_CONFIG } from '@/constants/digipanViewConfig';
 import * as THREE from 'three';
 import { VisualTonefield } from './VisualTonefield';
 
 // Composite Background Component for Digipan 11
 const Digipan11Background = ({ centerX = 500, centerY = 500, visualNotes = [], viewMode }: { centerX?: number; centerY?: number; visualNotes?: any[]; viewMode?: number }) => {
     // Load texture
-    const tex1 = useTexture('/images/9notes.png');
+    const tex1 = useTexture('/images/digipan/9notes.png');
 
     const size = HANDPAN_CONFIG.OUTER_RADIUS * 2; // 57cm
 
@@ -88,6 +88,7 @@ interface Digipan11Props {
     forceCompactView?: boolean;
     showAxes?: boolean;
     onIsRecordingChange?: (isRecording: boolean) => void;
+    hideTouchText?: boolean;
 }
 
 const Digipan11 = React.forwardRef<Digipan3DHandle, Digipan11Props>(({
@@ -107,7 +108,8 @@ const Digipan11 = React.forwardRef<Digipan3DHandle, Digipan11Props>(({
     showLabelToggle = false,
     forceCompactView = false,
     showAxes = false,
-    onIsRecordingChange
+    onIsRecordingChange,
+    hideTouchText = false
 }, ref) => {
 
     // Internal Note Generation (C# Pygmy 11 Layout)
@@ -311,6 +313,7 @@ const Digipan11 = React.forwardRef<Digipan3DHandle, Digipan11Props>(({
             cameraZoom={DIGIPAN_VIEW_CONFIG['11'].zoom}
             cameraTargetY={DIGIPAN_VIEW_CONFIG['11'].targetY}
             onIsRecordingChange={onIsRecordingChange}
+            hideTouchText={hideTouchText}
         />
     );
 });

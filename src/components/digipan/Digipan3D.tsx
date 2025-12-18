@@ -8,28 +8,19 @@ const btnMobile = "w-[38.4px] h-[38.4px] flex items-center justify-center bg-whi
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { Text, OrbitControls, Center, Line, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
-import { Scale } from '../../data/handpanScales';
-import { Lock, Unlock, Camera, Check, Eye, EyeOff, Play, Ship, Pointer, Disc, Square, Drum, Music, Music2, Download, Trash2 } from 'lucide-react';
-import { HANDPAN_CONFIG, getDomeHeight, TONEFIELD_CONFIG } from '../../constants/handpanConfig';
-import { DIGIPAN_VIEW_CONFIG, DIGIPAN_LABEL_POS_FACTOR } from '../../constants/digipanViewConfig';
+import { Scale } from '@/data/handpanScales';
+import { Lock, Unlock, Camera, Check, Eye, EyeOff, MinusCircle, PlayCircle, Play, Ship, Pointer, Disc, Square, Drum, Music, Music2, Download, Trash2 } from 'lucide-react';
+import { HANDPAN_CONFIG, getDomeHeight, TONEFIELD_CONFIG } from '@/constants/handpanConfig';
+import { DIGIPAN_VIEW_CONFIG, DIGIPAN_LABEL_POS_FACTOR } from '@/constants/digipanViewConfig';
 import html2canvas from 'html2canvas';
-import { useHandpanAudio } from '../../hooks/useHandpanAudio';
+import { useHandpanAudio } from '@/hooks/useHandpanAudio';
 import { usePathname } from 'next/navigation';
-{/* Scale Info Panel Removed for Portability */ }
-{/* {isDevPage && (
-                <ScaleInfoPanel
-                    scale={scale}
-                    // ... props
-                />
-            )} */}
 import TouchText from './TouchText';
-import CyberBoat from './CyberBoat';
-import ToneFieldMesh from './ToneFieldMesh'; // Imported Reusable Component
-import { useOctaveResonance, ResonanceSettings } from '../../hooks/useOctaveResonance';
-import { DEFAULT_HARMONIC_SETTINGS, DigipanHarmonicConfig } from '../../constants/harmonicDefaults';
-import { useDigipanRecorder } from '../../hooks/useDigipanRecorder';
-import { useJamSession } from '../../hooks/useJamSession';
-import { calculateChordProgression, ChordSet } from '../../lib/ChordCalculator';
+import { useOctaveResonance, ResonanceSettings } from '@/hooks/useOctaveResonance';
+import { DEFAULT_HARMONIC_SETTINGS, DigipanHarmonicConfig } from '@/constants/harmonicDefaults';
+import { useDigipanRecorder } from '@/hooks/useDigipanRecorder';
+import { useJamSession } from '@/hooks/useJamSession';
+import { calculateChordProgression, ChordSet } from '@/utils/ChordCalculator';
 
 const CameraHandler = ({
     isLocked,
@@ -105,7 +96,7 @@ const CameraHandler = ({
 
 // ... (HandpanBody, ToneFieldMesh components remain the same)
 
-import { NoteData, SCALES } from '@/data/handpanScales';
+import { SCALES, NoteData } from '@/data/handpanScales';
 
 interface Digipan3DProps {
     notes: NoteData[];
@@ -136,8 +127,7 @@ interface Digipan3DProps {
     harmonicSettings?: DigipanHarmonicConfig; // Optional override for harmonics
     onIsRecordingChange?: (isRecording: boolean) => void;
     cameraZoom?: number; // Optional override for initial camera zoom
-    isAutoPlay?: boolean; // New: Clean AutoPlayer View Mode
-    demoActiveNoteId?: number | null; // New: External control for note highlighting
+    hideTouchText?: boolean; // New Prop to hide Ready/Set/Touch text
 }
 
 export interface Digipan3DHandle {
@@ -147,6 +137,7 @@ export interface Digipan3DHandle {
     toggleViewMode: () => void;
     toggleIdleBoat: () => void;
     toggleTouchText: () => void;
+    triggerNote: (noteId: number) => void;
 }
 
 // Constants & Types
@@ -155,8 +146,6 @@ export interface Digipan3DHandle {
 const TONEFIELD_RATIO_X = 0.3;
 const TONEFIELD_RATIO_Y = 0.425;
 
-// NoteData interface moved to handpanScales.ts "Bottom Guide" sienna mesh
-// ... other props optional for now
 
 
 // Duplicate interface removed
@@ -234,8 +223,482 @@ const HandpanImageRenderer = ({ url, position }: { url: string; position: [numbe
     );
 };
 
-// Reusable ToneFieldMesh imported above
-// (Orphaned ToneFieldMesh code removed)
+const ToneFieldMesh = React.memo(({
+    note,
+    centerX = 500,
+    centerY = 500,
+    onClick,
+    viewMode = 0, // 0: All, 1: No Labels, 2: No Mesh inside, 3: Interaction Only
+    demoActive = false,
+    playNote,
+    offset
+}: {
+    note: NoteData;
+    centerX?: number;
+    centerY?: number;
+    onClick?: (id: number) => void;
+    viewMode?: 0 | 1 | 2 | 3 | 4;
+    demoActive?: boolean;
+    playNote?: (noteName: string, volume?: number) => void;
+    offset?: [number, number, number];
+}) => {
+    const [hovered, setHovered] = useState(false);
+    const [pulsing, setPulsing] = useState(false);
+
+    // Calculate position
+    const cx = note.cx ?? 500;
+    const cy = note.cy ?? 500;
+    const pos = svgTo3D(cx, cy, centerX, centerY);
+
+    // Apply Offset
+    const [offX, offY, offZ] = offset || [0, 0, 0];
+    const finalPosX = pos.x + offX;
+    const finalPosY = pos.y + offY;
+    const finalPosZ = 0 + offZ; // zPos logic moved here
+
+    // Calculate size (Converted to cm)
+
+    // Rotation
+    const rotationZ = -THREE.MathUtils.degToRad(note.rotate || 0);
+
+    // Ding logic
+    const isDing = note.id === 0;
+    const isBottom = note.position === 'bottom';
+
+    // Dimensions Calculation
+    // We use Frequency-based calculation to maintain consistency with the original tuning logic.
+    // If visualFrequency is provided (e.g. for Digipan 9 fixed layout), use it. Otherwise use the audio frequency.
+    const visualHz = note.visualFrequency ?? (note.frequency || 440);
+    const dimensions = getTonefieldDimensions(visualHz, isDing);
+
+    const rx = dimensions.width;
+    const ry = dimensions.height;
+
+    const radiusX = rx / 2;
+    const radiusY = ry / 2;
+
+    // Calculate Dimple Radius
+    // Condition: Ding OR Frequency <= F#3 (185Hz) -> Large Dimple (0.45)
+    // Else -> Small Dimple (0.40)
+    // Note: When using fixed layout (note.scale), we don't strictly have frequency driving the size, 
+    // but we can still use the note's frequency property to determine dimple ratio.
+    const dimpleRatio = (isDing || (visualHz) <= TONEFIELD_CONFIG.RATIOS.F_SHARP_3_HZ)
+        ? TONEFIELD_CONFIG.RATIOS.DIMPLE_LARGE
+        : TONEFIELD_CONFIG.RATIOS.DIMPLE_SMALL;
+
+    const dimpleRadiusX = radiusX * dimpleRatio;
+    const dimpleRadiusY = ry * dimpleRatio;
+
+    // Apply Overrides (Multipliers)
+    // If scaleX/Y are provided, they multiply the calculated radius (or base unit).
+    const scaleXMult = note.scaleX ?? 1;
+    const scaleYMult = note.scaleY ?? 1;
+
+    const finalRadiusX = radiusX * scaleXMult;
+    const finalRadiusY = radiusY * scaleYMult;
+
+    // Z-position: Place on the 0,0 coordinate plane (Top of dome)
+    const zPos = finalPosZ; // Use offset Z
+
+    // Trigger Demo Effect
+    React.useEffect(() => {
+        if (demoActive) {
+            // Play Sound via preloaded Howler (instant playback)
+            if (playNote) {
+                playNote(note.label);
+            }
+
+            // Trigger Visual Pulse
+            triggerPulse();
+        }
+    }, [demoActive, note.label, playNote]);
+
+    // ========================================
+    // CLICK EFFECT CONFIGURATION
+    // ========================================
+    const CLICK_EFFECT_CONFIG = {
+        // Main Sphere Effect (Breathing Glow)
+        sphere: {
+            color: '#00FF00',        // Green - TEST
+            baseSize: 1.05,          // 5% larger than tonefield
+            maxOpacity: 0.1,         // 10% opacity at peak
+            scalePulse: 0.15,        // 15% scale variation
+        },
+        // Impact Ring Effect (Initial strike)
+        ring: {
+            color: '#000000',        // Black - TEST
+            maxOpacity: 0.4,         // 40% opacity at start
+            duration: 0.3,           // Quick 0.3s flash
+            expandScale: 1.5,        // Expands to 150%
+        },
+        // Timing
+        timing: {
+            duration: 1.2,           // Total duration (1.2 seconds)
+            attackPhase: 0.15,       // Fast attack (15% of duration)
+        }
+    };
+
+    // Animation State logic
+    const effectMeshRef = useRef<THREE.Mesh>(null);
+    const effectMaterialRef = useRef<THREE.MeshBasicMaterial>(null);
+    const impactRingRef = useRef<THREE.Mesh>(null);
+    const impactMaterialRef = useRef<THREE.MeshBasicMaterial>(null);
+    const animState = useRef({ active: false, time: 0 });
+
+    // Sound Breathing Configuration
+    const SUSTAIN_DURATION = CLICK_EFFECT_CONFIG.timing.duration;
+
+    // Frame Loop for Click Effects Animation
+    useFrame((_state: any, delta: number) => {
+        if (!animState.current.active || !effectMeshRef.current || !effectMaterialRef.current) {
+            return;
+        }
+
+        animState.current.time += delta;
+        const progress = Math.min(animState.current.time / SUSTAIN_DURATION, 1);
+
+        // === EFFECT 1: Main Sphere (Breathing Glow) ===
+        const attackPhase = CLICK_EFFECT_CONFIG.timing.attackPhase;
+        let breathCurve: number;
+
+        if (progress < attackPhase) {
+            // Very fast fade-in: 0 → 1 in first 15%
+            const attackProgress = progress / attackPhase;
+            breathCurve = Math.sin(attackProgress * Math.PI / 2);
+        } else {
+            // Faster fade-out: 1 → 0 in remaining 85%
+            const decayProgress = (progress - attackPhase) / (1 - attackPhase);
+            breathCurve = Math.cos(decayProgress * Math.PI / 2);
+        }
+
+        const opacity = CLICK_EFFECT_CONFIG.sphere.maxOpacity * breathCurve;
+        effectMaterialRef.current.opacity = opacity;
+
+        const scaleMultiplier = 1 + CLICK_EFFECT_CONFIG.sphere.scalePulse * breathCurve;
+        effectMeshRef.current.scale.set(
+            finalRadiusX * CLICK_EFFECT_CONFIG.sphere.baseSize * scaleMultiplier,
+            finalRadiusY * CLICK_EFFECT_CONFIG.sphere.baseSize * scaleMultiplier,
+            1
+        );
+
+        // === EFFECT 2: Impact Ring (Initial Strike Flash) ===
+        if (impactRingRef.current && impactMaterialRef.current) {
+            const ringDuration = CLICK_EFFECT_CONFIG.ring.duration;
+            const ringProgress = Math.min(animState.current.time / ringDuration, 1);
+
+            if (ringProgress < 1) {
+                // Quick fade-out with expansion
+                const ringCurve = Math.cos(ringProgress * Math.PI / 2); // 1 → 0
+                const ringOpacity = CLICK_EFFECT_CONFIG.ring.maxOpacity * ringCurve;
+                const ringScale = 1 + (CLICK_EFFECT_CONFIG.ring.expandScale - 1) * ringProgress;
+
+                impactMaterialRef.current.opacity = ringOpacity;
+
+                impactRingRef.current.scale.set(
+                    finalRadiusX * ringScale,
+                    finalRadiusY * ringScale,
+                    1
+                );
+            } else {
+                // Hide ring after duration
+                impactMaterialRef.current.opacity = 0;
+            }
+        }
+
+        if (progress >= 1) {
+            animState.current.active = false;
+            setPulsing(false);
+        }
+    });
+
+    // Initialize opacity - DISABLED for testing (JSX now sets opacity={1.0})
+    // useEffect(() => {
+    //     if (effectMaterialRef.current) {
+    //         effectMaterialRef.current.opacity = 0;
+    //     }
+    // }, []);
+
+    const triggerPulse = () => {
+        // Start animation
+        animState.current = { active: true, time: 0 };
+        setPulsing(true);
+
+        // Initialize at 0 (animation will fade in)
+        if (effectMaterialRef.current) {
+            effectMaterialRef.current.opacity = 0;
+        }
+    };
+
+    const handlePointerDown = (e: any) => {
+        e.stopPropagation();
+        onClick?.(note.id);
+
+        // Play Sound via preloaded Howler (instant playback, no network delay)
+        if (playNote) {
+            playNote(note.label);
+        }
+
+        // Trigger Sound Breathing effect
+        triggerPulse();
+    };
+
+    return (
+        <group position={[finalPosX, finalPosY, zPos]}>
+            <group rotation={[0, 0, rotationZ]}>
+                {/* 1. Tone Field Body */}
+                {/* 1-a. Interaction Mesh (Invisible Hit Box) - Always handles events */}
+                {/* Placed at z=0.2 to be IN FRONT of the visual dot (z=0.1) for reliable interaction */}
+                <mesh
+                    onPointerDown={handlePointerDown}
+                    onPointerOver={() => {
+                        document.body.style.cursor = 'pointer';
+                        setHovered(true);
+                    }}
+                    onPointerOut={() => {
+                        document.body.style.cursor = 'auto';
+                        setHovered(false);
+                    }}
+                    rotation={[Math.PI / 2, 0, 0]}
+                    scale={[finalRadiusX, 0.05, finalRadiusY]} // Flattened
+                    position={[0, 0, 0.2]} // Moved forward to ensure it captures clicks
+                    visible={true} // Must be visible to receive raycast events
+                >
+                    <sphereGeometry args={[1, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2]} />
+                    <meshBasicMaterial
+                        transparent={true}
+                        opacity={0} // Invisible
+                        depthWrite={false}
+                        side={THREE.DoubleSide}
+                    />
+                </mesh>
+
+                {/* 1-b. Visual Mesh (Wireframe) - Standard Tonefields */}
+                {/* Visible in Modes 0 (1) and 1 (2) for ALL notes (including Bottom) */}
+                <mesh
+                    rotation={[Math.PI / 2, 0, 0]}
+                    scale={[finalRadiusX, 0.05, finalRadiusY]}
+                    visible={viewMode === 0 || viewMode === 1}
+                >
+                    <sphereGeometry args={[1, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2]} />
+                    <meshStandardMaterial
+                        color={hovered ? "#60A5FA" : "#FFFFFF"}
+                        emissive={hovered ? "#1E40AF" : "#000000"}
+                        emissiveIntensity={hovered ? 0.5 : 0}
+                        roughness={0.9}
+                        metalness={0.0}
+                        wireframe={true}
+                        toneMapped={false}
+                        transparent={true}
+                        opacity={1}
+                    />
+                </mesh>
+
+                {/* 1-c. Bottom Dot Visual (Sienna Guide) */}
+                {/* Visible ONLY in Guide Mode (Mode 4 / UI Mode 5) */}
+                {isBottom && !note.hideGuide && (
+                    <mesh
+                        position={[0, 0, 0.1]} // Behind interaction mesh (z=0.1)
+                        rotation={[0, 0, 0]}
+                        scale={[1.5 * (note.scaleX ?? 1), 1.5 * (note.scaleX ?? 1), 1.5 * (note.scaleX ?? 1)]} // Scaled Spherical Dot
+                        visible={viewMode === 4} // Only visible in 5th mode
+                    >
+                        <sphereGeometry args={[1, 16, 16]} />
+                        <meshStandardMaterial
+                            color={hovered ? "#60A5FA" : "#A0522D"} // Hover Blue, Default Sienna
+                            emissive={hovered ? "#1E40AF" : "#000000"}
+                            emissiveIntensity={hovered ? 0.5 : 0}
+                            roughness={0.4}
+                            metalness={0.0}
+                            transparent={true}
+                            opacity={0.9}
+                        />
+                    </mesh>
+                )}
+
+                {/* === CLICK EFFECTS === */}
+
+                {/* EFFECT 1: Impact Ring (White Flash) */}
+                <mesh
+                    ref={impactRingRef}
+                    position={[0, 0, 0.6]} // Above the main sphere
+                    scale={[finalRadiusX, finalRadiusY, 1]}
+                    visible={pulsing}
+                    renderOrder={1000} // Above main sphere
+                >
+                    <sphereGeometry args={[1, 32, 16]} />
+                    <meshBasicMaterial
+                        ref={impactMaterialRef}
+                        color={CLICK_EFFECT_CONFIG.ring.color}
+                        transparent={true}
+                        opacity={0}
+                        toneMapped={false}
+                        depthWrite={false}
+                        depthTest={false}
+                        side={2}
+                    />
+                </mesh>
+
+                {/* EFFECT 2: Main Sphere (Breathing Glow) */}
+                <mesh
+                    ref={effectMeshRef}
+                    position={[0, 0, 0.5]} // Slightly above tonefield
+                    scale={[
+                        finalRadiusX * CLICK_EFFECT_CONFIG.sphere.baseSize,
+                        finalRadiusY * CLICK_EFFECT_CONFIG.sphere.baseSize,
+                        1
+                    ]}
+                    visible={pulsing}
+                    renderOrder={999}
+                >
+                    <sphereGeometry args={[1, 32, 16]} />
+                    <meshBasicMaterial
+                        ref={effectMaterialRef}
+                        color={CLICK_EFFECT_CONFIG.sphere.color}
+                        transparent={true}
+                        opacity={0}
+                        toneMapped={false}
+                        depthWrite={false}
+                        depthTest={false}
+                        side={2}
+                    />
+                </mesh>
+
+                {/* 2. Dimple - Wireframe (Standard Only) */}
+                {!isBottom && (
+                    <mesh
+                        position={[0, 0, 0.01]}
+                        rotation={[isDing ? Math.PI / 2 : -Math.PI / 2, 0, 0]}
+                        scale={[dimpleRadiusX, 0.05, dimpleRadiusY]}
+                        // Visible in 0 (All) and 1 (No Labels). Hidden in 2 (Labels Only) and 3 (Interaction Only)
+                        visible={viewMode === 0 || viewMode === 1}
+                    >
+                        <sphereGeometry args={[1, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2]} />
+                        <meshStandardMaterial
+                            color="#FFFFFF"
+                            roughness={0.9}
+                            metalness={0.0}
+                            wireframe={true}
+                            transparent={true}
+                            opacity={1} // Was opacity conditional, now controlled by visible prop
+                        />
+                    </mesh>
+                )}
+            </group>
+
+            {/* 3. Labels (Separated from rotation group to stay upright) */}
+            <group position={[0, 0, 1]}> {/* Lifted slightly above mesh */}
+                {/* Helper to calculate bottom point of rotated ellipse */}
+                {(() => {
+                    const calculateBottomOffset = (rx: number, ry: number, rotZ: number) => {
+                        // We want to find the point on the ellipse with the lowest Y value (Visual Bottom)
+                        // Ellipse parametric: x = rx*cos(t), y = ry*sin(t)
+                        // Rotated: 
+                        // x' = x*cos(rot) - y*sin(rot)
+                        // y' = x*sin(rot) + y*cos(rot)
+                        // We want deriv(y', t) = 0
+
+                        // Note: rotationZ in this component is already in radians
+                        const phi = rotZ;
+
+                        // tan(t) = (ry/rx) * cot(phi)
+                        let t1;
+                        if (Math.abs(Math.sin(phi)) < 0.001) {
+                            // If rotation is near 0 or 180, bottom is at t = -PI/2 (270 deg)
+                            t1 = -Math.PI / 2;
+                        } else {
+                            // deriv y' wrt t: -rx*sin(t)*sin(phi) + ry*cos(t)*cos(phi) = 0
+                            // ry*cos(t)*cos(phi) = rx*sin(t)*sin(phi)
+                            // tan(t) = (ry/rx) * cot(phi)
+                            const val = (ry / rx) / Math.tan(phi);
+                            t1 = Math.atan(val);
+                        }
+                        const t2 = t1 + Math.PI;
+
+                        const getP = (t: number) => ({
+                            x: rx * Math.cos(t) * Math.cos(phi) - ry * Math.sin(t) * Math.sin(phi),
+                            y: rx * Math.cos(t) * Math.sin(phi) + ry * Math.sin(t) * Math.cos(phi)
+                        });
+
+                        const p1 = getP(t1);
+                        const p2 = getP(t2);
+
+                        // In 3D (Y-up), bottom is Lowest Y
+                        return p1.y < p2.y ? p1 : p2;
+                    };
+
+                    // Calculate position for Number Label (Visual Bottom)
+                    // We use a reduced radius (e.g. 20%) to bring the text closer to the center (Pitch Label)
+                    // instead of placing it at the absolute edge.
+                    const LABEL_POS_FACTOR = DIGIPAN_LABEL_POS_FACTOR;
+                    const bottomPos = calculateBottomOffset(
+                        finalRadiusX * LABEL_POS_FACTOR,
+                        finalRadiusY * LABEL_POS_FACTOR,
+                        rotationZ
+                    );
+
+                    // Show labels only if viewMode is 0 (All Visible) or 2 (Labels Only/No Mesh)
+                    // Mode 1 = Mesh Only (No Labels) and Mode 3 = Interaction Only (No Labels, No Mesh)
+                    // if (viewMode === 1 || viewMode === 3) return null; // Removed early return to keep components mounted
+
+                    const areLabelsVisible = viewMode === 0 || viewMode === 2;
+
+                    return (
+                        <>
+                            {/* Pitch Label (Center) - Remains at 0,0 but upright */}
+                            {(() => {
+                                // Use black color for bottom position notes (white background outside pan)
+                                const pitchLabelColor = note.textColor || (note.position === 'bottom' ? '#333333' : '#FFFFFF');
+                                const outlineColor = note.outlineColor || (note.position === 'bottom' ? '#CCCCCC' : '#000000');
+                                return (
+                                    <Text
+                                        visible={areLabelsVisible}
+                                        position={[0, 0, 0]}
+                                        fontSize={3.0}
+                                        color={pitchLabelColor}
+                                        anchorX="center"
+                                        anchorY="middle"
+                                        fontWeight="bold"
+                                        outlineWidth={0.05}
+                                        outlineColor={outlineColor}
+                                    >
+                                        {note.label}
+                                    </Text>
+                                );
+                            })()}
+
+                            {/* Number Label (Visual Bottom / 6 o'clock) */}
+                            {/* Determine Display Label: Use subLabel if present, otherwise ID (or 'D' for ID 0) */}
+                            {(() => {
+                                const displayText = note.subLabel ? note.subLabel : (note.id + 1).toString();
+                                // Use black color for bottom position notes (white background outside pan)
+                                const labelColor = note.textColor || (note.position === 'bottom' ? '#333333' : '#FFFFFF');
+                                return (
+                                    <Text
+                                        visible={areLabelsVisible}
+                                        position={[bottomPos.x, bottomPos.y - 0.05, 0]}
+                                        fontSize={2.0}
+                                        color={labelColor}
+                                        anchorX="center"
+                                        anchorY="top"
+                                        fontWeight="bold"
+                                        outlineWidth={0.05} // Added outline to subLabel for consistency if needed, strictly requested for Pitch but let's see
+                                        outlineColor={note.outlineColor || (note.position === 'bottom' ? '#CCCCCC' : '#000000')}
+                                    >
+                                        {displayText}
+                                    </Text>
+                                );
+                            })()}
+                        </>
+                    );
+                })()}
+            </group>
+
+            {/* Markers - White */}
+
+
+        </group >
+    );
+});
 
 const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
     notes,
@@ -267,8 +730,7 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
     harmonicSettings, // Optional Override
     onIsRecordingChange,
     cameraZoom, // Destructure new prop
-    isAutoPlay = false,
-    demoActiveNoteId: externalDemoNoteId // Destructure external demo control
+    hideTouchText = false // Default to false (Show text)
 }, ref) => {
     const pathname = usePathname();
     // ScaleInfoPanel은 /digipan-3d-test 경로에서만 표시
@@ -280,7 +742,6 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
     const [isInfoExpanded, setIsInfoExpanded] = useState(!forceCompactView);
     const [isSelectorOpen, setIsSelectorOpen] = useState(false);
     const [demoNoteId, setDemoNoteId] = useState<number | null>(null);
-    const activeHighlightId = externalDemoNoteId ?? demoNoteId; // Prefer external if present, else internal
     const [isPlaying, setIsPlaying] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [drumTimer, setDrumTimer] = useState<number | null>(null);
@@ -297,7 +758,7 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
     // We can try to query it or use gl.domElement if we had access here (we don't outer ref).
     // Alternative: Use a ref on the Canvas? R3F forwards refs to the canvas element since v8?
     // Let's rely on querying the canvas from the container for now as a robust fallback.
-    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null!);
 
     // Workaround: Capture the canvas reference once mounted
     useEffect(() => {
@@ -386,7 +847,7 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
     }, []);
 
     const { isRecording, startRecording, stopRecording } = useDigipanRecorder({
-        canvasRef: canvasRef as React.RefObject<HTMLCanvasElement>,
+        canvasRef,
         getAudioContext,
         getMasterGain,
         onRecordingComplete: handleRecordingComplete
@@ -454,9 +915,7 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
 
     const [isIdle, setIsIdle] = useState(true); // Default to True
     const [showIdleBoat, setShowIdleBoat] = useState(false); // Default to OFF for DigiBall
-    // Default showTouchText to true unless isAutoPlay is active
-    const [showTouchText, setShowTouchText] = useState(!isAutoPlay);
-
+    const [showTouchText, setShowTouchText] = useState(false); // New State for Touch Text - 현재 숨김 처리
     const lastInteractionTime = useRef(Date.now() - 6000); // Allow immediate idle
     const IDLE_TIMEOUT = 5000; // 5 seconds
     const idleCheckInterval = useRef<NodeJS.Timeout | null>(null);
@@ -573,9 +1032,9 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
 
             notes.forEach(targetNote => {
                 if (targetNote.id === sourceNote.id) return;
-                if (!targetNote.frequency || !sourceNote.frequency) return;
+                if (!targetNote.frequency) return;
 
-                const ratio = targetNote.frequency / sourceNote.frequency;
+                const ratio = targetNote.frequency! / sourceNote.frequency!;
                 const tolerance = 0.03;
 
                 // Octave (x2, x4)
@@ -712,7 +1171,7 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
         // This handles both cases:
         // - Type 1 (D Kurd 12): Ding is lowest, starts from Ding
         // - Type 2 (E Equinox 12): Bottom notes are lower than Ding, starts from bottom
-        const sortedNotes = [...notes].filter(n => n.frequency).sort((a, b) => (a.frequency || 0) - (b.frequency || 0));
+        const sortedNotes = [...notes].sort((a, b) => (a.frequency || 0) - (b.frequency || 0));
 
         // The LOWEST frequency note gets the root emphasis (not necessarily Ding)
         const lowestNoteId = sortedNotes.length > 0 ? sortedNotes[0].id : -1;
@@ -830,7 +1289,26 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
             setViewMode(prev => (prev + 1) % 5 as 0 | 1 | 2 | 3 | 4);
         },
         toggleIdleBoat: () => setShowIdleBoat(prev => !prev),
-        toggleTouchText: () => setShowTouchText(prev => !prev)
+        toggleTouchText: () => setShowTouchText(prev => !prev),
+        triggerNote: (noteId: number) => {
+            // Visual feedback
+            setDemoNoteId(noteId);
+            setTimeout(() => setDemoNoteId(null), 150);
+
+            // Audio feedback (if not handled by parent scheduling, but usually Digipan handles audio)
+            // Ideally parent schedules audio via Tone.js directly for precision?
+            // The requirement says: "visualized in the center... automatically played"
+            // If we use Digipan's audio, we leverage its preloaded samples.
+            // Let's find the note label.
+            const note = notes.find(n => n.id === noteId);
+            if (note && playNote) {
+                playNote(note.label);
+            }
+            // Trigger pulses
+            // We need to access the child ToneFieldMesh trigger? 
+            // ToneFieldMesh listens to `demoActive` prop (demoNoteId === note.id).
+            // So setting demoNoteId will trigger the effect in ToneFieldMesh!
+        }
     }));
 
     return (
@@ -853,10 +1331,9 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
                 </>
             )}
 
-            {/* Home Screen Only: Top-Right - 피치/번호, 자동재생, 캐슬링(세로: 녹화) */}
-            {/* AutoPlay Only: Hide ALL Buttons */}
-            {!isDevPage && !isAutoPlay && (
-                <div className={`absolute ${isMobileButtonLayout ? 'top-2' : 'top-4'} right-4 z-50 flex flex-row items-start gap-2`}>
+            {/* Home Screen Only: Top-Right - 피치/번호, 자동재생, 녹화, 캐슬링 (가로 한줄) - 현재 숨김 처리 (hidden) */}
+            {!isDevPage && (
+                <div className={`hidden absolute ${isMobileButtonLayout ? 'top-2' : 'top-4'} right-4 z-50 flex flex-row items-center gap-2`}>
                     {/* 1. View Mode Toggle (피치/순서 표시/숨김) */}
                     <button
                         onClick={() => {
@@ -884,30 +1361,28 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
                         />
                     </button>
 
-                    {/* 3. 캐슬링 버튼과 녹화 버튼 (세로 배열) */}
-                    <div className="flex flex-col gap-2">
-                        {/* 캐슬링 버튼 */}
-                        <button
-                            onClick={toggleDrum}
-                            className={`${btnMobile} relative ${isJamPlaying ? 'animate-heartbeat' : ''}`}
-                            style={{ color: '#0066FF' }}
-                            title={isJamPlaying ? "Castling 중지" : "Castling 시작"}
-                        >
-                            <span className="text-3xl font-black leading-none relative z-10">C</span>
-                        </button>
-                        {/* 녹화 버튼 */}
-                        <button
-                            onClick={handleRecordToggle}
-                            className={`${btnMobile} text-red-600 ${isRecording ? 'animate-pulse ring-2 ring-red-100 border-red-400' : ''}`}
-                            title={isRecording ? "Stop Recording" : "Start Recording"}
-                        >
-                            {isRecording ? (
-                                <Square size={16} fill="currentColor" />
-                            ) : (
-                                <Disc size={16} fill="currentColor" />
-                            )}
-                        </button>
-                    </div>
+                    {/* 3. 녹화 버튼 */}
+                    <button
+                        onClick={handleRecordToggle}
+                        className={`${btnMobile} text-red-600 ${isRecording ? 'animate-pulse ring-2 ring-red-100 border-red-400' : ''}`}
+                        title={isRecording ? "Stop Recording" : "Start Recording"}
+                    >
+                        {isRecording ? (
+                            <Square size={16} fill="currentColor" />
+                        ) : (
+                            <Disc size={16} fill="currentColor" />
+                        )}
+                    </button>
+
+                    {/* 4. 캐슬링 버튼 */}
+                    <button
+                        onClick={toggleDrum}
+                        className={`${btnMobile} relative ${isJamPlaying ? 'animate-heartbeat' : ''}`}
+                        style={{ color: '#0066FF' }}
+                        title={isJamPlaying ? "Castling 중지" : "Castling 시작"}
+                    >
+                        <span className="text-3xl font-black leading-none relative z-10">C</span>
+                    </button>
                 </div>
             )}
 
@@ -942,13 +1417,16 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
                 <group>
                     {/* CyberBoat (Tech Sailboat) - always mounted, handles its own vis/anim */}
                     {/* Pass combined idle state: Only true if system is idle AND user wants to show it */}
-                    <CyberBoat isIdle={isIdle && showIdleBoat} />
-                    <TouchText
-                        isIdle={isIdle && !isJamPlaying && showTouchText && !isAutoPlay} // Hide in AutoPlay
-                        suppressExplosion={false}
-                        overrideText={introCountdown}
-                        interactionTrigger={interactionCount}
-                    />
+                    {/* CyberBoat removed */}
+                    {/* Touch Text - Hidden on Home Screen if ViewMode is 2 (Labels Visible) to avoid obscuring pitch info */}
+                    {!hideTouchText && (
+                        <TouchText
+                            isIdle={isIdle && !isJamPlaying && showTouchText}
+                            suppressExplosion={false}
+                            overrideText={introCountdown}
+                            interactionTrigger={interactionCount}
+                        />
+                    )}
                     <Suspense fallback={null}>
                         {backgroundContent ? backgroundContent : <HandpanImage backgroundImage={backgroundImage} centerX={centerX} centerY={centerY} />}
                     </Suspense>
@@ -1041,9 +1519,9 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
                             centerY={centerY}
                             onClick={handleToneFieldClick}
                             viewMode={viewMode}
-                            demoActive={activeHighlightId === note.id}
+                            demoActive={demoNoteId === note.id}
                             playNote={playNote}
-                            offset={note.offset || tonefieldOffset} // Prefer note offset, fallback to global
+                            offset={Array.isArray(note.offset) ? note.offset : typeof note.offset === 'number' ? [0, 0, note.offset] : tonefieldOffset}
                         />
                     ))}
                 </group>
@@ -1052,17 +1530,7 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
 
 
             {/* Scale Info Panel - Bottom Right Overlay (only shown in /digipan-3d-test dev page) */}
-            {/* {isDevPage && scale && !forceCompactView && showInfoPanel && (
-                <ScaleInfoPanel
-                    scale={scale}
-                    onScaleSelect={onScaleSelect}
-                    noteCountFilter={noteCountFilter} // Still passed, but overridden by showAllScales
-                    className="" // Managed by DraggablePanel
-                    isMobileButtonLayout={isMobileButtonLayout}
-                    defaultExpanded={true}
-                    showAllScales={true} // Forcing Global List Logic
-                />
-            )} */}
+            {/* ScaleInfoPanel removed */}
 
             {/* Recording Finished Overlay - Only show if NOT mobile (Mobile auto-saves) */}
             {currentBlob && !isMobileButtonLayout && (

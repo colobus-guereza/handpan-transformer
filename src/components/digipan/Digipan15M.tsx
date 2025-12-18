@@ -2,13 +2,13 @@
 
 import React, { useMemo } from 'react';
 import Digipan3D, { svgTo3D, getTonefieldDimensions, Digipan3DHandle } from './Digipan3D';
-import { Scale } from '../../data/handpanScales';
-import { getNoteFrequency } from '../../constants/noteFrequencies';
-import { DIGIPAN_VIEW_CONFIG } from '../../constants/digipanViewConfig';
+import { Scale } from '@/data/handpanScales';
+import { getNoteFrequency } from '@/constants/noteFrequencies';
+import { DIGIPAN_VIEW_CONFIG } from '@/constants/digipanViewConfig';
 import * as THREE from 'three';
 import { VisualTonefield } from './VisualTonefield';
 import { useTexture } from '@react-three/drei';
-import { HANDPAN_CONFIG } from '../../constants/handpanConfig';
+import { HANDPAN_CONFIG } from '@/constants/handpanConfig';
 
 interface Digipan15MProps {
     scale?: Scale | null;
@@ -29,12 +29,13 @@ interface Digipan15MProps {
     notes?: any[]; // Allow passing notes for editor mode override
     showAxes?: boolean;
     onIsRecordingChange?: (isRecording: boolean) => void;
+    hideTouchText?: boolean;
 }
 
 // Composite Background Component for Digipan 15M (Mutant image + 4 visual tonefields)
 const Digipan15MBackground = ({ centerX = 500, centerY = 500, visualNotes = [], viewMode }: { centerX?: number; centerY?: number; visualNotes?: any[]; viewMode?: number }) => {
     // Load texture (Using 12notes_mutant.png) - Same as 14M for now
-    const tex1 = useTexture('/images/12notes_mutant.png');
+    const tex1 = useTexture('/images/digipan/12notes_mutant.png');
 
     const size = HANDPAN_CONFIG.OUTER_RADIUS * 2; // 57cm
 
@@ -107,7 +108,8 @@ const Digipan15M = React.forwardRef<Digipan3DHandle, Digipan15MProps>(({
     forceCompactView = false,
     notes: externalNotes,
     showAxes = false,
-    onIsRecordingChange
+    onIsRecordingChange,
+    hideTouchText = false
 }, ref) => {
 
     // 15-Note Base Coordinates (Cloned from Digipan14M)
@@ -330,6 +332,7 @@ const Digipan15M = React.forwardRef<Digipan3DHandle, Digipan15MProps>(({
             ref={ref}
             scale={scale}
             onIsRecordingChange={onIsRecordingChange}
+            hideTouchText={hideTouchText}
             notes={notesToRender.length > 0 ? notesToRender : baseNotes15.map(n => ({ ...n, label: '', frequency: 440, visualFrequency: 440, offset: [0, 0, 0] as [number, number, number] }))}
             onNoteClick={onNoteClick}
             isCameraLocked={isCameraLocked}

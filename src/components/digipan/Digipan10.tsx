@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import Digipan3D, { svgTo3D, getTonefieldDimensions, Digipan3DHandle } from './Digipan3D';
-import { Scale } from '../../data/handpanScales';
-import { getNoteFrequency } from '../../constants/noteFrequencies';
-import { DIGIPAN_VIEW_CONFIG } from '../../constants/digipanViewConfig';
+import Digipan3D from './Digipan3D';
+import { Scale } from '@/data/handpanScales';
+import { getNoteFrequency } from '@/constants/noteFrequencies';
+import { DIGIPAN_VIEW_CONFIG } from '@/constants/digipanViewConfig';
 
+import { Digipan3DHandle } from './Digipan3D';
 
 interface Digipan10Props {
     scale?: Scale | null;
@@ -26,12 +27,7 @@ interface Digipan10Props {
     notes?: any[]; // Allow passing notes for editor mode override
     showAxes?: boolean;
     onIsRecordingChange?: (isRecording: boolean) => void;
-    // AutoPlayer Props
-    isAutoPlay?: boolean;
-    demoActiveNoteId?: number | null;
-    backgroundImage?: string | null;
-    centerX?: number;
-    centerY?: number;
+    hideTouchText?: boolean;
 }
 
 const Digipan10 = React.forwardRef<Digipan3DHandle, Digipan10Props>(({
@@ -53,11 +49,7 @@ const Digipan10 = React.forwardRef<Digipan3DHandle, Digipan10Props>(({
     notes: externalNotes,
     showAxes = false,
     onIsRecordingChange,
-    isAutoPlay = false,
-    demoActiveNoteId,
-    backgroundImage,
-    centerX = 500,
-    centerY = 500
+    hideTouchText = false
 }, ref) => {
 
     // 10-Note Specific Layout (Coordinates for 10notes.png)
@@ -251,17 +243,11 @@ const Digipan10 = React.forwardRef<Digipan3DHandle, Digipan10Props>(({
             isCameraLocked={isCameraLocked}
             onNoteClick={onNoteClick}
             onScaleSelect={onScaleSelect}
-            centerX={centerX}
-            centerY={centerY}
-            backgroundImage={backgroundImage || "/images/10notes.png"}
-
-            // AutoPlay Support
-            isAutoPlay={isAutoPlay}
-            showControls={showControls && !isAutoPlay}
-            showInfoPanel={showInfoPanel && !isAutoPlay}
-
+            backgroundImage="/images/digipan/10notes.png" // Fixed Background for Digipan10
             extraControls={extraControls}
             noteCountFilter={10}
+            showControls={showControls}
+            showInfoPanel={showInfoPanel}
             initialViewMode={initialViewMode}
             viewMode={viewMode}
             onViewModeChange={onViewModeChange}
@@ -271,10 +257,10 @@ const Digipan10 = React.forwardRef<Digipan3DHandle, Digipan10Props>(({
             forceCompactView={forceCompactView}
             showAxes={showAxes}
             onIsRecordingChange={onIsRecordingChange}
+            hideTouchText={hideTouchText}
             sceneSize={forceCompactView ? { width: 66, height: 50 } : { width: 64, height: 60 }}
             cameraZoom={DIGIPAN_VIEW_CONFIG['10'].zoom}
             cameraTargetY={DIGIPAN_VIEW_CONFIG['10'].targetY}
-            demoActiveNoteId={demoActiveNoteId}
         />
     );
 });

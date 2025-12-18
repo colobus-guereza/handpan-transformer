@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import * as Tone from 'tone';
-import { calculateChordProgression, ChordSet } from '../lib/ChordCalculator';
+import { calculateChordProgression, ChordSet } from '@/utils/ChordCalculator';
 
 interface JamSessionProps {
     bpm?: number;

@@ -1,12 +1,12 @@
 import React, { useMemo } from 'react';
 import Digipan3D from './Digipan3D';
-import { Scale } from '../../data/handpanScales';
-import { getNoteFrequency } from '../../constants/noteFrequencies';
-import { DIGIPAN_VIEW_CONFIG } from '../../constants/digipanViewConfig';
+import { Scale } from '@/data/handpanScales';
+import { getNoteFrequency } from '@/constants/noteFrequencies';
+import { DIGIPAN_VIEW_CONFIG } from '@/constants/digipanViewConfig';
 
 import { Digipan3DHandle } from './Digipan3D';
 import { useControls, folder } from 'leva';
-import { DigipanHarmonicConfig } from '../../constants/harmonicDefaults';
+import { DigipanHarmonicConfig } from '@/constants/harmonicDefaults';
 
 export interface DigipanDMProps {
     scale?: Scale | null;
@@ -27,12 +27,6 @@ export interface DigipanDMProps {
     forceCompactView?: boolean;
     showAxes?: boolean;
     onIsRecordingChange?: (isRecording: boolean) => void;
-    // AutoPlayer Props
-    isAutoPlay?: boolean;
-    demoActiveNoteId?: number | null;
-    backgroundImage?: string | null;
-    centerX?: number;
-    centerY?: number;
 }
 
 const DigipanDM = React.forwardRef<Digipan3DHandle, DigipanDMProps>(({
@@ -52,12 +46,7 @@ const DigipanDM = React.forwardRef<Digipan3DHandle, DigipanDMProps>(({
     showLabelToggle = false,
     forceCompactView = false,
     showAxes = false,
-    onIsRecordingChange,
-    isAutoPlay = false,
-    demoActiveNoteId,
-    backgroundImage,
-    centerX = 500,
-    centerY = 500
+    onIsRecordingChange
 }, ref) => {
 
     // 1. Digital Harmonics Engine is now in Digipan3D
@@ -150,6 +139,7 @@ const DigipanDM = React.forwardRef<Digipan3DHandle, DigipanDMProps>(({
     // Use external notes if provided (Editor Mode), otherwise use internal default (Standard Component)
     const notesToRender = externalNotes || internalNotes;
 
+
     // 3. Resonance Logic Wrapper
     // DEPRECATED: Logic moved to Digipan3D. 
     // We only need to pass the clicked ID through.
@@ -185,20 +175,12 @@ const DigipanDM = React.forwardRef<Digipan3DHandle, DigipanDMProps>(({
             isCameraLocked={isCameraLocked}
             onNoteClick={handleNoteClick}
             onScaleSelect={onScaleSelect}
-            centerX={centerX}
-            centerY={centerY}
-            backgroundImage={backgroundImage || "/images/10notes.png"}
-
-            // AutoPlay Support
-            isAutoPlay={isAutoPlay}
-            demoActiveNoteId={demoActiveNoteId}
-            showControls={showControls && !isAutoPlay}
-            showInfoPanel={showInfoPanel && !isAutoPlay}
-
+            backgroundImage="/images/digipan/10notes.png"
             harmonicSettings={harmonicSettings} // Pass Controlled Settings
             extraControls={extraControls}
             noteCountFilter={10}
-
+            showControls={showControls}
+            showInfoPanel={showInfoPanel}
             initialViewMode={initialViewMode}
             viewMode={viewMode}
             onViewModeChange={onViewModeChange}

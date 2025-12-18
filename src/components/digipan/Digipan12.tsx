@@ -2,13 +2,13 @@
 
 import React, { useMemo } from 'react';
 import Digipan3D, { svgTo3D, getTonefieldDimensions, Digipan3DHandle } from './Digipan3D';
-import { Scale } from '../../data/handpanScales';
-import { getNoteFrequency } from '../../constants/noteFrequencies';
-import { DIGIPAN_VIEW_CONFIG } from '../../constants/digipanViewConfig';
+import { Scale } from '@/data/handpanScales';
+import { getNoteFrequency } from '@/constants/noteFrequencies';
+import { DIGIPAN_VIEW_CONFIG } from '@/constants/digipanViewConfig';
 import * as THREE from 'three';
 import { VisualTonefield } from './VisualTonefield';
 import { useTexture } from '@react-three/drei';
-import { HANDPAN_CONFIG } from '../../constants/handpanConfig';
+import { HANDPAN_CONFIG } from '@/constants/handpanConfig';
 
 interface Digipan12Props {
     scale?: Scale | null;
@@ -29,12 +29,13 @@ interface Digipan12Props {
     notes?: any[]; // Allow passing notes for editor mode override
     showAxes?: boolean;
     onIsRecordingChange?: (isRecording: boolean) => void;
+    hideTouchText?: boolean;
 }
 
 // Composite Background Component for Digipan 12 (10 notes image + 2 visual tonefields)
 const Digipan12Background = ({ centerX = 500, centerY = 500, visualNotes = [], viewMode }: { centerX?: number; centerY?: number; visualNotes?: any[]; viewMode?: number }) => {
     // Load texture (Using 10notes.png as base)
-    const tex1 = useTexture('/images/10notes.png');
+    const tex1 = useTexture('/images/digipan/10notes.png');
 
     const size = HANDPAN_CONFIG.OUTER_RADIUS * 2; // 57cm
 
@@ -110,7 +111,8 @@ const Digipan12 = React.forwardRef<Digipan3DHandle, Digipan12Props>(({
     forceCompactView = false,
     notes: externalNotes,
     showAxes = false,
-    onIsRecordingChange
+    onIsRecordingChange,
+    hideTouchText = false
 }, ref) => {
 
     // 10-Note Base Coordinates (from Digipan10.tsx)
@@ -231,6 +233,8 @@ const Digipan12 = React.forwardRef<Digipan3DHandle, Digipan12Props>(({
             forceCompactView={forceCompactView}
             hideStaticLabels={true}
             showAxes={showAxes}
+            onIsRecordingChange={onIsRecordingChange}
+            hideTouchText={hideTouchText}
             sceneSize={forceCompactView ? { width: 66, height: 50 } : { width: 64, height: 60 }}
             cameraZoom={DIGIPAN_VIEW_CONFIG['12'].zoom}
             cameraTargetY={DIGIPAN_VIEW_CONFIG['12'].targetY}

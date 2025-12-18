@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import Digipan3D from './Digipan3D';
-import { Scale } from '../../data/handpanScales';
-import { getNoteFrequency } from '../../constants/noteFrequencies';
-import { DIGIPAN_VIEW_CONFIG } from '../../constants/digipanViewConfig';
+import { Scale } from '@/data/handpanScales';
+import { getNoteFrequency } from '@/constants/noteFrequencies';
+import { DIGIPAN_VIEW_CONFIG } from '@/constants/digipanViewConfig';
 
 import { Digipan3DHandle } from './Digipan3D';
 
@@ -25,12 +25,7 @@ export interface Digipan9Props {
     forceCompactView?: boolean;
     showAxes?: boolean;
     onIsRecordingChange?: (isRecording: boolean) => void;
-    // AutoPlayer Props
-    isAutoPlay?: boolean;
-    demoActiveNoteId?: number | null;
-    backgroundImage?: string | null;
-    centerX?: number;
-    centerY?: number;
+    hideTouchText?: boolean;
 }
 
 const Digipan9 = React.forwardRef<Digipan3DHandle, Digipan9Props>(({
@@ -51,11 +46,7 @@ const Digipan9 = React.forwardRef<Digipan3DHandle, Digipan9Props>(({
     forceCompactView = false,
     showAxes = false,
     onIsRecordingChange,
-    isAutoPlay = false,
-    demoActiveNoteId,
-    backgroundImage,
-    centerX = 500,
-    centerY = 500
+    hideTouchText = false
 }, ref) => {
 
     // Internal Note Generation (Standard 9-Note D Kurd Layout)
@@ -132,17 +123,11 @@ const Digipan9 = React.forwardRef<Digipan3DHandle, Digipan9Props>(({
             isCameraLocked={isCameraLocked}
             onNoteClick={onNoteClick}
             onScaleSelect={onScaleSelect}
-            centerX={centerX}
-            centerY={centerY}
-            backgroundImage={backgroundImage || "/images/9notes.png"}
+            backgroundImage="/images/digipan/9notes.png"
             extraControls={extraControls}
             noteCountFilter={9}
-
-            // AutoPlay Support
-            isAutoPlay={isAutoPlay}
-            showControls={showControls && !isAutoPlay}
-            showInfoPanel={showInfoPanel && !isAutoPlay}
-
+            showControls={showControls}
+            showInfoPanel={showInfoPanel}
             initialViewMode={initialViewMode}
             viewMode={viewMode}
             onViewModeChange={onViewModeChange}
@@ -152,6 +137,7 @@ const Digipan9 = React.forwardRef<Digipan3DHandle, Digipan9Props>(({
             forceCompactView={forceCompactView}
             showAxes={showAxes}
             onIsRecordingChange={onIsRecordingChange}
+            hideTouchText={hideTouchText}
             sceneSize={forceCompactView ? { width: 66, height: 50 } : { width: 64, height: 60 }}
             cameraZoom={DIGIPAN_VIEW_CONFIG['9'].zoom}
             cameraTargetY={DIGIPAN_VIEW_CONFIG['9'].targetY}

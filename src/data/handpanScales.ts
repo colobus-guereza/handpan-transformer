@@ -4,26 +4,29 @@ export interface LocalizedContent {
     description?: string;
     tags?: string[];
 }
-// NoteData Interface
+
 export interface NoteData {
     id: number;
-    label: string;
+    label: string; // e.g., "C4", "Ding"
     frequency?: number;
     visualFrequency?: number;
     subLabel?: string;
     cx?: number;
     cy?: number;
-    rx?: number; // Override general X Radius
-    ry?: number; // Override general Y Radius
-    scaleX?: number; // Multiplier for Radius X
-    scaleY?: number; // Multiplier for Radius Y
-    rotate?: number; // Rotation in Degrees
-    position?: 'top' | 'bottom' | 'center';
+    scale?: number;
+    rotate?: number;
+    scaleX?: number;
+    scaleY?: number;
+    labelX?: number;
+    labelY?: number;
+    labelOffset?: number;
+    offset?: number | [number, number, number];
+    position?: string; // Used for some layout logic?
+    hideGuide?: boolean;
     textColor?: string;
     outlineColor?: string;
-    hideGuide?: boolean; // Hide bottom guide dot
-    offset?: [number, number, number]; // 3D position offset
 }
+
 export interface Scale {
     id: string;
     name: string;

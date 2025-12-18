@@ -1,22 +1,57 @@
 "use client";
 
-import React, { useState } from 'react';
-// import { Canvas } from '@react-three/fiber'; // Removed: Digipan3D implements its own Canvas
-// import { OrbitControls, Sphere } from '@react-three/drei';
+import React, { useState, Suspense, useMemo, use } from 'react';
+import dynamic from 'next/dynamic';
 import { parseMidi, findBestMatchScale } from '@/lib/midiUtils';
 import { useMidiStore, TrackRole } from '@/store/useMidiStore';
-import DigiPanModel from '@/components/DigiPanModel';
-import * as Tone from 'tone';
+import { SCALES } from '@/data/handpanScales';
+import { Language } from '@/constants/translations';
 
-export default function DevDashboard() {
+const MiniDigiPan = dynamic(() => import('@/components/digipan/MiniDigiPan'), {
+    ssr: false,
+    loading: () => <div className="flex items-center justify-center w-full h-full text-neutral-500">Loading 3D Model...</div>
+});
+
+
+import ScaleSelection from '@/components/dev/ScaleSelection';
+export default function DevDashboard(props: { params: Promise<any> }) {
+    const params = use(props.params); // Unwrap params to satisfy Next.js 15 requirement
     const [logs, setLogs] = useState<string[]>([]);
+    const [manualScaleId, setManualScaleId] = useState<string | null>(null);
+
+
 
     // Zustand Store
     const { midiData, setMidiData, updateTrackRole, matchingAlgorithm, setMatchingAlgorithm } = useMidiStore();
 
+    // Determine Target Scale (Default to D Asha 9 if no MIDI or no match)
+    // The previous code had 'd_kurd_10' as default. The user specifically asked for 'D Asha 9'.
+    // We map the suggestedScale ID to the Scale object.
+    const targetScale = useMemo(() => {
+        // Priority 1: Manual Selection
+        if (manualScaleId) {
+            const found = SCALES.find(s => s.id === manualScaleId);
+            if (found) return found;
+        }
+
+        const targetId = midiData?.suggestedScale || 'd_asha_9';
+        // Try finding by ID first
+        let found = SCALES.find(s => s.id === targetId);
+        // Fallback to name search if needed (e.g. if ID schema differs)
+        if (!found) found = SCALES.find(s => s.name === "D Asha 9");
+        // Fallback to first scale
+        if (!found) found = SCALES[0];
+        return found;
+    }, [midiData?.suggestedScale, manualScaleId]);
+
+    const language: Language = 'ko'; // Default to Korean
+
     const addLog = (msg: string) => {
         setLogs(prev => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...prev]);
     };
+
+    const digiPanRef = React.useRef<any>(null); // Use any for dynamic component ref
+
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -48,11 +83,11 @@ export default function DevDashboard() {
             {/* LEFT: Input & Control */}
             <div className="w-1/3 min-w-[350px] border-r border-neutral-700 p-4 flex flex-col gap-6 overflow-y-auto">
                 <div>
-                    <h2 className="text-xl font-bold mb-4 text-emerald-400">1. Input & Control</h2>
+                    <h2 className="text-xl font-bold mb-4 text-emerald-400">1. 입력 및 제어</h2>
                     <div className="bg-neutral-800 p-4 rounded-lg border border-neutral-700 space-y-4">
                         {/* Mode Toggle */}
                         <div>
-                            <label className="block mb-2 text-sm text-neutral-400">Matching Mode</label>
+                            <label className="block mb-2 text-sm text-neutral-400">매칭 모드 (Matching Mode)</label>
                             <div className="flex bg-neutral-900 p-1 rounded-lg border border-neutral-700 relative">
                                 <button
                                     onClick={() => {
@@ -91,7 +126,7 @@ export default function DevDashboard() {
                         </div>
 
                         <div>
-                            <label className="block mb-2 text-sm text-neutral-400">Upload MIDI File (.mid)</label>
+                            <label className="block mb-2 text-sm text-neutral-400">MIDI 파일 업로드 (.mid)</label>
                             <input
                                 type="file"
                                 accept=".mid"
@@ -102,45 +137,24 @@ export default function DevDashboard() {
 
                         <div className="border-t border-neutral-700 pt-4 space-y-4">
 
-                            <button
-                                onClick={() => {
-                                    setMidiData({
-                                        midiName: "Demo Song (D Kurd 10)",
-                                        bpm: 120,
-                                        duration: 60,
-                                        tracks: [],
-                                        suggestedScale: "d_kurd_10"
-                                    });
-                                    addLog("[Demo] Loaded fake MIDI data with D Kurd 10 scale");
-                                }}
-                                className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-semibold transition-colors"
-                            >
-                                Load Demo (D Kurd 10)
-                            </button>
-
-                            <button
-                                onClick={async () => {
-                                    try {
-                                        await Tone.start();
-                                        addLog("[Audio] AudioContext started successfully");
-                                        console.log('Audio Context Started');
-                                    } catch (err) {
-                                        addLog(`[Audio] Error starting AudioContext: ${err}`);
-                                        console.error('Audio Context Error:', err);
-                                    }
-                                }}
-                                className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-sm font-semibold transition-colors"
-                            >
-                                Start Audio
-                            </button>
+                            {/* Audio Start Button Removed per user request (Auto-start on interaction) */}
                         </div>
                     </div>
+
+                    {/* Scale Selection */}
+                    <ScaleSelection
+                        currentScaleId={targetScale.id}
+                        onScaleSelect={(id) => {
+                            setManualScaleId(id);
+                            addLog(`[Manual] Scale selected: ${id}`);
+                        }}
+                    />
                 </div>
 
                 {midiData && (
                     <div className="bg-neutral-800 p-4 rounded-lg border border-neutral-700">
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="font-bold text-lg">Track List ({midiData.tracks.length})</h3>
+                            <h3 className="font-bold text-lg">트랙 목록 (Track List)</h3>
                             <span className="text-xs text-neutral-500">{midiData.bpm.toFixed(0)} BPM</span>
                         </div>
 
@@ -185,27 +199,27 @@ export default function DevDashboard() {
             </div>
 
             {/* CENTER: Visual Stage */}
-            <div className="flex-1 bg-black relative flex flex-col">
-                <div className="absolute top-4 left-4 z-10 bg-black/50 p-2 rounded text-emerald-400">
-                    <h2 className="text-xl font-bold">2. Visual Stage (R3F)</h2>
-                </div>
-                <div className="w-full h-full bg-neutral-900 border-l border-r border-neutral-700 relative">
-                    {/* 
-                      Fix: Digipan3D (inside DigiPanModel) brings its own <Canvas>. 
-                      We must NOT wrap it in another <Canvas>.
-                    */}
-                    {/* 
-                      Fix: Always render DigiPanModel to show the Visual Stage (white bg + axes) immediately.
-                      Pass a default scaleId if none exists.
-                    */}
-                    <DigiPanModel scaleId={midiData?.suggestedScale || 'd_kurd_10'} isAutoPlay={true} />
+            <div className="flex-1 bg-black relative flex flex-col transition-all">
+
+                {/* BOTTOM: Visual Stage (DigiPan) */}
+                <div className="flex-1 w-full bg-neutral-900 border-l border-r border-neutral-700 relative min-h-0 group">
+                    {/* Render MiniDigiPan with the determined scale */}
+                    <Suspense fallback={<div className="flex items-center justify-center h-full text-emerald-500">3D 환경 초기화 중...</div>}>
+                        {targetScale && (
+                            <MiniDigiPan
+                                ref={digiPanRef}
+                                scale={targetScale}
+                                language={language}
+                            // Pass other props if MiniDigiPan accepts them (e.g. for interaction logging)
+                            />
+                        )}
+                    </Suspense>
                 </div>
             </div>
 
             {/* RIGHT: Data Log */}
             <div className="w-1/4 min-w-[300px] border-l border-neutral-700 p-4 flex flex-col bg-neutral-900">
-
-                <h2 className="text-xl font-bold mb-4 text-emerald-400">3. Data Log</h2>
+                <h2 className="text-xl font-bold mb-4 text-emerald-400">3. 데이터 로그</h2>
 
                 {/* Analysis Card - Algorithm Transparency */}
                 {midiData?.matchResult && (
@@ -288,7 +302,7 @@ export default function DevDashboard() {
 
 
                 <div className="flex-1 bg-neutral-950 rounded-lg p-2 font-mono text-xs text-green-500 overflow-y-auto border border-neutral-800 font-light mb-4 max-h-[40vh]">
-                    {logs.length === 0 && <span className="text-neutral-600 italic">Waiting for events...</span>}
+                    {logs.length === 0 && <span className="text-neutral-600 italic">이벤트 대기 중...</span>}
                     {logs.map((log, i) => (
                         <div key={i} className="mb-1 border-b border-neutral-900 pb-1 break-words">{log}</div>
                     ))}
@@ -296,7 +310,7 @@ export default function DevDashboard() {
 
                 {midiData && (
                     <div className="flex-1 bg-neutral-800 rounded-lg p-2 overflow-auto border border-neutral-700">
-                        <h3 className="text-sm font-bold text-neutral-300 sticky top-0 bg-neutral-800 pb-2 border-b border-neutral-700 mb-2">Processed Song JSON</h3>
+                        <h3 className="text-sm font-bold text-neutral-300 sticky top-0 bg-neutral-800 pb-2 border-b border-neutral-700 mb-2">처리된 노래 데이터 (JSON)</h3>
                         <pre className="text-[10px] text-neutral-400 whitespace-pre-wrap">
                             {JSON.stringify(midiData, (key, value) => {
                                 // Truncate notes array for display performance
