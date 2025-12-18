@@ -1913,6 +1913,48 @@ export const SCALES: Scale[] = [
                 description: "Fa parte del \"triangolo del benessere\" (Pygmy, Aegean, Amara) ed è conosciuta anche come Celtic Minor. È diventata famosa grazie alle interpretazioni di Malte Marten e oggi occupa una posizione speciale nelle comunità di yoga, meditazione e healing in tutto il mondo. È anche la versione introduttiva molto amata della scala E Amara 18. Grazie alla sua risonanza misteriosa e spirituale, è profondamente apprezzata da chi cerca pace interiore, sia in Oriente che in Occidente."
             }
         }
+    },
+
+    // 29. F# Low Pygmy 12
+    {
+        id: "fs_low_pygmy_12",
+        name: "F# Low Pygmy 12",
+        nameEn: "F# Low Pygmy 12",
+        notes: {
+            ding: "F#3",
+            top: ["G#3", "A3", "C#4", "E4", "F#4", "G#4", "A4", "C#5", "E5"],
+            bottom: ["D3", "E3"]
+        },
+        vector: { minorMajor: -0.7, pureSpicy: 0.2, rarePopular: 0.7 },
+        tags: ["피그미", "저음", "몽환적", "치유", "12노트"],
+        tagsEn: ["Pygmy", "Deep Bass", "Dreamy", "Healing", "12 Notes"],
+        description: "깊고 풍성한 저음이 특징인 F# Low Pygmy 스케일의 12노트 버전입니다. 몽환적이고 신비로운 울림으로 내면의 평화와 치유를 선사하며, 확장된 음역대로 더욱 다채로운 연주가 가능합니다.",
+        descriptionEn: "A 12-note version of the F# Low Pygmy scale, characterized by deep and rich bass. Its dreamy and mysterious resonance offers inner peace and healing, while the extended range allows for more diverse performance.",
+        videoUrl: "https://youtu.be/pRuQQDSMUY0?si=9TJIit8W9P9VZnqi",
+        productUrl: "https://smartstore.naver.com/sndhandpan/products/12705260873",
+        ownUrl: "https://handpan.co.kr/shop/?idx=104",
+        ownUrlEn: "https://handpanen.imweb.me/21/?idx=104"
+    },
+
+    // 30. E Amara 18
+    {
+        id: "e_amara_18",
+        name: "E Amara 18",
+        nameEn: "E Amara 18",
+        notes: {
+            ding: "E3",
+            top: ["B3", "C4", "E4", "F#4", "G4", "A4", "B4", "C5", "E5", "F#5", "G5", "A5"],
+            bottom: ["C3", "D3", "G3", "A3", "D5"]
+        },
+        vector: { minorMajor: -0.6, pureSpicy: 0.8, rarePopular: 0.5 },
+        tags: ["아마라", "켈틱마이너", "18노트", "뮤턴트", "몬스터", "전문가용"],
+        tagsEn: ["Amara", "Celtic Minor", "18 Notes", "Mutant", "Monster", "Professional"],
+        description: "압도적인 18개 노트로 구성된 E Amara 스케일입니다. 켈틱 마이너의 신비로움에 광범위한 음역이 더해져, 솔로 연주만으로도 오케스트라와 같은 웅장하고 섬세한 표현이 가능한 전문가용 모델입니다.",
+        descriptionEn: "An E Amara scale consisting of an overwhelming 18 notes. Adding a wide range to the mystery of Celtic Minor, it is a professional model capable of magnificent and delicate expression like an orchestra with just a solo performance.",
+        videoUrl: "https://youtu.be/o42OZ6uhqDU?si=2QnyvwhFr0ETWlSc",
+        productUrl: "https://smartstore.naver.com/sndhandpan/products/12070371584",
+        ownUrl: "https://handpan.co.kr/shop/?idx=105",
+        ownUrlEn: "https://handpanen.imweb.me/21/?idx=105"
     }
 ];
 

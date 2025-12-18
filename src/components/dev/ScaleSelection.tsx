@@ -1,16 +1,27 @@
 import React, { useState } from 'react';
-import { SCALES } from '@/data/handpanScales';
+import { SCALES, Scale } from '@/data/handpanScales';
 
 interface ScaleSelectionProps {
     currentScaleId: string;
     onScaleSelect: (scaleId: string) => void;
+    language?: 'ko' | 'en';
 }
 
-export default function ScaleSelection({ currentScaleId, onScaleSelect }: ScaleSelectionProps) {
+export default function ScaleSelection({ currentScaleId, onScaleSelect, language = 'ko' }: ScaleSelectionProps) {
     const [isExpanded, setIsExpanded] = useState(false); // Default collapsed
 
     // Find the current scale object for display name
     const currentScale = SCALES.find(s => s.id === currentScaleId);
+
+    const getDescription = (scale: Scale) => {
+        if (language === 'en') return scale.descriptionEn || scale.description;
+        return scale.description;
+    };
+
+    const getTags = (scale: Scale) => {
+        if (language === 'en') return scale.tagsEn || scale.tags;
+        return scale.tags;
+    };
 
     return (
         <div className="bg-neutral-800 p-4 rounded-lg border border-neutral-700">
@@ -18,11 +29,8 @@ export default function ScaleSelection({ currentScaleId, onScaleSelect }: ScaleS
 
             <div className="mb-4 p-3 bg-neutral-900 rounded border border-neutral-800">
                 <div className="text-xs text-neutral-500 uppercase mb-1">Current Scale</div>
-                <div className="text-lg font-bold text-white">
-                    {currentScale ? currentScale.name : 'Unknown Scale'}
-                </div>
-                <div className="text-xs text-neutral-400 font-mono mt-1">
-                    ID: {currentScaleId}
+                <div className="text-lg font-bold text-white mb-2">
+                    {currentScale ? (language === 'en' ? currentScale.nameEn || currentScale.name : currentScale.name) : 'Unknown Scale'}
                 </div>
             </div>
 
@@ -50,7 +58,7 @@ export default function ScaleSelection({ currentScaleId, onScaleSelect }: ScaleS
                                     : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200 hover:border-neutral-600'
                                     }`}
                             >
-                                <div className="font-medium">{scale.name}</div>
+                                <div className="font-medium">{language === 'en' ? scale.nameEn || scale.name : scale.name}</div>
                             </div>
                         ))}
                     </div>

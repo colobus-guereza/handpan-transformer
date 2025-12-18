@@ -20,14 +20,23 @@ export interface MatchResult {
     scaleNotes: string[];
     transposition: number;
     score: number;
-    inputNotes: string[];
-    shiftedNotes: string[];
-    matchedNotes: string[];
-    missedNotes: string[];
+    inputNotes: string[]; // Original pitch classes
+    shiftedNotes: string[]; // Transposed pitch classes
+    matchedNotes: string[]; // Exact matches (Full Note Name e.g., "A4")
+    foldedNotes: string[]; // Octave folded matches (Full Note Name e.g., "A5" -> displayed as "A5→A4" in UI)
+    missedNotes: string[]; // No match
     originalKeyNotes: string[];
     noteCount?: number;
     rawScore?: number;
     originalKey?: string;
+
+    // Detailed Score Breakdown
+    details?: {
+        exactMatches: number;
+        foldedMatches: number;
+        transposePenalty: number;
+        keyBonus: number;
+    }
 }
 
 export interface ProcessedSong {

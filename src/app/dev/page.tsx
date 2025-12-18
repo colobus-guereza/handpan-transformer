@@ -2,7 +2,7 @@
 
 import React, { useState, Suspense, useMemo, use } from 'react';
 import dynamic from 'next/dynamic';
-import { parseMidi, findBestMatchScale } from '@/lib/midiUtils';
+import { parseMidi, findBestMatchScale, getScaleNotes } from '@/lib/midiUtils';
 import { useMidiStore, TrackRole } from '@/store/useMidiStore';
 import { SCALES } from '@/data/handpanScales';
 import { Language } from '@/constants/translations';
@@ -222,78 +222,109 @@ export default function DevDashboard(props: { params: Promise<any> }) {
                 <h2 className="text-xl font-bold mb-4 text-emerald-400">3. 데이터 로그</h2>
 
                 {/* Analysis Card - Algorithm Transparency */}
+                {/* Analysis Card - Algorithm Transparency */}
                 {midiData?.matchResult && (
-                    <div className="bg-neutral-800 p-4 rounded-lg border border-neutral-700 mb-4 shadow-lg">
-                        <div className="flex justify-between items-start mb-3 border-b border-neutral-700 pb-2">
-                            <div>
-                                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                    🏆 Winner: <span className="text-emerald-400">{midiData.matchResult.scaleName}</span>
-                                </h3>
-                                <div className="text-xs text-neutral-400 mt-1">
-                                    Transpose: <strong className="text-white">
-                                        {midiData.matchResult.transposition > 0 ? '+' : ''}{midiData.matchResult.transposition} Semitones
-                                    </strong>
-                                </div>
-                            </div>
-                            <div className="text-right">
-                                <div className="text-2xl font-bold text-emerald-500">
-                                    {Math.round(midiData.matchResult.score)}%
-                                </div>
-                                <div className="text-[10px] text-neutral-500 uppercase tracking-wider">Accuracy</div>
-                            </div>
-                        </div>
+                    <div className="bg-neutral-800 p-4 rounded-lg border border-neutral-700 mb-4 shadow-lg space-y-4">
 
-                        {/* Note Analysis Badges */}
-                        <div className="space-y-3 mb-4">
-                            <div>
-                                <div className="text-[10px] text-neutral-500 uppercase mb-1">Matched Notes (Hit)</div>
-                                <div className="flex flex-wrap gap-1">
-                                    {midiData.matchResult.matchedNotes.map((note, i) => (
-                                        <span key={i} className="px-2 py-0.5 bg-emerald-900/50 text-emerald-400 text-xs rounded border border-emerald-800">
-                                            {note}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {midiData.matchResult.missedNotes.length > 0 && (
-                                <div>
-                                    <div className="text-[10px] text-neutral-500 uppercase mb-1">Missed Notes (Dissonance)</div>
-                                    <div className="flex flex-wrap gap-1">
-                                        {midiData.matchResult.missedNotes.map((note, i) => (
-                                            <span key={i} className="px-2 py-0.5 bg-red-900/30 text-red-400 text-xs rounded border border-red-900/50 opacity-80">
-                                                {note}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Reasoning */}
-                        <div className="bg-neutral-900/50 p-3 rounded text-xs text-neutral-400 italic border border-neutral-800 space-y-2">
-                            {/* Original Key Info */}
-                            <div className="border-b border-neutral-800 pb-2 mb-2">
-                                <span className="block text-neutral-500 text-[10px] uppercase font-bold">Original Key Detection</span>
-                                <span className="text-emerald-300 font-bold text-sm">
+                        {/* 1. Original Key Analysis */}
+                        <div className="bg-neutral-900/50 p-3 rounded-lg border border-neutral-700/50">
+                            <h3 className="text-[10px] text-neutral-400 font-bold uppercase mb-2 flex justify-between items-center tracking-wider">
+                                <span>Original Key Analysis</span>
+                                <span className="bg-neutral-800 text-[9px] px-1.5 py-0.5 rounded text-neutral-500 border border-neutral-700" title="Based on Note Duration & Distribution">Krumhansl-Schmuckler</span>
+                            </h3>
+                            <div className="flex items-baseline gap-2 mb-2">
+                                <span className="text-xl font-bold text-white">
                                     {midiData.matchResult.originalKey || 'Unknown'}
                                 </span>
                             </div>
+                            {/* Theoretical Notes */}
+                            <div className="flex flex-wrap gap-1">
+                                {(() => {
+                                    const [root, type] = (midiData.matchResult.originalKey || '').split(' ');
+                                    if (!root || !type) return null;
+                                    const notes = getScaleNotes(root, type as 'Major' | 'Minor');
+                                    return notes.map((n, i) => (
+                                        <span key={i} className="text-[10px] text-neutral-500 bg-neutral-800 px-1.5 py-0.5 rounded border border-neutral-700/50 font-mono">
+                                            {n}
+                                        </span>
+                                    ));
+                                })()}
+                            </div>
+                        </div>
 
-                            {/* Transposition Logic */}
-                            {midiData.matchResult.transposition === 0 ? (
-                                midiData.matchResult.score >= 100 ? (
-                                    <div className="text-emerald-400">✨ 오리지널 키가 핸드팬 스케일과 완벽하게 일치합니다.</div>
-                                ) : (
-                                    <div>오리지널 키에서 가장 높은 매칭률을 보입니다.</div>
-                                )
-                            ) : (
+                        {/* 2. Best Handpan Scale */}
+                        <div className="bg-neutral-900/30 p-3 rounded-lg border border-neutral-700/50 relative overflow-hidden group">
+
+                            <h3 className="text-[10px] text-emerald-500 font-bold uppercase mb-1 tracking-wider">Recommended Scale</h3>
+                            <div className="flex justify-between items-end mb-3">
                                 <div>
-                                    Original Key <span className="text-emerald-300">({midiData.matchResult.originalKey})</span>에서는 매칭률이 낮아,
-                                    <span className="text-emerald-400 font-bold mx-1">
-                                        {midiData.matchResult.transposition > 0 ? '+' : ''}{midiData.matchResult.transposition}키
+                                    <div className="text-lg font-bold text-white relative z-10 leading-tight">
+                                        {midiData.matchResult.scaleName}
+                                    </div>
+                                    <div className="text-xs text-neutral-400 mt-1">
+                                        Transpose: <strong className={midiData.matchResult.transposition === 0 ? "text-emerald-400" : "text-amber-400"}>
+                                            {midiData.matchResult.transposition > 0 ? '+' : ''}{midiData.matchResult.transposition} Semitones
+                                        </strong>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-2xl font-bold text-emerald-500">
+                                        {Math.round(midiData.matchResult.score)}%
+                                    </div>
+                                    <div className="text-[9px] text-neutral-600 uppercase tracking-widest">Score</div>
+                                </div>
+                            </div>
+
+                            {/* Match Details Badge */}
+                            <div className="space-y-2 border-t border-neutral-800 pt-3 relative z-10">
+                                <div className="text-[9px] text-neutral-500 uppercase tracking-wider mb-1">Score Calculation</div>
+                                <div className="grid grid-cols-2 gap-2 text-xs">
+                                    <div className="bg-neutral-900/80 p-2 rounded border border-neutral-800 flex justify-between">
+                                        <span className="text-neutral-500 text-[10px]">Exact Matches</span>
+                                        <span className="text-emerald-400 font-bold">{midiData.matchResult.details?.exactMatches || 0}</span>
+                                    </div>
+                                    <div className="bg-neutral-900/80 p-2 rounded border border-neutral-800 flex justify-between">
+                                        <span className="text-neutral-500 text-[10px]">Folded Matches</span>
+                                        <span className="text-yellow-500 font-bold">{(midiData.matchResult.details?.foldedMatches || 0).toFixed(1)}</span>
+                                    </div>
+                                </div>
+                                {(midiData.matchResult.details?.transposePenalty || 0) > 0 && (
+                                    <div className="bg-neutral-900/80 p-2 rounded border border-neutral-800 flex justify-between items-center text-[10px]">
+                                        <span className="text-neutral-500">Transpose Penalty</span>
+                                        <span className="text-red-400 font-bold">-{midiData.matchResult.details?.transposePenalty} pts</span>
+                                    </div>
+                                )}
+                                {(midiData.matchResult.details?.keyBonus || 0) > 0 && (
+                                    <div className="bg-emerald-900/10 p-2 rounded border border-emerald-900/30 flex justify-between items-center text-[10px]">
+                                        <span className="text-emerald-600">Key Match Bonus</span>
+                                        <span className="text-emerald-400 font-bold">+{midiData.matchResult.details?.keyBonus} pts</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* 3. Visual Feedback */}
+                        <div>
+                            <h3 className="text-[10px] text-neutral-500 font-bold uppercase mb-2 tracking-wider">Visual Feedback</h3>
+                            <div className="flex flex-wrap gap-1 mb-2">
+                                {midiData.matchResult.matchedNotes.map((note, i) => (
+                                    <span key={`match-${i}`} className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 text-[10px] rounded border border-emerald-500/20 font-mono">
+                                        {note}
                                     </span>
-                                    조옮김(Transpose)하여 <span className="text-emerald-300">{midiData.suggestedScale?.replace(/_/g, ' ')}</span>에 최적화했습니다.
+                                ))}
+                                {midiData.matchResult.foldedNotes && midiData.matchResult.foldedNotes.map((note, i) => (
+                                    <span key={`folded-${i}`} className="px-2 py-0.5 bg-yellow-500/10 text-yellow-500 text-[10px] rounded border border-yellow-500/20 font-mono" title="Octave Adjusted">
+                                        {note}
+                                    </span>
+                                ))}
+                            </div>
+                            {midiData.matchResult.missedNotes.length > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                    {midiData.matchResult.missedNotes.map((note, i) => (
+                                        <span key={`miss-${i}`} className="px-1.5 py-0.5 bg-red-900/40 text-red-400 text-[10px] rounded border border-red-900/50">
+                                            {note}
+                                        </span>
+                                    ))}
                                 </div>
                             )}
                         </div>
