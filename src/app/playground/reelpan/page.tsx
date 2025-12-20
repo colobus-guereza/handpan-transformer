@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useMemo, useState, useRef, useEffect } from "react";
+import { Suspense, useMemo, useState, useRef, useEffect, use } from "react";
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { motion, AnimatePresence } from "framer-motion";
@@ -20,7 +20,7 @@ const Digipan14M = dynamic(() => import('@/components/digipan/Digipan14M'), { ss
 const Digipan15M = dynamic(() => import('@/components/digipan/Digipan15M'), { ssr: false });
 const Digipan18M = dynamic(() => import('@/components/digipan/Digipan18M'), { ssr: false });
 
-// 피아노 건반 아이콘 컴포넌트 (도미솔: C-E-G)
+// 화음반주 아이콘 컴포넌트 (겹쳐진 음표들로 화음 표현)
 const PianoKeysIcon = ({ size = 18, className = '' }: { size?: number; className?: string }) => (
     <svg
         width={size}
@@ -30,20 +30,26 @@ const PianoKeysIcon = ({ size = 18, className = '' }: { size?: number; className
         xmlns="http://www.w3.org/2000/svg"
         className={className}
     >
-        {/* 흰건반 3개 (C, E, G) */}
-        <rect x="2" y="6" width="5" height="12" rx="1" fill="currentColor" opacity="0.9" />
-        <rect x="9" y="6" width="5" height="12" rx="1" fill="currentColor" opacity="0.9" />
-        <rect x="16" y="6" width="5" height="12" rx="1" fill="currentColor" opacity="0.9" />
-        {/* 검은 건반 2개 (C#, D#) */}
-        <rect x="6" y="6" width="2.5" height="8" rx="0.5" fill="currentColor" opacity="0.5" />
-        <rect x="13" y="6" width="2.5" height="8" rx="0.5" fill="currentColor" opacity="0.5" />
+        {/* 화음반주: 여러 음표가 겹쳐진 모양 */}
+        {/* 첫 번째 음표 (왼쪽, 위) */}
+        <ellipse cx="8" cy="7" rx="3" ry="2.5" fill="currentColor" opacity="0.9" />
+        <line x1="10.5" y1="7" x2="10.5" y2="16" stroke="currentColor" strokeWidth="1.5" opacity="0.9" />
+
+        {/* 두 번째 음표 (중앙, 중간) */}
+        <ellipse cx="12" cy="10" rx="3" ry="2.5" fill="currentColor" opacity="0.8" />
+        <line x1="14.5" y1="10" x2="14.5" y2="18" stroke="currentColor" strokeWidth="1.5" opacity="0.8" />
+
+        {/* 세 번째 음표 (오른쪽, 아래) */}
+        <ellipse cx="16" cy="13" rx="3" ry="2.5" fill="currentColor" opacity="0.7" />
+        <line x1="18.5" y1="13" x2="18.5" y2="20" stroke="currentColor" strokeWidth="1.5" opacity="0.7" />
     </svg>
 );
 
 // 상태 정의: 대기중 | 녹화중 | 검토중(완료후)
 type RecordState = 'idle' | 'recording' | 'reviewing';
 
-export default function ReelPanPage() {
+export default function ReelPanPage(props: { params: Promise<Record<string, never>> }) {
+    const params = use(props.params); // Unwrap params to satisfy Next.js 16 requirement
     // 1. State Management
     const [recordState, setRecordState] = useState<RecordState>('idle');
     const [isRecording, setIsRecording] = useState(false); // 기존 호환성 유지
@@ -207,56 +213,117 @@ export default function ReelPanPage() {
         }
     };
 
+    // ╔════════════════════════════════════════════════════════════════════════════╗
+    // ║                         🥁 DRUM AUDIO ENGINE                               ║
+    // ╠════════════════════════════════════════════════════════════════════════════╣
+    // ║  킥 드럼은 딩(Ding) 피치와 연결되어 하모닉하게 조화됨                        ║
+    // ║  - Kick: 딩 피치 - 1옥타브 (베이스 주파수)                                  ║
+    // ║  - Snare: NoiseSynth 기반 (딩 피치 연결 없음)                               ║
+    // ║  - Hat: NoiseSynth 기반 (딩 피치 연결 없음)                                 ║
+    // ╚════════════════════════════════════════════════════════════════════════════╝
+
     // Drum Audio Refs
     const drumMasterGainRef = useRef<Tone.Gain | null>(null);
     const kickSynthRef = useRef<Tone.MembraneSynth | null>(null);
     const snareSynthRef = useRef<Tone.NoiseSynth | null>(null);
     const hatSynthRef = useRef<Tone.NoiseSynth | null>(null);
     const drumLoopIdRef = useRef<number | null>(null);
-    const drumPitchRef = useRef("C1"); // Dynamic Pitch for Kick
 
-    // [Drum Engine] Initialize Synth
+    // Dynamic Pitch Refs (킥만 딩과 연결)
+    const drumPitchRef = useRef("C1");   // Kick: 딩 - 1옥타브
+    const drumStartOffsetRef = useRef(0); // 드럼 시작 오프셋 (항상 step 0부터 시작하기 위함)
+
+    // [Drum Engine] Initialize Synths
     useEffect(() => {
         if (typeof window === 'undefined') return;
 
+        // ═══════════════════════════════════════════════════════════════════════
+        // 🔊 MASTER BUS: 전체 드럼 볼륨 제어
+        // ═══════════════════════════════════════════════════════════════════════
         const masterGain = new Tone.Gain(0.5).toDestination();
         drumMasterGainRef.current = masterGain;
 
-        // Kick: Deep & Heavy
+        // ═══════════════════════════════════════════════════════════════════════
+        // 🦵 KICK DRUM: Deep & Heavy Bass (딩 피치 - 1옥타브)
+        // ═══════════════════════════════════════════════════════════════════════
+        // 특성: 깊고 무거운 베이스, 딩의 서브하모닉 주파수
+        // - MembraneSynth: 드럼 막(membrane) 시뮬레이션
+        // - Sine Wave: 순수한 저음, 배음 없이 깔끔한 펀치
+        // - pitchDecay: 0.05s 동안 피치 하강 (뚱- 느낌)
+        // - Lowpass Filter 90Hz: 고음역 차단, 서브베이스만 통과
+        // - Compressor: 다이나믹 제어, 일정한 펀치감
+        // ───────────────────────────────────────────────────────────────────────
         const kickCompressor = new Tone.Compressor({
-            threshold: -15,
-            ratio: 6,
-            attack: 0.01,
-            release: 0.2
+            threshold: -12,  // 압축 시작 레벨 (dB) - 더 빨리 압축
+            ratio: 8,        // 8:1 압축 비율 - 더 강한 압축
+            attack: 0.005,   // 더 빠른 어택으로 펀치 유지
+            release: 0.1     // 짧은 릴리즈
         }).connect(masterGain);
-        const kickFilter = new Tone.Filter(90, "lowpass").connect(kickCompressor);
+
+        const kickFilter = new Tone.Filter(120, "lowpass").connect(kickCompressor);
+        // └─ 120Hz 이상 차단: 약간의 어택 성분 허용
 
         kickSynthRef.current = new Tone.MembraneSynth({
-            pitchDecay: 0.05,
-            octaves: 2,
-            oscillator: { type: "sine" },
+            pitchDecay: 0.02,   // 피치 하강 시간 (초) - 빠른 하강 = 딱딱한 느낌
+            octaves: 1.5,       // 1.5옥타브 하강 (좁은 범위)
+            oscillator: {
+                type: "triangle"  // 삼각파 = 약간의 배음으로 딱딱한 질감
+            },
             envelope: {
-                attack: 0.001,
-                decay: 0.8,
-                sustain: 0.05,
-                release: 1.5,
+                attack: 0.001,        // 즉각적 어택 (펀치)
+                decay: 0.3,           // 짧은 디케이 (딱딱함)
+                sustain: 0.01,        // 거의 없는 서스테인
+                release: 0.5,         // 짧은 릴리즈
                 attackCurve: "exponential"
             },
-            volume: 4
+            volume: 6  // 볼륨 부스트 (dB)
         }).connect(kickFilter);
 
-        snareSynthRef.current = new Tone.NoiseSynth({
-            envelope: { attack: 0.001, decay: 0.2, sustain: 0 }
+        // ═══════════════════════════════════════════════════════════════════════
+        // 🪘 SNARE DRUM: Metallic Finger Tap
+        // ═══════════════════════════════════════════════════════════════════════
+        // 특성: 금속을 손가락으로 때릴 때의 쫀득한 질감
+        // - NoiseSynth: 화이트 노이즈 기반
+        // - Bandpass Filter 2000Hz + Q: 금속성 공명 느낌
+        // - 짧은 어택 + 적당한 디케이: "딱-" 하고 쫀득하게 끊김
+        // ───────────────────────────────────────────────────────────────────────
+        const snareFilter = new Tone.Filter({
+            frequency: 2000,    // 2kHz 중심 주파수 (금속성 고음역)
+            type: "bandpass",
+            Q: 2               // 공명 품질 (높을수록 좁고 날카로운 공명)
         }).connect(masterGain);
 
-        // Hi-Hat: Even Softer (Lower Bandpass + Pink Noise)
+        snareSynthRef.current = new Tone.NoiseSynth({
+            noise: { type: "white" },  // 화이트 노이즈 (높은 피치 유지)
+            envelope: {
+                attack: 0.002,   // 2ms - 즉각적이지만 살짝 부드러운 시작 (쫀득함)
+                decay: 0.06,     // 60ms - 울림 반으로 줄임
+                sustain: 0       // 완전 끊김
+            }
+        }).connect(snareFilter);
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // 🎩 HI-HAT: Sharp & Crisp
+        // ═══════════════════════════════════════════════════════════════════════
+        // 특성: 샤프하고 짧은 하이햇
+        // - Pink Noise: 부드러운 톤
+        // - Bandpass Filter 3500Hz: 중고음역 통과
+        // - 즉각적 어택, 50ms 지속: "칙!" 하고 짧게 끊김
+        // ───────────────────────────────────────────────────────────────────────
         const hatFilter = new Tone.Filter(3500, "bandpass").connect(masterGain);
         hatSynthRef.current = new Tone.NoiseSynth({
             noise: { type: "pink" },
-            envelope: { attack: 0.01, decay: 0.02, sustain: 0 },
+            envelope: {
+                attack: 0.001,   // 1ms - 즉각적 어택
+                decay: 0.05,     // 50ms - 짧은 지속
+                sustain: 0
+            },
             volume: -3  // 70% 볼륨
         }).connect(hatFilter);
 
+        // ═══════════════════════════════════════════════════════════════════════
+        // 🧹 CLEANUP: 컴포넌트 언마운트 시 리소스 해제
+        // ═══════════════════════════════════════════════════════════════════════
         return () => {
             kickSynthRef.current?.dispose();
             snareSynthRef.current?.dispose();
@@ -297,7 +364,11 @@ export default function ReelPanPage() {
         };
     }, []);
 
-    // [Drum Engine] Dynamic Pitch Update (Ding - 1 Octave)
+    // [Drum Engine] Dynamic Pitch Update (딩 피치 기반)
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 스케일 변경 시 킥 드럼 피치를 딩과 하모닉하게 조정
+    // - Kick: 딩 - 1옥타브 (서브베이스)
+    // ═══════════════════════════════════════════════════════════════════════════
     useEffect(() => {
         if (!targetScale?.notes?.ding) return;
 
@@ -308,8 +379,10 @@ export default function ReelPanPage() {
         if (match) {
             const noteName = match[1];
             const octave = parseInt(match[2], 10);
-            const newOctave = Math.max(0, octave - 1); // 1옥타브 내림 (사용자 요청 반영)
-            drumPitchRef.current = `${noteName}${newOctave}`;
+
+            // 🦵 Kick: 딩 - 1옥타브 (서브베이스 영역)
+            const kickOctave = Math.max(0, octave - 1);
+            drumPitchRef.current = `${noteName}${kickOctave}`;
         } else {
             // Fallback if parsing fails
             drumPitchRef.current = "C1";
@@ -338,10 +411,13 @@ export default function ReelPanPage() {
             const secondsPerStep = 60 / drumBpm / 4;
             const absoluteStep = Math.round(Tone.Transport.seconds / secondsPerStep);
 
+            // ★ 드럼 시작 오프셋을 빼서 항상 step 0부터 시작
+            const relativeStep = absoluteStep - drumStartOffsetRef.current;
+
             const is68 = drumTimeSignature === '6/8';
             const is34 = drumTimeSignature === '3/4';
             const division = is68 ? 12 : (is34 ? 12 : 16); // 3/4도 12 step (3박 × 4)
-            const step = absoluteStep % division;
+            const step = ((relativeStep % division) + division) % division; // 음수 방지
 
             // ===== 4/4 박자 =====
             if (drumTimeSignature === '4/4') {
@@ -362,11 +438,25 @@ export default function ReelPanPage() {
                     }
                 }
                 else if (drumPattern === 'Acoustic Pop') {
-                    // TODO: Acoustic Pop 패턴 구현 예정
-                    // 임시로 Basic 8-beat와 동일
-                    if (step === 0 || step === 8) kickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.8);
-                    if (step === 4 || step === 12) snareSynthRef.current?.triggerAttackRelease("8n", time, 0.5);
-                    if (step % 2 === 0) hatSynthRef.current?.triggerAttackRelease("32n", time, step % 4 === 0 ? 0.3 : 0.15);
+                    // ═══════════════════════════════════════════════════════════
+                    // ★ Acoustic Pop: 싱코페이션 & 고스트 노트가 특징
+                    // ═══════════════════════════════════════════════════════════
+                    // 킥: Step 0 (강), Step 7 (싱코페이션), Step 10 (3박 and)
+                    const kickVel = step === 0 ? 0.8 : step === 7 ? 0.6 : step === 10 ? 0.8 : 0;
+                    if (step === 0 || step === 7 || step === 10) {
+                        kickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, kickVel);
+                    }
+                    // 스네어: Step 4, 12 (백비트) + Step 15 (고스트 노트)
+                    const snareVel = (step === 4 || step === 12) ? 0.6 : step === 15 ? 0.2 : 0;
+                    if (step === 4 || step === 12 || step === 15) {
+                        snareSynthRef.current?.triggerAttackRelease("8n", time, snareVel);
+                    }
+                    // 하이햇: 8분음표, 업비트(홀수 8분음표) 강조
+                    if (step % 2 === 0) {
+                        const isUpbeat = (step / 2) % 2 === 1; // 2, 6, 10, 14번째 step
+                        const hatVel = isUpbeat ? 0.25 : 0.15;
+                        hatSynthRef.current?.triggerAttackRelease("32n", time, hatVel);
+                    }
                 }
                 else if (drumPattern === 'Jazz Swing') {
                     // TODO: Jazz Swing 패턴 구현 예정
@@ -388,7 +478,25 @@ export default function ReelPanPage() {
                     if (step === 0) kickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.8);
                     if (step === 4 || step === 8) snareSynthRef.current?.triggerAttackRelease("8n", time, 0.4);
                     if (step % 2 === 0) hatSynthRef.current?.triggerAttackRelease("32n", time, 0.15);
-                } else {
+                }
+                else if (drumPattern === 'Acoustic Pop') {
+                    // ★ Acoustic Pop 3/4: 발라드 스타일
+                    // 킥: Step 0 (강)
+                    if (step === 0) {
+                        kickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.8);
+                    }
+                    // 스네어: Step 4, 8 (가볍게 탭)
+                    if (step === 4 || step === 8) {
+                        const snareVel = 0.35;
+                        snareSynthRef.current?.triggerAttackRelease("8n", time, snareVel);
+                    }
+                    // 하이햇: 매 박자 쪼개기 (0, 2, 4, 6, 8, 10)
+                    if (step % 2 === 0) {
+                        const hatVel = step === 0 ? 0.2 : 0.12;
+                        hatSynthRef.current?.triggerAttackRelease("32n", time, hatVel);
+                    }
+                }
+                else {
                     // 다른 프리셋도 3/4에선 Waltz 기본 사용
                     if (step === 0) kickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.8);
                     if (step === 4 || step === 8) snareSynthRef.current?.triggerAttackRelease("8n", time, 0.4);
@@ -402,7 +510,37 @@ export default function ReelPanPage() {
                     if (step === 0) kickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.8);
                     if (step === 6) snareSynthRef.current?.triggerAttackRelease("8n", time, 0.5);
                     if (step % 2 === 0) hatSynthRef.current?.triggerAttackRelease("32n", time, 0.2);
-                } else {
+                }
+                else if (drumPattern === 'Acoustic Pop') {
+                    // ★ Acoustic Pop 6/8: 어쿠스틱 팝 그루브 스타일
+                    // 6/8 = 12 steps (셔플 느낌의 복합박자)
+                    // 
+                    // 킥: Step 0 (1박 강) + Step 9 (서브 펀치, 다음 박 앞당김)
+                    if (step === 0) {
+                        kickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.8);
+                    }
+                    if (step === 9) {
+                        // 서브 펀치: 리듬감 추가 (약하게)
+                        kickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.45);
+                    }
+                    // 스네어: Step 6 (백비트) + Step 11 (고스트 노트)
+                    if (step === 6) {
+                        snareSynthRef.current?.triggerAttackRelease("8n", time, 0.55);
+                    }
+                    if (step === 11) {
+                        // 고스트 노트: 다음 마디 진입 전 살짝 리프트
+                        snareSynthRef.current?.triggerAttackRelease("16n", time, 0.18);
+                    }
+                    // 하이햇: 8분음표 간격 (step 0, 2, 4, 6, 8, 10)
+                    // 삼분할 느낌 악센트: 1박(0), 2박(4), 4박(6), 5박(8)
+                    if (step % 2 === 0) {
+                        let hatVel = 0.12;
+                        if (step === 0 || step === 6) hatVel = 0.28;      // 강박
+                        else if (step === 4 || step === 8) hatVel = 0.18; // 중간 악센트
+                        hatSynthRef.current?.triggerAttackRelease("32n", time, hatVel);
+                    }
+                }
+                else {
                     // 다른 프리셋도 6/8에선 기본 사용
                     if (step === 0) kickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.8);
                     if (step === 6) snareSynthRef.current?.triggerAttackRelease("8n", time, 0.5);
@@ -419,20 +557,28 @@ export default function ReelPanPage() {
 
         if (isDrumPlaying) {
             Tone.start();
-            // 드럼 시작 시 항상 처음부터
-            Tone.Transport.position = 0;
+
+            // ★ 드럼 시작 오프셋 설정 (항상 step 0부터 시작)
+            const secondsPerStep = 60 / drumBpm / 4;
+            const currentAbsoluteStep = Math.round(Tone.Transport.seconds / secondsPerStep);
+            drumStartOffsetRef.current = currentAbsoluteStep;
+
+            // 화음이 재생 중이 아닐 때만 Transport position 리셋
+            if (!isChordPlayingRef.current) {
+                Tone.Transport.position = 0;
+                drumStartOffsetRef.current = 0; // Transport도 리셋했으므로 오프셋도 0
+            }
             if (Tone.Transport.state !== 'started') {
                 Tone.Transport.start();
             }
         } else {
-            // 드럼 OFF 시 위치 초기화
-            Tone.Transport.position = 0;
-            // 드럼 끄려는데 화음도 꺼져있으면 Transport 중지
+            // 드럼 끄려는데 화음도 꺼져있으면 Transport 중지 및 위치 초기화
             if (!isChordPlayingRef.current) {
+                Tone.Transport.position = 0;
                 Tone.Transport.stop();
             }
         }
-    }, [isDrumPlaying]);
+    }, [isDrumPlaying, drumBpm]);
 
     // Drum Handlers
     const handleDrumDown = (e: React.PointerEvent) => {
@@ -554,21 +700,20 @@ export default function ReelPanPage() {
         await Tone.start();
 
         if (isChordPlaying) {
-            // STOP - 화음 중지 및 초기화
+            // STOP - 화음 중지
             isChordPlayingRef.current = false;
             chordPartRef.current?.stop();
             chordPadSynthRef.current?.releaseAll();
             setIsChordPlaying(false);
 
-            // 화음 OFF 시 위치 초기화 (다음 재생 시 처음부터)
-            Tone.Transport.position = 0;
-
             // 화음 끄려는데 드럼도 꺼져있으면 Transport 중지
+            // ★ 드럼이 재생 중이면 Transport 위치를 초기화하지 않음
             if (!isDrumPlayingRef.current) {
+                Tone.Transport.position = 0;
                 Tone.Transport.stop();
             }
         } else {
-            // START - 화음 시작 (무한 루프, 처음부터)
+            // START - 화음 시작 (무한 루프)
             const chordSets = chordSetsRef.current;
             if (chordSets.length < 4 || !chordPadSynthRef.current) return;
 
@@ -592,13 +737,19 @@ export default function ReelPanPage() {
             ]);
             chordPartRef.current.loop = true;
             chordPartRef.current.loopEnd = "16:0:0";
-            chordPartRef.current.start(0);
+
+            // ★ 드럼 재생 여부에 따라 시작 방식 결정
+            if (isDrumPlayingRef.current) {
+                // 드럼이 재생 중이면 즉시 시작 (현재 Transport 시간 기준)
+                chordPartRef.current.start("+0");
+            } else {
+                // 드럼이 없으면 처음부터 시작
+                Tone.Transport.position = 0;
+                chordPartRef.current.start(0);
+            }
 
             isChordPlayingRef.current = true;
             setIsChordPlaying(true);
-
-            // 화음 시작 시 항상 처음부터
-            Tone.Transport.position = 0;
 
             // Transport가 멈춰있으면 시작
             if (Tone.Transport.state !== 'started') {
@@ -831,20 +982,27 @@ export default function ReelPanPage() {
                             initial={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.5, ease: 'easeOut' }}
-                            className="absolute inset-0 z-[999] bg-slate-950 flex flex-col items-center justify-between"
+                            className="absolute inset-0 z-[999] bg-slate-950 flex flex-col"
                         >
-                            {/* Header Skeleton */}
-                            <div className="w-full px-4 py-8 flex flex-col items-center gap-2">
-                                <div className="w-32 h-6 bg-white/10 rounded-full animate-pulse" />
-                                <div className="w-16 h-1 bg-white/10 rounded-full animate-pulse" />
-                            </div>
+                            {/* Header Skeleton - matches real header (px-4 py-8, centered scale name) */}
+                            <header className="relative flex items-center justify-center px-4 py-8 bg-gradient-to-b from-black/80 to-transparent">
+                                {/* Back button placeholder */}
+                                <div className="absolute left-4 w-10 h-10 rounded-full bg-white/5 animate-pulse" />
+                                {/* Scale name placeholder */}
+                                <div className="flex flex-col items-center gap-1">
+                                    <div className="flex items-center gap-1.5">
+                                        <div className="w-28 h-6 bg-white/10 rounded-md animate-pulse" />
+                                        <div className="w-4 h-4 bg-white/10 rounded animate-pulse" />
+                                    </div>
+                                </div>
+                            </header>
 
-                            {/* Center: Digipan Skeleton */}
+                            {/* Center: Digipan Skeleton - fills available space */}
                             <div className="flex-1 flex items-center justify-center">
-                                <div className="relative">
-                                    <div className="w-64 h-64 rounded-full bg-gradient-to-br from-white/10 to-white/5 animate-pulse" />
+                                <div className="relative w-[85vw] max-w-[360px] aspect-square">
+                                    <div className="w-full h-full rounded-full bg-gradient-to-br from-white/10 to-white/5 animate-pulse" />
                                     <div className="absolute inset-0 flex items-center justify-center">
-                                        <div className="w-20 h-20 rounded-full bg-white/10 animate-pulse" />
+                                        <div className="w-[30%] h-[30%] rounded-full bg-white/10 animate-pulse" />
                                     </div>
                                     <div className="absolute inset-0 animate-spin" style={{ animationDuration: '3s' }}>
                                         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-white/20" />
@@ -853,14 +1011,22 @@ export default function ReelPanPage() {
                                 </div>
                             </div>
 
-                            {/* Footer Skeleton */}
-                            <div className="w-full px-6 py-8 pb-10 flex justify-center gap-4">
-                                <div className="w-12 h-12 rounded-full bg-white/10 animate-pulse" />
-                                <div className="w-12 h-12 rounded-full bg-white/10 animate-pulse" />
-                                <div className="w-16 h-16 rounded-full bg-white/10 animate-pulse" />
-                                <div className="w-12 h-12 rounded-full bg-white/10 animate-pulse" />
-                                <div className="w-12 h-12 rounded-full bg-white/10 animate-pulse" />
-                            </div>
+                            {/* Footer Skeleton - matches real footer (px-6 py-8 pb-10, min-h-[180px], max-w-[380px] justify-between) */}
+                            <footer className="w-full px-6 py-8 pb-10 bg-gradient-to-t from-black/95 to-transparent min-h-[180px] flex flex-col items-center gap-6">
+                                {/* Timer badge placeholder (invisible in idle state, keeps spacing) */}
+                                <div className="h-8 opacity-0" />
+                                {/* Button group placeholder */}
+                                <div className="w-full flex items-center justify-between max-w-[380px]">
+                                    <div className="w-12 h-12 rounded-full bg-white/10 animate-pulse" />
+                                    <div className="w-12 h-12 rounded-full bg-white/10 animate-pulse" />
+                                    {/* Center record button - larger */}
+                                    <div className="w-16 h-16 rounded-full border-4 border-white/20 flex items-center justify-center">
+                                        <div className="w-[85%] h-[85%] rounded-full bg-white/10 animate-pulse" />
+                                    </div>
+                                    <div className="w-12 h-12 rounded-full bg-white/10 animate-pulse" />
+                                    <div className="w-12 h-12 rounded-full bg-white/10 animate-pulse" />
+                                </div>
+                            </footer>
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -1343,7 +1509,7 @@ export default function ReelPanPage() {
 
                                             const filters = [
                                                 { label: 'All', value: 'all', count: SCALES.length },
-                                                ...availableCounts.map(n => ({ label: `${n}N`, value: String(n), count: stats[n] })),
+                                                ...availableCounts.map(n => ({ label: `${n}`, value: String(n), count: stats[n] })),
                                                 { label: 'Mutant', value: 'mutant', count: stats.mutant }
                                             ];
 
@@ -1353,8 +1519,8 @@ export default function ReelPanPage() {
                                                     onClick={() => setFilterNoteCount(filter.value)}
                                                     className={`px-3 py-1.5 rounded-full flex items-center gap-2 transition-all border whitespace-nowrap
                                                         ${filterNoteCount === filter.value
-                                                            ? 'bg-cyan-500 border-cyan-400 text-black shadow-[0_0_15px_rgba(34,211,238,0.4)]'
-                                                            : 'bg-white/[0.03] border-white/[0.08] text-white/40 hover:text-cyan-300/80 hover:bg-cyan-500/10'}`}
+                                                            ? 'bg-slate-300/80 border-slate-200 text-slate-900 shadow-[0_0_15px_rgba(200,200,210,0.4)]'
+                                                            : 'bg-white/[0.03] border-white/[0.08] text-white/40 hover:text-slate-200/80 hover:bg-slate-300/10'}`}
                                                 >
                                                     <span className="text-[10px] font-black uppercase tracking-widest">{filter.label}</span>
                                                     <span className={`text-[10px] font-bold ${filterNoteCount === filter.value ? 'opacity-80' : 'opacity-30'}`}>
@@ -1367,19 +1533,19 @@ export default function ReelPanPage() {
                                     <div className="flex justify-end gap-5 px-1 pt-1">
                                         <button
                                             onClick={() => setSortBy('default')}
-                                            className={`text-[9px] font-black uppercase tracking-[0.2em] transition-all ${sortBy === 'default' ? 'text-cyan-400' : 'text-white/20 hover:text-cyan-300/60'}`}
+                                            className={`text-[9px] font-black uppercase tracking-[0.2em] transition-all ${sortBy === 'default' ? 'text-slate-200' : 'text-white/20 hover:text-slate-200/60'}`}
                                         >
                                             Default
                                         </button>
                                         <button
                                             onClick={() => setSortBy('name')}
-                                            className={`text-[9px] font-black uppercase tracking-[0.2em] transition-all ${sortBy === 'name' ? 'text-cyan-400' : 'text-white/20 hover:text-cyan-300/60'}`}
+                                            className={`text-[9px] font-black uppercase tracking-[0.2em] transition-all ${sortBy === 'name' ? 'text-slate-200' : 'text-white/20 hover:text-slate-200/60'}`}
                                         >
                                             A-Z
                                         </button>
                                         <button
                                             onClick={() => setSortBy('notes')}
-                                            className={`text-[9px] font-black uppercase tracking-[0.2em] transition-all ${sortBy === 'notes' ? 'text-cyan-400' : 'text-white/20 hover:text-cyan-300/60'}`}
+                                            className={`text-[9px] font-black uppercase tracking-[0.2em] transition-all ${sortBy === 'notes' ? 'text-slate-200' : 'text-white/20 hover:text-slate-200/60'}`}
                                         >
                                             Notes
                                         </button>
@@ -1404,7 +1570,7 @@ export default function ReelPanPage() {
                                                     tabIndex={0}
                                                     onClick={() => handleScaleSelect(currentScale)}
                                                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleScaleSelect(currentScale); }}
-                                                    className="p-6 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border cursor-pointer bg-cyan-500/[0.06] backdrop-blur-md border-cyan-500/30 hover:bg-cyan-500/10 hover:border-cyan-400/50"
+                                                    className="p-6 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border cursor-pointer bg-slate-300/[0.06] backdrop-blur-md border-slate-300/30 hover:bg-slate-300/10 hover:border-slate-200/50"
                                                 >
                                                     <div className="flex flex-col gap-2 z-10 flex-1 min-w-0 pr-4">
                                                         <div className="flex items-center justify-between">
@@ -1428,7 +1594,7 @@ export default function ReelPanPage() {
 
                                                         <div className="flex gap-1.5 flex-wrap mt-2">
                                                             {(currentScale.tagsEn || currentScale.tags).map((tag, idx) => (
-                                                                <span key={idx} className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all bg-cyan-500/15 text-cyan-300/70 border border-cyan-500/20">
+                                                                <span key={idx} className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all bg-slate-300/15 text-slate-200/70 border border-slate-300/20">
                                                                     {tag}
                                                                 </span>
                                                             ))}
@@ -1438,7 +1604,7 @@ export default function ReelPanPage() {
                                                     <div className="flex items-center gap-3 z-10 shrink-0">
                                                         <button
                                                             onClick={(e) => handlePreview(e, currentScale)}
-                                                            className="w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-lg bg-cyan-500/25 hover:bg-cyan-500/40 text-cyan-100 border border-cyan-400/30 backdrop-blur-sm"
+                                                            className="w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-lg bg-slate-300/25 hover:bg-slate-300/40 text-slate-100 border border-slate-200/30 backdrop-blur-sm"
                                                         >
                                                             {previewingScaleId === currentScale.id ? (
                                                                 <Volume2 size={20} className="animate-pulse" />
@@ -1464,7 +1630,7 @@ export default function ReelPanPage() {
                                                 tabIndex={0}
                                                 onClick={() => handleScaleSelect(scale)}
                                                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleScaleSelect(scale); }}
-                                                className="p-6 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border cursor-pointer bg-white/[0.02] border-white/[0.05] text-white hover:bg-cyan-500/[0.08] hover:border-cyan-500/30"
+                                                className="p-6 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border cursor-pointer bg-white/[0.02] border-white/[0.05] text-white hover:bg-slate-300/[0.08] hover:border-slate-300/30"
                                             >
                                                 <div className="flex flex-col gap-2 z-10 flex-1 min-w-0 pr-4">
                                                     <div className="flex items-center justify-between">
@@ -1488,7 +1654,7 @@ export default function ReelPanPage() {
 
                                                     <div className="flex gap-1.5 flex-wrap mt-2">
                                                         {(scale.tagsEn || scale.tags).map((tag, idx) => (
-                                                            <span key={idx} className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all bg-white/5 text-white/30 group-hover:bg-cyan-500/10 group-hover:text-cyan-300/50">
+                                                            <span key={idx} className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all bg-white/5 text-white/30 group-hover:bg-slate-300/10 group-hover:text-slate-200/50">
                                                                 {tag}
                                                             </span>
                                                         ))}
@@ -1498,7 +1664,7 @@ export default function ReelPanPage() {
                                                 <div className="flex items-center gap-3 z-10 shrink-0">
                                                     <button
                                                         onClick={(e) => handlePreview(e, scale)}
-                                                        className="w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-lg bg-white/10 hover:bg-cyan-500/25 text-white hover:text-cyan-100 border border-white/10 hover:border-cyan-400/30"
+                                                        className="w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-lg bg-white/10 hover:bg-slate-300/25 text-white hover:text-slate-100 border border-white/10 hover:border-slate-200/30"
                                                     >
                                                         {previewingScaleId === scale.id ? (
                                                             <Volume2 size={20} className="animate-pulse" />

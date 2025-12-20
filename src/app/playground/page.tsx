@@ -1,7 +1,7 @@
 "use client";
 
 import type { Viewport } from 'next';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { Camera, Music, Heart, Users, ArrowRight, ArrowLeft, Globe, Smartphone, Box, Type, Drum, Sparkles, HelpCircle, Music2 } from 'lucide-react';
 import ReelPanSlider from '@/components/playground/ReelPanSlider';
@@ -73,10 +73,35 @@ export default function PlaygroundHome() {
 
     const screen2Ref = useRef<HTMLDivElement>(null);
     const screen1Ref = useRef<HTMLDivElement>(null);
+    
+    // 가로 슬라이더 인디케이터
+    const sliderRef = useRef<HTMLDivElement>(null);
+    const [activeCardIndex, setActiveCardIndex] = useState(0);
+    const cardRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
 
     const scrollToSection = (ref: React.RefObject<HTMLDivElement | null>) => {
         ref.current?.scrollIntoView({ behavior: 'smooth' });
     };
+
+    // 가로 슬라이더 인디케이터 업데이트
+    useEffect(() => {
+        const slider = sliderRef.current;
+        if (!slider) return;
+
+        const updateActiveIndex = () => {
+            const scrollLeft = slider.scrollLeft;
+            const cardWidth = slider.clientWidth;
+            const index = Math.round(scrollLeft / cardWidth);
+            setActiveCardIndex(Math.min(index, 2)); // 최대 2 (3개 카드)
+        };
+
+        slider.addEventListener('scroll', updateActiveIndex);
+        updateActiveIndex(); // 초기값 설정
+
+        return () => {
+            slider.removeEventListener('scroll', updateActiveIndex);
+        };
+    }, []);
 
     return (
         <div className="h-dvh w-screen overflow-x-auto snap-x snap-mandatory flex overflow-y-hidden bg-slate-950 text-white selection:bg-cyan-500 selection:text-white">
@@ -189,9 +214,15 @@ export default function PlaygroundHome() {
                 <div className="w-full max-w-4xl mx-auto px-6 pb-24 -mt-8 md:-mt-12 flex flex-col gap-20 md:gap-32">
 
                     {/* Section 2: Features (Grid Cards) */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {/* Card 1 */}
-                        <div className="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-cyan-500/30 hover:scale-[1.015] transition-all duration-500 group">
+                    {/* 모바일: 가로 슬라이더, 데스크톱: Grid */}
+                    <div className="relative">
+                        <div 
+                            ref={sliderRef}
+                            className="flex md:grid md:grid-cols-3 gap-6 overflow-x-auto overflow-y-hidden md:overflow-x-visible md:overflow-y-visible snap-x snap-mandatory md:snap-none no-scrollbar" 
+                            style={{ touchAction: 'pan-x' }}
+                        >
+                            {/* Card 1 */}
+                            <div ref={cardRefs[0]} className="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-cyan-500/30 transition-all duration-500 group flex-shrink-0 w-full md:w-auto snap-center overflow-hidden">
                             <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                                 <Music size={24} className="text-cyan-400" />
                             </div>
@@ -200,8 +231,8 @@ export default function PlaygroundHome() {
                                 대중적인 D Kurd부터 트렌디한 Pygmy, Amara까지! 31개의 다양한 핸드팬 스케일을 디지털로 자유롭게 변경해가며 연주해 볼 수 있습니다.
                             </p>
                         </div>
-                        {/* Card 2 */}
-                        <div className="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-purple-500/30 hover:scale-[1.015] transition-all duration-500 group">
+                            {/* Card 2 */}
+                            <div ref={cardRefs[1]} className="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-purple-500/30 transition-all duration-500 group flex-shrink-0 w-full md:w-auto snap-center overflow-hidden">
                             <div className="w-12 h-12 rounded-2xl bg-purple-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                                 <Smartphone size={24} className="text-purple-400" />
                             </div>
@@ -211,7 +242,7 @@ export default function PlaygroundHome() {
                             </p>
                         </div>
                         {/* Card 3 */}
-                        <div className="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-pink-500/30 hover:scale-[1.015] transition-all duration-500 group">
+                        <div className="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-pink-500/30 transition-all duration-500 group flex-shrink-0 w-full md:w-auto snap-center overflow-hidden">
                             <div className="w-12 h-12 rounded-2xl bg-pink-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                                 <Box size={24} className="text-pink-400" />
                             </div>
