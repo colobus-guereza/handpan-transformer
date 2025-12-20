@@ -222,12 +222,26 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
     // ║  - Hat: NoiseSynth 기반 (딩 피치 연결 없음)                                 ║
     // ╚════════════════════════════════════════════════════════════════════════════╝
 
-    // Drum Audio Refs
+    // Drum Audio Refs (Pop/Rock)
     const drumMasterGainRef = useRef<Tone.Gain | null>(null);
     const kickSynthRef = useRef<Tone.MembraneSynth | null>(null);
     const snareSynthRef = useRef<Tone.NoiseSynth | null>(null);
     const hatSynthRef = useRef<Tone.NoiseSynth | null>(null);
     const drumLoopIdRef = useRef<number | null>(null);
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 🎷 JAZZ DRUM AUDIO REFS (Swing/Brush 전용 - 별도 튜닝)
+    // ═══════════════════════════════════════════════════════════════════════════
+    const jazzKickSynthRef = useRef<Tone.MembraneSynth | null>(null);  // Feathered Kick
+    const jazzSnareSynthRef = useRef<Tone.NoiseSynth | null>(null);    // Brush Snare
+    const jazzRideSynthRef = useRef<Tone.NoiseSynth | null>(null);     // Ride Cymbal
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 🎧 LOFI CHILL DRUM AUDIO REFS (빈티지 더스티 사운드 - 먹먹한 질감)
+    // ═══════════════════════════════════════════════════════════════════════════
+    const lofiKickSynthRef = useRef<Tone.MembraneSynth | null>(null);   // Soft Thump (둥근 저음)
+    const lofiSnareSynthRef = useRef<Tone.NoiseSynth | null>(null);     // Dry Clap (건조한 탁)
+    const lofiHatSynthRef = useRef<Tone.NoiseSynth | null>(null);       // Tick (작은 틱)
 
     // Dynamic Pitch Refs (킥만 딩과 연결)
     const drumPitchRef = useRef("C1");   // Kick: 딩 - 1옥타브
@@ -322,12 +336,149 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
         }).connect(hatFilter);
 
         // ═══════════════════════════════════════════════════════════════════════
+        // 🎷 JAZZ KICK: Feathering (둥... 하는 부드러운 베이스)
+        // ═══════════════════════════════════════════════════════════════════════
+        // 특성: 락 드럼처럼 때리는 게 아니라 베이스를 살짝 받쳐주는 느낌
+        // - 느린 attack, 긴 pitchDecay, 낮은 필터
+        // ───────────────────────────────────────────────────────────────────────
+        const jazzKickFilter = new Tone.Filter(90, "lowpass").connect(masterGain);
+        // └─ 90Hz 이상 차단: 더 부드럽고 둥근 베이스
+
+        jazzKickSynthRef.current = new Tone.MembraneSynth({
+            pitchDecay: 0.08,   // 긴 피치 하강 (부드러운 "둥...")
+            octaves: 1.2,       // 좁은 옥타브 범위 (안정적)
+            oscillator: {
+                type: "sine"   // 순수 사인파 (배음 없이 깨끗)
+            },
+            envelope: {
+                attack: 0.02,         // 느린 어택 (부드러운 시작)
+                decay: 0.4,           // 긴 디케이 (여운)
+                sustain: 0.02,        // 살짝 유지
+                release: 0.6,
+                attackCurve: "linear"
+            },
+            volume: 0  // 볼륨 낮춤 (feathering)
+        }).connect(jazzKickFilter);
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // 🎷 JAZZ SNARE: Brush (치익- 하는 브러쉬 질감)
+        // ═══════════════════════════════════════════════════════════════════════
+        // 특성: 브러쉬로 긁거나 가볍게 탭하는 소리
+        // - Pink Noise + 긴 attack = "치익-" 질감
+        // ───────────────────────────────────────────────────────────────────────
+        const jazzSnareFilter = new Tone.Filter({
+            frequency: 1500,    // 낮은 중심 주파수 (부드러운 톤)
+            type: "bandpass",
+            Q: 1.5              // 넓은 Q (자연스러운 브러쉬)
+        }).connect(masterGain);
+
+        jazzSnareSynthRef.current = new Tone.NoiseSynth({
+            noise: { type: "pink" },  // 핑크 노이즈 (부드러운 톤)
+            envelope: {
+                attack: 0.06,    // 60ms - 느린 어택 ("치익-" 느낌)
+                decay: 0.15,     // 150ms - 브러쉬 스윕 지속
+                sustain: 0       // 끊김
+            },
+            volume: -6  // 낮은 볼륨 (섬세함)
+        }).connect(jazzSnareFilter);
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // 🎷 JAZZ RIDE: Cymbal (금속성 여운의 라이드 심벌)
+        // ═══════════════════════════════════════════════════════════════════════
+        // 특성: Jazz의 메인 타임키퍼, "딩~" 하는 금속성 여운
+        // - High-pass 필터, 긴 decay
+        // ───────────────────────────────────────────────────────────────────────
+        const jazzRideFilter = new Tone.Filter({
+            frequency: 4500,    // 높은 주파수 (밝은 심벌 톤)
+            type: "highpass"    // 저음 차단, 금속성 유지
+        }).connect(masterGain);
+
+        jazzRideSynthRef.current = new Tone.NoiseSynth({
+            noise: { type: "white" },  // 화이트 노이즈 (밝은 톤)
+            envelope: {
+                attack: 0.002,   // 즉각적 어택 ("딩!")
+                decay: 0.35,     // 350ms - 긴 여운 (심벌 서스테인)
+                sustain: 0.02    // 살짝 유지
+            },
+            volume: -4  // 볼륨 조절
+        }).connect(jazzRideFilter);
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // 🎧 LOFI KICK: Soft Thump (먹먹하고 둥근 저음)
+        // ═══════════════════════════════════════════════════════════════════════
+        // 특성: LP판 샘플링 느낌, 찰진 고음(Click) 제거
+        // ───────────────────────────────────────────────────────────────────────
+        const lofiKickFilter = new Tone.Filter(600, "lowpass").connect(masterGain);
+        // └─ 600Hz lowpass: 찰진 고음 제거, 둥근 저음만
+
+        lofiKickSynthRef.current = new Tone.MembraneSynth({
+            pitchDecay: 0.03,   // 빠른 피치 하강 (음정이 튜지 않게)
+            octaves: 1.2,       // 좁은 범위
+            oscillator: {
+                type: "sine"    // 순수 사인파 (둥근 저음)
+            },
+            envelope: {
+                attack: 0.02,         // 부드러운 어택
+                decay: 0.35,          // 적당한 디케이
+                sustain: 0.01,
+                release: 0.4,
+                attackCurve: "linear"
+            },
+            volume: 3  // 약간 부스트
+        }).connect(lofiKickFilter);
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // 🎧 LOFI SNARE: Dry Clap (건조하고 짧은 탁)
+        // ═══════════════════════════════════════════════════════════════════════
+        // 특성: 고음 노이즈 차단, 부드러운 "탁" 소리
+        // ───────────────────────────────────────────────────────────────────────
+        const lofiSnareFilter = new Tone.Filter(1500, "lowpass").connect(masterGain);
+        // └─ 1500Hz lowpass: 고음역 노이즈 차단
+
+        lofiSnareSynthRef.current = new Tone.NoiseSynth({
+            noise: { type: "pink" },  // 핑크 노이즈 (부드러운 톤)
+            envelope: {
+                attack: 0.005,   // 빠른 어택
+                decay: 0.08,     // 80ms - 짧고 건조
+                sustain: 0
+            },
+            volume: -2  // 적당한 볼륨
+        }).connect(lofiSnareFilter);
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // 🎧 LOFI HAT: Tick (배경 백색소음 같은 틱)
+        // ═══════════════════════════════════════════════════════════════════════
+        // 특성: 금속성 제거, 아주 작은 "틱" 소리
+        // ───────────────────────────────────────────────────────────────────────
+        const lofiHatFilter = new Tone.Filter(2500, "lowpass").connect(masterGain);
+        // └─ 2500Hz lowpass: 금속성 없애기
+
+        lofiHatSynthRef.current = new Tone.NoiseSynth({
+            noise: { type: "pink" },  // 핑크 노이즈
+            envelope: {
+                attack: 0.003,   // 빠른 어택
+                decay: 0.04,     // 40ms - 매우 짧음
+                sustain: 0
+            },
+            volume: -11  // 매우 작은 볼륨 (배경 역할)
+        }).connect(lofiHatFilter);
+
+        // ═══════════════════════════════════════════════════════════════════════
         // 🧹 CLEANUP: 컴포넌트 언마운트 시 리소스 해제
         // ═══════════════════════════════════════════════════════════════════════
         return () => {
+            // Pop/Rock synths
             kickSynthRef.current?.dispose();
             snareSynthRef.current?.dispose();
             hatSynthRef.current?.dispose();
+            // Jazz synths
+            jazzKickSynthRef.current?.dispose();
+            jazzSnareSynthRef.current?.dispose();
+            jazzRideSynthRef.current?.dispose();
+            // Lofi Chill synths
+            lofiKickSynthRef.current?.dispose();
+            lofiSnareSynthRef.current?.dispose();
+            lofiHatSynthRef.current?.dispose();
             masterGain.dispose();
             if (drumLoopIdRef.current !== null) Tone.Transport.clear(drumLoopIdRef.current);
         };
@@ -400,6 +551,14 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
 
         Tone.Transport.bpm.value = drumBpm;
 
+        // 🎷 Jazz Swing: Transport에 스윙 적용 (다른 패턴은 스윙 없음)
+        if (drumPattern === 'Jazz Swing') {
+            Tone.Transport.swing = 0.3;        // 30% 스윙감
+            Tone.Transport.swingSubdivision = "8n";  // 8분음표 기준 스윙
+        } else {
+            Tone.Transport.swing = 0;          // 스윙 없음
+        }
+
         // Pattern logic based on drumPattern & drumTimeSignature
         // ★ 킥 피치는 drumPitchRef.current (딩 피치 - 1옥타브)와 연결됨
         drumLoopIdRef.current = Tone.Transport.scheduleRepeat((time) => {
@@ -459,16 +618,94 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                     }
                 }
                 else if (drumPattern === 'Jazz Swing') {
-                    // TODO: Jazz Swing 패턴 구현 예정
-                    if (step === 0 || step === 8) kickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.8);
-                    if (step === 4 || step === 12) snareSynthRef.current?.triggerAttackRelease("8n", time, 0.5);
-                    if (step % 2 === 0) hatSynthRef.current?.triggerAttackRelease("32n", time, step % 4 === 0 ? 0.3 : 0.15);
+                    // ═══════════════════════════════════════════════════════════════
+                    // 🎷 JAZZ SWING 4/4: "Spang-a-lang" 라이드 패턴
+                    // ═══════════════════════════════════════════════════════════════
+                    // 16 steps = 4박 × 4 (16분음표 단위)
+                    // Ride: 정박(0,4,8,12) + 스윙 뒷박(10,14) = "딩~딩~딩다딩다"
+                    // Kick: Feathering (1박에만 약하게)
+                    // Snare: Ghost notes (엇박에 아주 약하게)
+                    // ───────────────────────────────────────────────────────────────
+
+                    // 📌 Humanize: 미세한 velocity 랜덤화 (±0.05)
+                    const humanize = () => (Math.random() - 0.5) * 0.1;
+
+                    // 🎹 RIDE CYMBAL: "Spang-a-lang" 패턴
+                    // 정박 (4분음표): Step 0, 4, 8, 12
+                    // 스윙 뒷박 (트리플렛 느낌): Step 10, 14
+                    if (step === 0 || step === 4 || step === 8 || step === 12) {
+                        // 정박 (강)
+                        const rideVel = 0.5 + humanize();
+                        jazzRideSynthRef.current?.triggerAttackRelease("4n", time, rideVel);
+                    }
+                    if (step === 10 || step === 14) {
+                        // 스윙 뒷박 (중) - 트리플렛 느낌
+                        const rideVel = 0.35 + humanize();
+                        jazzRideSynthRef.current?.triggerAttackRelease("8n", time, rideVel);
+                    }
+
+                    // 🦵 KICK: Feathering (1박에만 아주 약하게)
+                    if (step === 0) {
+                        const kickVel = 0.25 + humanize();
+                        jazzKickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "4n", time, kickVel);
+                    }
+                    // 가끔 당김음 (Step 10 or 11에서 50% 확률로)
+                    if (step === 10 && Math.random() > 0.5) {
+                        jazzKickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.18 + humanize());
+                    }
+
+                    // 🪘 SNARE: Ghost Notes (엇박에 아주 약하게)
+                    // Step 13, 15에 랜덤하게 브러쉬 탭
+                    if (step === 13 || step === 15) {
+                        // 70% 확률로 고스트 노트 재생
+                        if (Math.random() > 0.3) {
+                            const ghostVel = 0.12 + humanize();
+                            jazzSnareSynthRef.current?.triggerAttackRelease("16n", time, ghostVel);
+                        }
+                    }
+                    // 가끔 Step 7에서 살짝 탭
+                    if (step === 7 && Math.random() > 0.6) {
+                        jazzSnareSynthRef.current?.triggerAttackRelease("16n", time, 0.1 + humanize());
+                    }
                 }
                 else if (drumPattern === 'Bossa Nova') {
-                    // TODO: Bossa Nova 패턴 구현 예정
-                    if (step === 0 || step === 8) kickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.8);
-                    if (step === 4 || step === 12) snareSynthRef.current?.triggerAttackRelease("8n", time, 0.5);
-                    if (step % 2 === 0) hatSynthRef.current?.triggerAttackRelease("32n", time, step % 4 === 0 ? 0.3 : 0.15);
+                    // ═══════════════════════════════════════════════════════════════
+                    // 🎸 BOSSA NOVA 4/4: Clave 리듬의 라틴 그루브
+                    // ═══════════════════════════════════════════════════════════════
+                    // 16 steps = 4박 × 4 (16분음표 단위)
+                    // Kick (Surdo): Step 0 (강), Step 10 (중) - 심장박동 패턴
+                    // Snare (Rimshot): Clave 패턴 - Step 2, 5, 8, 11, 14
+                    // Hat (Shaker): 8분음표 찰찰
+                    // ※ Straight Feel (스윙 없음)
+                    // ───────────────────────────────────────────────────────────────
+
+                    // 🦵 KICK (Surdo): 심장박동 패턴
+                    // Step 0: 정박 1 (강) / Step 10: 3박 뒷박 (중) = "둥...둥"
+                    if (step === 0) {
+                        bossaKickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "4n", time, 0.75);
+                    }
+                    if (step === 10) {
+                        // 3박자의 뒷박 (And of 3) - 보사노바 그루브의 핵심!
+                        bossaKickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.55);
+                    }
+
+                    // 🪘 SNARE (Rimshot): Clave 패턴
+                    // Step 2: And of 1 / Step 5: 당김음 / Step 8: 정박 3
+                    // Step 11: 당김음 / Step 14: And of 4
+                    const claveSteps = [2, 5, 8, 11, 14];
+                    if (claveSteps.includes(step)) {
+                        // 정박(8)은 약간 강하게, 나머지는 균등
+                        const rimVel = step === 8 ? 0.65 : 0.55;
+                        bossaSnareSynthRef.current?.triggerAttackRelease("16n", time, rimVel);
+                    }
+
+                    // 🎩 HAT (Shaker): 8분음표 찰찰 (정박 약하게)
+                    if (step % 2 === 0) {
+                        // 정박(0,4,8,12)은 약하게, 업비트는 살짝 강조
+                        const isDownbeat = step % 4 === 0;
+                        const shakerVel = isDownbeat ? 0.25 : 0.35;
+                        bossaHatSynthRef.current?.triggerAttackRelease("16n", time, shakerVel);
+                    }
                 }
             }
             // ===== 3/4 박자 (Waltz) =====
@@ -494,6 +731,65 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                     if (step % 2 === 0) {
                         const hatVel = step === 0 ? 0.2 : 0.12;
                         hatSynthRef.current?.triggerAttackRelease("32n", time, hatVel);
+                    }
+                }
+                else if (drumPattern === 'Jazz Swing') {
+                    // ═══════════════════════════════════════════════════════════════
+                    // 🎷 JAZZ WALTZ 3/4: 유려한 스윙 왈츠
+                    // ═══════════════════════════════════════════════════════════════
+                    // 12 steps = 3박 × 4 (16분음표 단위)
+                    // Ride: 정박(0,4,8) + 마지막 스윙 뒷박(11)
+                    // Kick: 1박에만 feathering
+                    // Snare: 2박, 3박에 아주 약한 브러쉬 탭
+                    // ───────────────────────────────────────────────────────────────
+
+                    const humanize = () => (Math.random() - 0.5) * 0.1;
+
+                    // 🎹 RIDE CYMBAL: 왈츠 스윙 패턴
+                    if (step === 0 || step === 4 || step === 8) {
+                        const rideVel = step === 0 ? 0.5 : 0.4;
+                        jazzRideSynthRef.current?.triggerAttackRelease("4n", time, rideVel + humanize());
+                    }
+                    // 마지막 박자의 스윙 뒷박
+                    if (step === 11) {
+                        jazzRideSynthRef.current?.triggerAttackRelease("8n", time, 0.3 + humanize());
+                    }
+
+                    // 🦵 KICK: Feathering (1박에만)
+                    if (step === 0) {
+                        jazzKickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "4n", time, 0.25 + humanize());
+                    }
+
+                    // 🪘 SNARE: 브러쉬 탭 (2박, 3박에 아주 약하게)
+                    if (step === 4 || step === 8) {
+                        jazzSnareSynthRef.current?.triggerAttackRelease("8n", time, 0.15 + humanize());
+                    }
+                }
+                else if (drumPattern === 'Bossa Nova') {
+                    // ═══════════════════════════════════════════════════════════════
+                    // 🎸 BOSSA NOVA 3/4: 라틴 왈츠 스타일
+                    // ═══════════════════════════════════════════════════════════════
+                    // 12 steps = 3박 × 4
+                    // Kick (Surdo): Step 0 (1박)
+                    // Snare (Rimshot): Step 3, 7 (당김음 느낌)
+                    // Hat (Shaker): 8분음표
+                    // ───────────────────────────────────────────────────────────────
+
+                    // 🦵 KICK (Surdo): 1박에만
+                    if (step === 0) {
+                        bossaKickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "4n", time, 0.7);
+                    }
+
+                    // 🪘 SNARE (Rimshot): 당김음 패턴
+                    if (step === 3 || step === 7) {
+                        bossaSnareSynthRef.current?.triggerAttackRelease("16n", time, 0.55);
+                    }
+
+                    // 🎩 HAT (Shaker): 8분음표
+                    if (step % 2 === 0) {
+                        const isDownbeat = step === 0 || step === 4 || step === 8;
+                        const shakerVel = isDownbeat ? 0.25 : 0.35;
+                        bossaHatSynthRef.current?.triggerAttackRelease("16n", time, shakerVel);
                     }
                 }
                 else {
@@ -538,6 +834,73 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                         if (step === 0 || step === 6) hatVel = 0.28;      // 강박
                         else if (step === 4 || step === 8) hatVel = 0.18; // 중간 악센트
                         hatSynthRef.current?.triggerAttackRelease("32n", time, hatVel);
+                    }
+                }
+                else if (drumPattern === 'Jazz Swing') {
+                    // ═══════════════════════════════════════════════════════════════
+                    // 🎷 JAZZ SWING 6/8: 단순화된 복합박자 스윙
+                    // ═══════════════════════════════════════════════════════════════
+                    // 12 steps = 2그룹 × 6
+                    // Ride: 1박(0), 4박(6) 강조 + 스윙 뒷박(10) 하나만
+                    // Kick: 1박에만 feathering
+                    // Snare: 4박에 브러쉬 탭 (고스트 노트 없음)
+                    // ───────────────────────────────────────────────────────────────
+
+                    const humanize = () => (Math.random() - 0.5) * 0.08;
+
+                    // 🎹 RIDE CYMBAL: 단순한 6/8 스윙 패턴
+                    // 강박만 (1박, 4박) + 스윙 뒷박 하나 (마디 끝)
+                    if (step === 0) {
+                        // 1박 (가장 강)
+                        jazzRideSynthRef.current?.triggerAttackRelease("4n", time, 0.5 + humanize());
+                    }
+                    if (step === 6) {
+                        // 4박 (백비트)
+                        jazzRideSynthRef.current?.triggerAttackRelease("4n", time, 0.4 + humanize());
+                    }
+                    if (step === 10) {
+                        // 스윙 뒷박 (다음 마디로 이어지는 느낌)
+                        jazzRideSynthRef.current?.triggerAttackRelease("8n", time, 0.3 + humanize());
+                    }
+
+                    // 🦵 KICK: Feathering (1박에만)
+                    if (step === 0) {
+                        jazzKickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "4n", time, 0.28 + humanize());
+                    }
+
+                    // 🪘 SNARE: 4박에 브러쉬 탭만 (고스트 노트 제거)
+                    if (step === 6) {
+                        jazzSnareSynthRef.current?.triggerAttackRelease("8n", time, 0.22 + humanize());
+                    }
+                }
+                else if (drumPattern === 'Bossa Nova') {
+                    // ═══════════════════════════════════════════════════════════════
+                    // 🎸 BOSSA NOVA 6/8: 라틴 복합박자
+                    // ═══════════════════════════════════════════════════════════════
+                    // 12 steps = 2그룹 × 6
+                    // Kick (Surdo): Step 0 (1박), Step 6 (4박)
+                    // Snare (Rimshot): Step 3, 9 (당김음)
+                    // Hat (Shaker): 8분음표
+                    // ───────────────────────────────────────────────────────────────
+
+                    // 🦵 KICK (Surdo): 복합박자의 두 강박
+                    if (step === 0) {
+                        bossaKickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "4n", time, 0.7);
+                    }
+                    if (step === 6) {
+                        bossaKickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "4n", time, 0.55);
+                    }
+
+                    // 🪘 SNARE (Rimshot): 당김음 패턴
+                    if (step === 3 || step === 9) {
+                        bossaSnareSynthRef.current?.triggerAttackRelease("16n", time, 0.55);
+                    }
+
+                    // 🎩 HAT (Shaker): 8분음표 (정박 약하게)
+                    if (step % 2 === 0) {
+                        const isDownbeat = step === 0 || step === 6;
+                        const shakerVel = isDownbeat ? 0.25 : 0.35;
+                        bossaHatSynthRef.current?.triggerAttackRelease("16n", time, shakerVel);
                     }
                 }
                 else {
@@ -1236,7 +1599,7 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                                     className={`w-12 h-12 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center transition-all active:scale-95 relative overflow-hidden group ${isChordPlaying ? 'bg-purple-500/30 border-purple-500/50' : 'bg-white/10 hover:bg-white/20'}`}
                                     title="화음 반주 토글 (길게 누르면 설정)"
                                 >
-                                    <PianoKeysIcon size={18} className={isChordPlaying ? 'text-purple-300' : 'text-white/40'} />
+                                    <Music2 size={18} className={isChordPlaying ? 'text-purple-300' : 'text-white/40'} />
                                     {isChordPlaying && (
                                         <motion.div
                                             animate={{ opacity: [0.3, 0.8, 0.3], scale: [1, 1.2, 1] }}
@@ -1325,7 +1688,7 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
 
                                     {/* Pattern Selection */}
                                     <div className="flex flex-col gap-3">
-                                        <span className="text-xs font-bold text-white/40 uppercase tracking-widest px-1">Pattern</span>
+                                        <span className="text-xs font-bold text-white/40 uppercase tracking-widest px-1">Preset</span>
                                         <div className="grid grid-cols-1 gap-2">
                                             {['Basic 8-beat', 'Acoustic Pop', 'Jazz Swing', 'Bossa Nova'].map((p) => (
                                                 <button

@@ -3,7 +3,7 @@
 import type { Viewport } from 'next';
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { Camera, Music, Heart, Users, ArrowRight, ArrowLeft, Globe, Smartphone, Box, Type, Drum, Sparkles, HelpCircle, Music2 } from 'lucide-react';
+import { Camera, Music, Heart, Users, ArrowRight, ArrowLeft, Globe, Smartphone, Box, Type, Drum, Sparkles, HelpCircle, Music2, Play } from 'lucide-react';
 import ReelPanSlider from '@/components/playground/ReelPanSlider';
 
 /*
@@ -73,35 +73,10 @@ export default function PlaygroundHome() {
 
     const screen2Ref = useRef<HTMLDivElement>(null);
     const screen1Ref = useRef<HTMLDivElement>(null);
-    
-    // 가로 슬라이더 인디케이터
-    const sliderRef = useRef<HTMLDivElement>(null);
-    const [activeCardIndex, setActiveCardIndex] = useState(0);
-    const cardRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
 
     const scrollToSection = (ref: React.RefObject<HTMLDivElement | null>) => {
         ref.current?.scrollIntoView({ behavior: 'smooth' });
     };
-
-    // 가로 슬라이더 인디케이터 업데이트
-    useEffect(() => {
-        const slider = sliderRef.current;
-        if (!slider) return;
-
-        const updateActiveIndex = () => {
-            const scrollLeft = slider.scrollLeft;
-            const cardWidth = slider.clientWidth;
-            const index = Math.round(scrollLeft / cardWidth);
-            setActiveCardIndex(Math.min(index, 2)); // 최대 2 (3개 카드)
-        };
-
-        slider.addEventListener('scroll', updateActiveIndex);
-        updateActiveIndex(); // 초기값 설정
-
-        return () => {
-            slider.removeEventListener('scroll', updateActiveIndex);
-        };
-    }, []);
 
     return (
         <div className="h-dvh w-screen overflow-x-auto snap-x snap-mandatory flex overflow-y-hidden bg-slate-950 text-white selection:bg-cyan-500 selection:text-white">
@@ -131,9 +106,11 @@ export default function PlaygroundHome() {
             <section ref={screen1Ref} className="w-screen h-dvh flex-shrink-0 snap-center relative z-10 overflow-hidden">
 
                 {/* Main Title - Exact Vertical Center */}
-                <h1 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 !text-5xl lg:!text-7xl font-black tracking-tight text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.15)] text-center leading-tight whitespace-nowrap">
-                    Reel<span className="!text-cyan-400 lg:!text-transparent lg:!bg-clip-text lg:!bg-gradient-to-r from-cyan-400 to-purple-400">Pan</span>
-                </h1>
+                <h1 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 !text-5xl lg:!text-7xl font-black tracking-tight text-center leading-tight whitespace-nowrap">
+                        <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-400">
+                            ReelPan
+                        </span>
+                    </h1>
 
                 {/* Subtitle & CTA - Below Center */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 mt-12 flex flex-col items-center gap-6">
@@ -189,14 +166,16 @@ export default function PlaygroundHome() {
                     <div className="flex flex-col items-start w-full px-4" style={{ marginTop: '-10vh' }}>
 
                         {/* 1. 릴팬 타이틀 */}
-                        <h2 className="text-3xl md:text-6xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-400 leading-tight flex flex-col mb-8">
-                            <span className="whitespace-nowrap">내 손안의 디지털 핸드팬</span>
-                            <span>ReelPan</span>
+                        <h2 className="text-3xl md:text-6xl font-bold tracking-tight leading-tight flex flex-col mb-8">
+                            <span className="whitespace-nowrap bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-400">내 손안의 디지털 핸드팬</span>
+                            <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-400">
+                                ReelPan
+                            </span>
                         </h2>
 
                         {/* 2. "일상에서" 중앙 텍스트 */}
                         <p className="text-[1.35rem] md:text-[1.8rem] text-cyan-400 font-medium word-keep text-left mb-8">
-                            "일상에서 영감이 왔을 때,<br className="md:hidden" /> 모바일 영상으로 바로 남길 수 있다면?"
+                            "영감이 찾아왔을 때,<br className="md:hidden" /> 즉시 폰으로 기록할 수 있다면?"
                         </p>
 
                         {/* 3. "물리적인 악기" 설명 */}
@@ -214,15 +193,9 @@ export default function PlaygroundHome() {
                 <div className="w-full max-w-4xl mx-auto px-6 pb-24 -mt-8 md:-mt-12 flex flex-col gap-20 md:gap-32">
 
                     {/* Section 2: Features (Grid Cards) */}
-                    {/* 모바일: 가로 슬라이더, 데스크톱: Grid */}
-                    <div className="relative">
-                        <div 
-                            ref={sliderRef}
-                            className="flex md:grid md:grid-cols-3 gap-6 overflow-x-auto overflow-y-hidden md:overflow-x-visible md:overflow-y-visible snap-x snap-mandatory md:snap-none no-scrollbar" 
-                            style={{ touchAction: 'pan-x' }}
-                        >
-                            {/* Card 1 */}
-                            <div ref={cardRefs[0]} className="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-cyan-500/30 transition-all duration-500 group flex-shrink-0 w-full md:w-auto snap-center overflow-hidden">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {/* Card 1 */}
+                        <div className="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-cyan-500/30 transition-all duration-500 group">
                             <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                                 <Music size={24} className="text-cyan-400" />
                             </div>
@@ -231,8 +204,8 @@ export default function PlaygroundHome() {
                                 대중적인 D Kurd부터 트렌디한 Pygmy, Amara까지! 31개의 다양한 핸드팬 스케일을 디지털로 자유롭게 변경해가며 연주해 볼 수 있습니다.
                             </p>
                         </div>
-                            {/* Card 2 */}
-                            <div ref={cardRefs[1]} className="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-purple-500/30 transition-all duration-500 group flex-shrink-0 w-full md:w-auto snap-center overflow-hidden">
+                        {/* Card 2 */}
+                        <div className="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-purple-500/30 transition-all duration-500 group">
                             <div className="w-12 h-12 rounded-2xl bg-purple-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                                 <Smartphone size={24} className="text-purple-400" />
                             </div>
@@ -242,7 +215,7 @@ export default function PlaygroundHome() {
                             </p>
                         </div>
                         {/* Card 3 */}
-                        <div className="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-pink-500/30 transition-all duration-500 group flex-shrink-0 w-full md:w-auto snap-center overflow-hidden">
+                        <div className="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-pink-500/30 transition-all duration-500 group">
                             <div className="w-12 h-12 rounded-2xl bg-pink-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                                 <Box size={24} className="text-pink-400" />
                             </div>
@@ -366,6 +339,24 @@ export default function PlaygroundHome() {
                                 </div>
                                 <h4 className="text-lg font-bold text-white">화음 반주</h4>
                                 <p className="text-slate-400 text-[1.05rem] text-center">화음반주를 추가하여 연주를 더욱 풍부하게 만들 수 있습니다. 버튼을 길게 눌러보세요.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Section 5.5: 9:16 동영상 컨테이너 */}
+                    <div className="w-full flex justify-center">
+                        <div className="w-full max-w-[280px] rounded-2xl overflow-hidden bg-white/5 border border-white/10">
+                            <div 
+                                style={{ 
+                                    aspectRatio: '9/16', 
+                                    width: '100%'
+                                }} 
+                                className="w-full relative bg-slate-900/50 flex items-center justify-center"
+                            >
+                                {/* 재생 버튼 */}
+                                <button className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center hover:bg-white/30 hover:scale-110 transition-all duration-200 group">
+                                    <Play size={32} className="text-white/90 ml-1 group-hover:text-white" fill="currentColor" />
+                                </button>
                             </div>
                         </div>
                     </div>
