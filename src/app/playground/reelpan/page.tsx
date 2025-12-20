@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, useMemo, useState, useRef, useEffect } from "react";
+import { Suspense, useMemo, useState, useRef, useEffect } from "react";
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { motion, AnimatePresence } from "framer-motion";
@@ -184,14 +184,39 @@ export default function ReelPanPage() {
         const masterGain = new Tone.Gain(0.5).toDestination();
         drumMasterGainRef.current = masterGain;
 
-        kickSynthRef.current = new Tone.MembraneSynth().connect(masterGain);
+        // Kick: Deep & Heavy
+        const kickCompressor = new Tone.Compressor({
+            threshold: -15,
+            ratio: 6,
+            attack: 0.01,
+            release: 0.2
+        }).connect(masterGain);
+        const kickFilter = new Tone.Filter(90, "lowpass").connect(kickCompressor);
+
+        kickSynthRef.current = new Tone.MembraneSynth({
+            pitchDecay: 0.05,
+            octaves: 2,
+            oscillator: { type: "sine" },
+            envelope: {
+                attack: 0.001,
+                decay: 0.8,
+                sustain: 0.05,
+                release: 1.5,
+                attackCurve: "exponential"
+            },
+            volume: 4
+        }).connect(kickFilter);
+
         snareSynthRef.current = new Tone.NoiseSynth({
             envelope: { attack: 0.001, decay: 0.2, sustain: 0 }
         }).connect(masterGain);
 
-        const hatFilter = new Tone.Filter(8000, "highpass").connect(masterGain);
+        // Hi-Hat: Even Softer (Lower Bandpass + Pink Noise)
+        const hatFilter = new Tone.Filter(3500, "bandpass").connect(masterGain);
         hatSynthRef.current = new Tone.NoiseSynth({
-            envelope: { attack: 0.001, decay: 0.05, sustain: 0 }
+            noise: { type: "pink" },
+            envelope: { attack: 0.01, decay: 0.02, sustain: 0 },
+            volume: -3  // 70% 볼륨
         }).connect(hatFilter);
 
         return () => {
@@ -214,7 +239,7 @@ export default function ReelPanPage() {
         if (match) {
             const noteName = match[1];
             const octave = parseInt(match[2], 10);
-            const newOctave = Math.max(0, octave - 1); // 1옥타브 내림 (최소 0)
+            const newOctave = Math.max(0, octave - 1); // 1옥타브 내림 (사용자 요청 반영)
             drumPitchRef.current = `${noteName}${newOctave}`;
         } else {
             // Fallback if parsing fails
@@ -971,8 +996,74 @@ export default function ReelPanPage() {
                                     </div>
                                 </div>
 
+                                {/* Scales List */}
                                 <div className="grid grid-cols-1 gap-3 pb-20">
-                                    {processedScales.map((scale) => {
+                                    {/* Current Selected Scale - First in List */}
+                                    {(() => {
+                                        const currentScale = processedScales.find(s => s.id === targetScale.id);
+                                        if (!currentScale) return null;
+                                        
+                                        const topNotes = [currentScale.notes.ding, ...currentScale.notes.top].join(' ');
+                                        const bottomNotes = currentScale.notes.bottom.length > 0 ? currentScale.notes.bottom.join(' ') : null;
+
+                                        return (
+                                            <div key={currentScale.id} className="mb-2">
+                                                <div className="text-[9px] font-black uppercase tracking-[0.3em] text-white/30 mb-2 px-2">CURRENT SELECTED</div>
+                                                <div
+                                                    role="button"
+                                                    tabIndex={0}
+                                                    onClick={() => handleScaleSelect(currentScale)}
+                                                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleScaleSelect(currentScale); }}
+                                                    className="p-6 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border cursor-pointer bg-white/[0.02] backdrop-blur-md border-white/[0.05] hover:bg-white/[0.05] hover:border-white/[0.1]"
+                                                >
+                                                    <div className="flex flex-col gap-2 z-10 flex-1 min-w-0 pr-4">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="font-black text-xl tracking-tight truncate text-white">
+                                                                {currentScale.name}
+                                                            </span>
+                                                        </div>
+
+                                                        <div className="flex flex-col gap-1 text-[10px] font-bold tracking-wide transition-opacity duration-300 text-white/40">
+                                                            <div className="flex gap-2">
+                                                                <span className="opacity-50 w-3">T</span>
+                                                                <span className="truncate">{topNotes}</span>
+                                                            </div>
+                                                            {bottomNotes && (
+                                                                <div className="flex gap-2">
+                                                                    <span className="opacity-50 w-3">B</span>
+                                                                    <span className="truncate">{bottomNotes}</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+
+                                                        <div className="flex gap-1.5 flex-wrap mt-2">
+                                                            {(currentScale.tagsEn || currentScale.tags).map((tag, idx) => (
+                                                                <span key={idx} className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all bg-white/10 text-white/50 border border-white/10">
+                                                                    {tag}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-3 z-10 shrink-0">
+                                                        <button
+                                                            onClick={(e) => handlePreview(e, currentScale)}
+                                                            className="w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-lg bg-white/20 hover:bg-white/30 text-white border border-white/20 backdrop-blur-sm"
+                                                        >
+                                                            {previewingScaleId === currentScale.id ? (
+                                                                <Volume2 size={20} className="animate-pulse" />
+                                                            ) : (
+                                                                <Play size={22} fill="currentColor" className="ml-1" />
+                                                            )}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
+
+                                    {/* Other Scales */}
+                                    {processedScales.filter(scale => scale.id !== targetScale.id).map((scale) => {
                                         const topNotes = [scale.notes.ding, ...scale.notes.top].join(' ');
                                         const bottomNotes = scale.notes.bottom.length > 0 ? scale.notes.bottom.join(' ') : null;
 
@@ -983,19 +1074,16 @@ export default function ReelPanPage() {
                                                 tabIndex={0}
                                                 onClick={() => handleScaleSelect(scale)}
                                                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleScaleSelect(scale); }}
-                                                className={`p-6 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border cursor-pointer
-                                                    ${targetScale.id === scale.id
-                                                        ? 'bg-gradient-to-br from-white to-gray-200 border-white shadow-[0_20px_40px_rgba(0,0,0,0.3)] scale-[1.02]'
-                                                        : 'bg-white/[0.02] border-white/[0.05] text-white hover:bg-white/[0.05] hover:border-white/[0.1]'}`}
+                                                className="p-6 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border cursor-pointer bg-white/[0.02] border-white/[0.05] text-white hover:bg-white/[0.05] hover:border-white/[0.1]"
                                             >
                                                 <div className="flex flex-col gap-2 z-10 flex-1 min-w-0 pr-4">
                                                     <div className="flex items-center justify-between">
-                                                        <span className={`font-black text-xl tracking-tight truncate ${targetScale.id === scale.id ? 'text-black' : 'text-white/90'}`}>
+                                                        <span className="font-black text-xl tracking-tight truncate text-white/90">
                                                             {scale.name}
                                                         </span>
                                                     </div>
 
-                                                    <div className={`flex flex-col gap-1 text-[10px] font-bold tracking-wide transition-opacity duration-300 ${targetScale.id === scale.id ? 'text-black/40' : 'text-white/20'}`}>
+                                                    <div className="flex flex-col gap-1 text-[10px] font-bold tracking-wide transition-opacity duration-300 text-white/20">
                                                         <div className="flex gap-2">
                                                             <span className="opacity-50 w-3">T</span>
                                                             <span className="truncate">{topNotes}</span>
@@ -1010,8 +1098,7 @@ export default function ReelPanPage() {
 
                                                     <div className="flex gap-1.5 flex-wrap mt-2">
                                                         {(scale.tagsEn || scale.tags).map((tag, idx) => (
-                                                            <span key={idx} className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all
-                                                                ${targetScale.id === scale.id ? 'bg-black/5 text-black/40' : 'bg-white/5 text-white/30'}`}>
+                                                            <span key={idx} className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all bg-white/5 text-white/30">
                                                                 {tag}
                                                             </span>
                                                         ))}
@@ -1021,10 +1108,7 @@ export default function ReelPanPage() {
                                                 <div className="flex items-center gap-3 z-10 shrink-0">
                                                     <button
                                                         onClick={(e) => handlePreview(e, scale)}
-                                                        className={`w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-lg
-                                                            ${targetScale.id === scale.id
-                                                                ? 'bg-black text-white hover:bg-black/80'
-                                                                : 'bg-white/10 hover:bg-white/20 text-white border border-white/10'}`}
+                                                        className="w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-lg bg-white/10 hover:bg-white/20 text-white border border-white/10"
                                                     >
                                                         {previewingScaleId === scale.id ? (
                                                             <Volume2 size={20} className="animate-pulse" />
