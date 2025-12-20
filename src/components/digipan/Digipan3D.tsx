@@ -130,6 +130,7 @@ interface Digipan3DProps {
     hideTouchText?: boolean; // New Prop to hide Ready/Set/Touch text
     onRecordingComplete?: (blob: Blob) => void; // New: Callback when recording finishes
     disableRecordingUI?: boolean; // New: Disable internal recording finished overlay
+    recordingCropMode?: 'full' | 'square'; // NEW: 녹화 시 크롭 모드
 }
 
 export interface Digipan3DHandle {
@@ -734,7 +735,8 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
     cameraZoom, // Destructure new prop
     hideTouchText = false, // Default to false (Show text)
     onRecordingComplete, // Destructure new prop
-    disableRecordingUI = false // Default to false (Show UI)
+    disableRecordingUI = false, // Default to false (Show UI)
+    recordingCropMode = 'full' // Default to full (전체 캔버스 녹화)
 }, ref) => {
     const pathname = usePathname();
     // ScaleInfoPanel은 /digipan-3d-test 경로에서만 표시
@@ -864,7 +866,8 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
         canvasRef,
         getAudioContext,
         getMasterGain,
-        onRecordingComplete: handleRecordingComplete
+        onRecordingComplete: handleRecordingComplete,
+        cropMode: recordingCropMode
     });
 
     // Sync Recording State with Parent

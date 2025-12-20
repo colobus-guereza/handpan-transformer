@@ -31,6 +31,7 @@ interface Digipan15MProps {
     onIsRecordingChange?: (isRecording: boolean) => void;
     hideTouchText?: boolean;
     onRecordingComplete?: (blob: Blob) => void;
+    recordingCropMode?: 'full' | 'square';
     disableRecordingUI?: boolean;
 }
 
@@ -113,7 +114,8 @@ const Digipan15M = React.forwardRef<Digipan3DHandle, Digipan15MProps>(({
     onIsRecordingChange,
     hideTouchText = false,
     onRecordingComplete,
-    disableRecordingUI
+    disableRecordingUI,
+    recordingCropMode
 }, ref) => {
 
     // 15-Note Base Coordinates (Cloned from Digipan14M)
@@ -339,6 +341,7 @@ const Digipan15M = React.forwardRef<Digipan3DHandle, Digipan15MProps>(({
             hideTouchText={hideTouchText}
             onRecordingComplete={onRecordingComplete}
             disableRecordingUI={disableRecordingUI}
+            recordingCropMode={recordingCropMode}
             notes={notesToRender.length > 0 ? notesToRender : baseNotes15.map(n => ({ ...n, label: '', frequency: 440, visualFrequency: 440, offset: [0, 0, 0] as [number, number, number] }))}
             onNoteClick={onNoteClick}
             isCameraLocked={isCameraLocked}

@@ -31,6 +31,7 @@ interface Digipan12Props {
     onIsRecordingChange?: (isRecording: boolean) => void;
     hideTouchText?: boolean;
     onRecordingComplete?: (blob: Blob) => void;
+    recordingCropMode?: 'full' | 'square';
     disableRecordingUI?: boolean;
 }
 
@@ -116,7 +117,8 @@ const Digipan12 = React.forwardRef<Digipan3DHandle, Digipan12Props>(({
     onIsRecordingChange,
     hideTouchText = false,
     onRecordingComplete,
-    disableRecordingUI
+    disableRecordingUI,
+    recordingCropMode
 }, ref) => {
 
     // 10-Note Base Coordinates (from Digipan10.tsx)
@@ -263,6 +265,7 @@ const Digipan12 = React.forwardRef<Digipan3DHandle, Digipan12Props>(({
             hideTouchText={hideTouchText}
             onRecordingComplete={onRecordingComplete}
             disableRecordingUI={disableRecordingUI}
+            recordingCropMode={recordingCropMode}
             sceneSize={forceCompactView ? { width: 66, height: 50 } : { width: 64, height: 60 }}
             cameraZoom={DIGIPAN_VIEW_CONFIG['12'].zoom}
             cameraTargetY={DIGIPAN_VIEW_CONFIG['12'].targetY}
