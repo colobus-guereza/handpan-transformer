@@ -12,8 +12,8 @@ export interface DigipanViewSettings {
 }
 
 export const DIGIPAN_VIEW_CONFIG: Record<string, DigipanViewSettings> = {
-    '9': { zoom: 13.5, targetY: 2 },    // Adjusted zoom to 13.5 per user request
-    '10': { zoom: 13.5, targetY: 2 },   // Adjusted zoom to 13.5 per user request
+    '9': { zoom: 13.5, targetY: 0 },    // Reset to 0 for perfect centering
+    '10': { zoom: 13.5, targetY: -1.5 }, // Lift slightly UP to fix visual centering (D Kurd 10)
     '11': { zoom: 12, targetY: 3 },   // Adjusted to +3 (User Request)
     '12': { zoom: 12, targetY: 3 },   // Adjusted to +3 (User Request)
     '14': { zoom: 12, targetY: 5 },   // Adjusted to +5 per user request
