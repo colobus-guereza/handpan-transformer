@@ -4,12 +4,12 @@ import React, { Suspense, useMemo, useState, useRef, useEffect } from "react";
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from "framer-motion";
 import { SCALES } from '@/data/handpanScales';
-import { Layout, Check, Square, Circle, Smartphone, Keyboard, Play, Pause, Volume2, Download, Trash2, X, Type, ChevronDown, Share2, RefreshCcw } from 'lucide-react';
+import { Layout, Check, Square, Circle, Smartphone, Keyboard, Play, Pause, Volume2, Download, Trash2, X, Type, ChevronDown, Share2, RefreshCcw, Drum, SlidersHorizontal, Settings2 } from 'lucide-react';
 import { Digipan3DHandle } from "@/components/digipan/Digipan3D";
 import { useHandpanAudio } from "@/hooks/useHandpanAudio";
 import { getNoteFrequency } from "@/constants/noteFrequencies";
+import * as Tone from 'tone';
 
-// Dynamically import all Digipan variants
 const Digipan9 = dynamic(() => import('@/components/digipan/Digipan9'), { ssr: false });
 const Digipan10 = dynamic(() => import('@/components/digipan/Digipan10'), { ssr: false });
 const Digipan11 = dynamic(() => import('@/components/digipan/Digipan11'), { ssr: false });
@@ -37,13 +37,26 @@ export default function PanReelPage() {
     const [isScaleLoading, setIsScaleLoading] = useState(false); // 스케일 전환 로딩 상태
     const [isPageReady, setIsPageReady] = useState(false); // 페이지 초기 로딩 상태
 
+    // Drum State
+    const [isDrumPlaying, setIsDrumPlaying] = useState(false);
+    const [showDrumSettings, setShowDrumSettings] = useState(false);
+    const [drumBpm, setDrumBpm] = useState(100);
+    const [drumPattern, setDrumPattern] = useState('Basic 8-beat');
+    const [drumTimeSignature, setDrumTimeSignature] = useState('4/4');
+
     // 녹화 타이머용
     const [recordTimer, setRecordTimer] = useState(0);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
 
+    // 롱프레스 타이머용
+    const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const isLongPressActive = useRef(false);
+
     // Filter & Sort State
     const [filterNoteCount, setFilterNoteCount] = useState<string>('all');
     const [sortBy, setSortBy] = useState<'default' | 'name' | 'notes'>('default');
+
+    const [countdown, setCountdown] = useState<number | 'Touch!' | null>(null);
 
     const processedScales = useMemo(() => {
         let result = [...SCALES];
@@ -51,7 +64,6 @@ export default function PanReelPage() {
         // 1. Filter
         if (filterNoteCount !== 'all') {
             if (filterNoteCount === 'mutant') {
-                // Check if ID contains mutant OR check tags if 'mutant' wasn't in ID policy (just to be safe)
                 result = result.filter(s => s.id.includes('mutant') || s.name.toLowerCase().includes('mutant'));
             } else if (filterNoteCount === '11+') {
                 result = result.filter(s => {
@@ -129,47 +141,145 @@ export default function PanReelPage() {
             for (let i = 0; i < sortedNotes.length; i++) {
                 const note = sortedNotes[i];
                 const isDing = note === scale.notes.ding;
-                const isTop = i === sortedNotes.length - 1;
-
-                // Base delay logic matching Digipan3D
                 let delay = isDing ? 500 : 180;
-                // Rubato
                 delay += Math.random() * 30;
-
-                // For the very first note, we play immediately (or small delay)
                 if (i === 0) await wait(50);
                 else await wait(delay);
-
                 playNote(note);
-
-                // Root emphasis breath (after playing root)
                 if (isDing) await wait(600);
             }
-
-            // Peak breath
             await wait(400);
-
             // Descending
             for (let i = sortedNotes.length - 1; i >= 0; i--) {
                 const note = sortedNotes[i];
                 const isDing = note === scale.notes.ding;
-
                 let delay = isDing ? 800 : 180;
                 delay += Math.random() * 30;
-
                 await wait(delay);
                 playNote(note);
             }
-
-            // Finished successfully
             setPreviewingScaleId(null);
             abortControllerRef.current = null;
-
         } catch (err: any) {
-            // Ignore abort errors
             if (err.message !== 'Aborted') {
                 console.error('Preview error:', err);
             }
+        }
+    };
+
+    // Drum Audio Refs
+    const drumMasterGainRef = useRef<Tone.Gain | null>(null);
+    const kickSynthRef = useRef<Tone.MembraneSynth | null>(null);
+    const snareSynthRef = useRef<Tone.NoiseSynth | null>(null);
+    const hatSynthRef = useRef<Tone.NoiseSynth | null>(null);
+    const drumLoopIdRef = useRef<number | null>(null);
+
+    // [Drum Engine] Initialize Synth
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        const masterGain = new Tone.Gain(0.5).toDestination();
+        drumMasterGainRef.current = masterGain;
+
+        kickSynthRef.current = new Tone.MembraneSynth().connect(masterGain);
+        snareSynthRef.current = new Tone.NoiseSynth({
+            envelope: { attack: 0.001, decay: 0.2, sustain: 0 }
+        }).connect(masterGain);
+
+        const hatFilter = new Tone.Filter(8000, "highpass").connect(masterGain);
+        hatSynthRef.current = new Tone.NoiseSynth({
+            envelope: { attack: 0.001, decay: 0.05, sustain: 0 }
+        }).connect(hatFilter);
+
+        return () => {
+            kickSynthRef.current?.dispose();
+            snareSynthRef.current?.dispose();
+            hatSynthRef.current?.dispose();
+            masterGain.dispose();
+            if (drumLoopIdRef.current !== null) Tone.Transport.clear(drumLoopIdRef.current);
+        };
+    }, []);
+
+    // [Drum Engine] Pattern Management
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        if (drumLoopIdRef.current !== null) {
+            Tone.Transport.clear(drumLoopIdRef.current);
+            drumLoopIdRef.current = null;
+        }
+
+        Tone.Transport.bpm.value = drumBpm;
+
+        // Simple Pattern logic based on drumPattern & drumTimeSignature
+        drumLoopIdRef.current = Tone.Transport.scheduleRepeat((time) => {
+            // Derive step from Transport seconds to ensure reset on stop()
+            // 4 steps per beat (16th notes)
+            const secondsPerStep = 60 / drumBpm / 4;
+            const absoluteStep = Math.round(Tone.Transport.seconds / secondsPerStep);
+
+            const is68 = drumTimeSignature === '6/8';
+            const division = is68 ? 12 : 16;
+            const step = absoluteStep % division;
+
+            if (drumTimeSignature === '4/4') {
+                // --- Simple 4/4 Basic 8-beat ---
+                // Kick: 1, 3
+                if (step === 0 || step === 8) kickSynthRef.current?.triggerAttackRelease("C1", "8n", time, 0.8);
+                // Snare: 2, 4
+                if (step === 4 || step === 12) snareSynthRef.current?.triggerAttackRelease("8n", time, 0.5);
+                // Hat: 8th notes (정박 위주)
+                if (step % 2 === 0) {
+                    const isAccent = step % 4 === 0;
+                    hatSynthRef.current?.triggerAttackRelease("32n", time, isAccent ? 0.3 : 0.15);
+                }
+            } else if (drumTimeSignature === '3/4') {
+                // --- Simple 3/4 Waltz ---
+                if (step === 0) kickSynthRef.current?.triggerAttackRelease("C1", "8n", time, 0.8);
+                if (step === 4 || step === 8) snareSynthRef.current?.triggerAttackRelease("8n", time, 0.4);
+                if (step % 2 === 0) hatSynthRef.current?.triggerAttackRelease("32n", time, 0.15);
+            } else if (is68) {
+                // --- Simple 6/8 ---
+                if (step === 0) kickSynthRef.current?.triggerAttackRelease("C1", "8n", time, 0.8);
+                if (step === 6) snareSynthRef.current?.triggerAttackRelease("8n", time, 0.5);
+                if (step % 2 === 0) hatSynthRef.current?.triggerAttackRelease("32n", time, 0.2);
+            }
+        }, "16n");
+
+    }, [drumBpm, drumPattern, drumTimeSignature]);
+
+    // [Drum Engine] Playback Sync
+    useEffect(() => {
+        if (isDrumPlaying) {
+            Tone.start();
+            Tone.Transport.position = 0; // Restart from beginning
+            Tone.Transport.start();
+        } else {
+            Tone.Transport.stop(); // Stops and resets to 0
+        }
+    }, [isDrumPlaying]);
+
+    // Drum Handlers
+    const handleDrumDown = (e: React.PointerEvent) => {
+        // Prevent double fire with mouse/touch
+        (e.target as HTMLElement).setPointerCapture(e.pointerId);
+
+        isLongPressActive.current = false;
+        longPressTimerRef.current = setTimeout(() => {
+            isLongPressActive.current = true;
+            setShowDrumSettings(true);
+        }, 600);
+    };
+
+    const handleDrumUp = (e: React.PointerEvent) => {
+        if (longPressTimerRef.current) {
+            clearTimeout(longPressTimerRef.current);
+            longPressTimerRef.current = null;
+        }
+
+        if (!isLongPressActive.current) {
+            // 짧게 눌렀을 때만 토글
+            setIsDrumPlaying(prev => !prev);
         }
     };
 
@@ -202,7 +312,22 @@ export default function PanReelPage() {
 
     const handleRecordToggle = () => {
         if (recordState === 'idle') {
-            startRecording();
+            // 카운트다운 시작
+            let count = 4;
+            setCountdown(count);
+
+            const interval = setInterval(() => {
+                count -= 1;
+                if (count > 0) {
+                    setCountdown(count);
+                } else if (count === 0) {
+                    setCountdown('Touch!');
+                    startRecording(); // 실제 녹화 시작
+                } else {
+                    setCountdown(null);
+                    clearInterval(interval);
+                }
+            }, 1000); // 사용자의 요청에 따라 1초(1000ms) 간격으로 조정
         } else if (recordState === 'recording') {
             stopRecording();
         }
@@ -347,8 +472,9 @@ export default function PanReelPage() {
             onIsRecordingChange: setIsRecording,
             onRecordingComplete: handleRecordingComplete,
             disableRecordingUI: true,
-            hideTouchText: true,
-            recordingCropMode: layoutMode === 'square' ? 'square' as 'square' : 'full' as 'full', // NEW: 레이아웃에 따른 녹화 크롭
+            hideTouchText: countdown === null, // 카운트다운 시에만 3D 텍스트 표시
+            externalTouchText: countdown ? countdown.toString() : null, // 3D 카운트다운 텍스트 주입
+            recordingCropMode: layoutMode === 'square' ? 'square' as 'square' : 'full' as 'full',
         };
 
         if (totalNotes === 18) return <Digipan18M {...commonProps} />;
@@ -589,8 +715,26 @@ export default function PanReelPage() {
                                     </button>
                                 </div>
 
-                                {/* 4. Right Extra 1 */}
-                                <button className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center hover:bg-white/20 transition-all active:scale-95">
+                                {/* 4. Drum Accompaniment */}
+                                <button
+                                    onPointerDown={handleDrumDown}
+                                    onPointerUp={handleDrumUp}
+                                    className={`w-12 h-12 rounded-full backdrop-blur-md border border-white/10 flex flex-col items-center justify-center transition-all active:scale-90 relative overflow-hidden group
+                                         ${isDrumPlaying ? 'bg-orange-500/40 border-orange-500/50' : 'bg-white/10 hover:bg-white/20'}
+                                     `}
+                                >
+                                    <Drum size={20} className={isDrumPlaying ? 'text-orange-200' : 'text-white/40'} />
+                                    {isDrumPlaying && (
+                                        <motion.div
+                                            animate={{ opacity: [0, 1, 0] }}
+                                            transition={{ duration: 1, repeat: Infinity }}
+                                            className="absolute bottom-1 w-1 h-1 rounded-full bg-orange-400"
+                                        />
+                                    )}
+                                    {/* Long press indicator hint */}
+                                    <div className="absolute -top-1 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <Settings2 size={8} className="text-white/40" />
+                                    </div>
                                 </button>
 
                                 {/* 5. Right Extra 2 */}
@@ -601,20 +745,125 @@ export default function PanReelPage() {
                     </div>
                 )}
 
-                {/* === Layer 4: Scale Selector Overlay === */}
+                {/* === Layer 3.5: Drum Settings Popup === */}
+                <AnimatePresence>
+                    {showDrumSettings && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 z-[150] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6"
+                            onClick={() => setShowDrumSettings(false)}
+                        >
+                            <motion.div
+                                initial={{ scale: 0.9, y: 20 }}
+                                animate={{ scale: 1, y: 0 }}
+                                exit={{ scale: 0.9, y: 20 }}
+                                className="w-full max-w-xs bg-zinc-900 border border-white/10 rounded-[32px] p-6 shadow-2xl"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <div className="flex items-center justify-between mb-6">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center">
+                                            <Drum size={16} className="text-orange-400" />
+                                        </div>
+                                        <h3 className="text-white font-bold tracking-tight">Drum Settings</h3>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowDrumSettings(false)}
+                                        className="text-white/40 hover:text-white"
+                                    >
+                                        <X size={20} />
+                                    </button>
+                                </div>
+
+                                <div className="flex flex-col gap-6">
+                                    {/* BPM Control */}
+                                    <div className="flex flex-col gap-3">
+                                        <div className="flex justify-between items-center px-1">
+                                            <span className="text-xs font-bold text-white/40 uppercase tracking-widest">Tempo</span>
+                                            <span className="text-xl font-mono font-bold text-orange-400">{drumBpm} <span className="text-[10px] text-white/20 uppercase">BPM</span></span>
+                                        </div>
+                                        <input
+                                            type="range"
+                                            min="60"
+                                            max="180"
+                                            value={drumBpm}
+                                            onChange={(e) => setDrumBpm(parseInt(e.target.value))}
+                                            className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-orange-500"
+                                        />
+                                    </div>
+
+                                    {/* Time Signature */}
+                                    <div className="flex flex-col gap-3">
+                                        <span className="text-xs font-bold text-white/40 uppercase tracking-widest px-1">Time Signature</span>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {['3/4', '4/4', '6/8'].map((ts) => (
+                                                <button
+                                                    key={ts}
+                                                    onClick={() => setDrumTimeSignature(ts)}
+                                                    className={`py-2.5 rounded-xl text-sm font-bold transition-all
+                                                         ${drumTimeSignature === ts
+                                                            ? 'bg-orange-500 text-black'
+                                                            : 'bg-white/5 text-white/60 hover:bg-white/10'}
+                                                     `}
+                                                >
+                                                    {ts}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Pattern Selection */}
+                                    <div className="flex flex-col gap-3">
+                                        <span className="text-xs font-bold text-white/40 uppercase tracking-widest px-1">Pattern</span>
+                                        <div className="grid grid-cols-1 gap-2">
+                                            {['Basic 8-beat', 'Acoustic Pop', 'Jazz Swing', 'Bossa Nova'].map((p) => (
+                                                <button
+                                                    key={p}
+                                                    onClick={() => setDrumPattern(p)}
+                                                    className={`px-4 py-3 rounded-2xl text-sm font-medium transition-all text-left flex items-center justify-between
+                                                          ${drumPattern === p
+                                                            ? 'bg-orange-500 text-black'
+                                                            : 'bg-white/5 text-white/60 hover:bg-white/10'}`}
+                                                >
+                                                    {p}
+                                                    {drumPattern === p && <Check size={16} />}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={() => {
+                                        // 보장: 오디오 컨텍스트 재개 후 재생
+                                        Tone.start();
+                                        setIsDrumPlaying(true);
+                                        setShowDrumSettings(false);
+                                    }}
+                                    className="w-full mt-8 py-4 rounded-2xl bg-white text-black font-bold hover:bg-gray-100 transition-all active:scale-95"
+                                >
+                                    Apply & Play
+                                </button>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
                 <AnimatePresence>
                     {showScaleSelector && (
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 20 }}
-                            className="absolute inset-0 z-[100] bg-black/80 backdrop-blur-2xl flex flex-col pointer-events-auto"
+                            className="absolute inset-0 z-[100] bg-black/60 backdrop-blur-[40px] flex flex-col pointer-events-auto"
                         >
-                            <div className="flex items-center justify-between px-6 py-8 border-b border-white/10">
-                                <h2 className="text-white font-bold text-lg tracking-wider uppercase">Select Scale</h2>
+                            <div className="flex items-center justify-between px-6 py-6 border-b border-white/[0.08]">
+                                <h2 className="text-white font-bold text-sm tracking-[0.25em] uppercase opacity-90">Select Scale</h2>
                                 <button
                                     onClick={() => setShowScaleSelector(false)}
-                                    className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+                                    className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all border border-white/[0.05]"
                                 >
                                     ✕
                                 </button>
@@ -654,35 +903,35 @@ export default function PanReelPage() {
                                                 <button
                                                     key={filter.value}
                                                     onClick={() => setFilterNoteCount(filter.value)}
-                                                    className={`px-3 py-1.5 rounded-full flex items-center gap-1.5 transition-colors whitespace-nowrap
+                                                    className={`px-3 py-1.5 rounded-full flex items-center gap-2 transition-all border whitespace-nowrap
                                                         ${filterNoteCount === filter.value
-                                                            ? 'bg-white text-black'
-                                                            : 'bg-white/10 text-white/60 hover:bg-white/20'}`}
+                                                            ? 'bg-white border-white text-black shadow-[0_0_15px_rgba(255,255,255,0.3)]'
+                                                            : 'bg-white/[0.03] border-white/[0.08] text-white/40 hover:text-white/80 hover:bg-white/[0.08]'}`}
                                                 >
-                                                    <span className="text-xs font-bold uppercase tracking-wider">{filter.label}</span>
-                                                    <span className={`text-[10px] font-bold ${filterNoteCount === filter.value ? 'opacity-100' : 'opacity-50'}`}>
+                                                    <span className="text-[10px] font-black uppercase tracking-widest">{filter.label}</span>
+                                                    <span className={`text-[10px] font-bold ${filterNoteCount === filter.value ? 'opacity-80' : 'opacity-30'}`}>
                                                         {filter.count}
                                                     </span>
                                                 </button>
                                             ));
                                         })()}
                                     </div>
-                                    <div className="flex justify-end gap-4 px-1">
+                                    <div className="flex justify-end gap-5 px-1 pt-1">
                                         <button
                                             onClick={() => setSortBy('default')}
-                                            className={`text-[10px] font-bold uppercase tracking-widest ${sortBy === 'default' ? 'text-white' : 'text-white/40'}`}
+                                            className={`text-[9px] font-black uppercase tracking-[0.2em] transition-all ${sortBy === 'default' ? 'text-white' : 'text-white/20 hover:text-white/40'}`}
                                         >
                                             Default
                                         </button>
                                         <button
                                             onClick={() => setSortBy('name')}
-                                            className={`text-[10px] font-bold uppercase tracking-widest ${sortBy === 'name' ? 'text-white' : 'text-white/40'}`}
+                                            className={`text-[9px] font-black uppercase tracking-[0.2em] transition-all ${sortBy === 'name' ? 'text-white' : 'text-white/20 hover:text-white/40'}`}
                                         >
                                             A-Z
                                         </button>
                                         <button
                                             onClick={() => setSortBy('notes')}
-                                            className={`text-[10px] font-bold uppercase tracking-widest ${sortBy === 'notes' ? 'text-white' : 'text-white/40'}`}
+                                            className={`text-[9px] font-black uppercase tracking-[0.2em] transition-all ${sortBy === 'notes' ? 'text-white' : 'text-white/20 hover:text-white/40'}`}
                                         >
                                             Notes
                                         </button>
@@ -701,34 +950,36 @@ export default function PanReelPage() {
                                                 tabIndex={0}
                                                 onClick={() => handleScaleSelect(scale)}
                                                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleScaleSelect(scale); }}
-                                                className={`p-5 rounded-[24px] text-left transition-all flex items-center justify-between group relative overflow-hidden border border-white/5 cursor-pointer
+                                                className={`p-6 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border cursor-pointer
                                                     ${targetScale.id === scale.id
-                                                        ? 'bg-white text-black'
-                                                        : 'bg-white/5 text-white hover:bg-white/10'}`}
+                                                        ? 'bg-gradient-to-br from-white to-gray-200 border-white shadow-[0_20px_40px_rgba(0,0,0,0.3)] scale-[1.02]'
+                                                        : 'bg-white/[0.02] border-white/[0.05] text-white hover:bg-white/[0.05] hover:border-white/[0.1]'}`}
                                             >
                                                 <div className="flex flex-col gap-2 z-10 flex-1 min-w-0 pr-4">
                                                     <div className="flex items-center justify-between">
-                                                        <span className="font-bold text-lg tracking-tight truncate">{scale.name}</span>
+                                                        <span className={`font-black text-xl tracking-tight truncate ${targetScale.id === scale.id ? 'text-black' : 'text-white/90'}`}>
+                                                            {scale.name}
+                                                        </span>
                                                     </div>
 
-                                                    <div className={`flex flex-col gap-1 text-[11px] font-medium opacity-70 ${targetScale.id === scale.id ? 'text-black/70' : 'text-white/60'}`}>
+                                                    <div className={`flex flex-col gap-1 text-[10px] font-bold tracking-wide transition-opacity duration-300 ${targetScale.id === scale.id ? 'text-black/40' : 'text-white/20'}`}>
                                                         <div className="flex gap-2">
-                                                            <span className="font-bold w-3">T</span>
+                                                            <span className="opacity-50 w-3">T</span>
                                                             <span className="truncate">{topNotes}</span>
                                                         </div>
                                                         {bottomNotes && (
                                                             <div className="flex gap-2">
-                                                                <span className="font-bold w-3">B</span>
+                                                                <span className="opacity-50 w-3">B</span>
                                                                 <span className="truncate">{bottomNotes}</span>
                                                             </div>
                                                         )}
                                                     </div>
 
-                                                    <div className="flex gap-1.5 flex-wrap mt-1">
-                                                        {scale.tags.map((tag, idx) => (
-                                                            <span key={idx} className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider
-                                                                ${targetScale.id === scale.id ? 'bg-black/10 text-black/60' : 'bg-white/10 text-white/50'}`}>
-                                                                #{tag}
+                                                    <div className="flex gap-1.5 flex-wrap mt-2">
+                                                        {(scale.tagsEn || scale.tags).map((tag, idx) => (
+                                                            <span key={idx} className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all
+                                                                ${targetScale.id === scale.id ? 'bg-black/5 text-black/40' : 'bg-white/5 text-white/30'}`}>
+                                                                {tag}
                                                             </span>
                                                         ))}
                                                     </div>
@@ -737,15 +988,15 @@ export default function PanReelPage() {
                                                 <div className="flex items-center gap-3 z-10 shrink-0">
                                                     <button
                                                         onClick={(e) => handlePreview(e, scale)}
-                                                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all
+                                                        className={`w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-lg
                                                             ${targetScale.id === scale.id
-                                                                ? 'bg-black/10 hover:bg-black/20 text-black'
-                                                                : 'bg-white/10 hover:bg-white/20 text-white'}`}
+                                                                ? 'bg-black text-white hover:bg-black/80'
+                                                                : 'bg-white/10 hover:bg-white/20 text-white border border-white/10'}`}
                                                     >
                                                         {previewingScaleId === scale.id ? (
                                                             <Volume2 size={20} className="animate-pulse" />
                                                         ) : (
-                                                            <Play size={20} fill="currentColor" />
+                                                            <Play size={22} fill="currentColor" className="ml-1" />
                                                         )}
                                                     </button>
                                                 </div>
@@ -756,13 +1007,15 @@ export default function PanReelPage() {
                             </div>
 
                             <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black via-black/90 to-transparent pointer-events-none">
-                                <p className="text-center text-gray-500 text-[10px] tracking-[0.3em] font-bold uppercase pointer-events-auto">
+                                <p className="text-center text-white/20 text-[9px] tracking-[0.5em] font-black uppercase pointer-events-auto">
                                     {SCALES.length} MASTER SCALES
                                 </p>
                             </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
+
+                {/* === Layer 6: Countdown Overlay REMOVED (Now using 3D externalTouchText) === */}
 
             </main>
 
@@ -783,7 +1036,7 @@ export default function PanReelPage() {
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                             {recordedVideoUrl ? (
                                 <video
-                                    src={recordedVideoUrl}
+                                    src={recordedVideoUrl || undefined}
                                     loop
                                     autoPlay
                                     playsInline
@@ -864,7 +1117,7 @@ export default function PanReelPage() {
                   scrollbar-width: none;
                 }
             `}</style>
-        </div>
+        </div >
     );
 }
 
