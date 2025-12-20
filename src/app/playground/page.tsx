@@ -112,7 +112,7 @@ export default function PlaygroundHome() {
 
                 {/* Subtitle & CTA - Below Center */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 mt-12 flex flex-col items-center gap-6">
-                    <p className="!text-sm lg:!text-xl text-slate-400 font-medium tracking-wide flex items-center gap-2 flex-wrap justify-center">
+                    <p className="!text-xs sm:!text-sm lg:!text-xl text-slate-400 font-medium tracking-wide flex items-center gap-2 whitespace-nowrap justify-center">
                         {lang === 'en' ? (
                             <>
                                 {t.subtitleStart}<span className="text-cyan-400 font-bold">{t.subtitleDing}</span>
@@ -120,7 +120,7 @@ export default function PlaygroundHome() {
                             </>
                         ) : (
                             <span className="font-bold text-slate-300">
-                                오늘도 하나 남겨볼까? <span className="text-2xl inline-block translate-y-1">📹</span>
+                                오늘도 하나 남겨볼까? <span className="text-2xl inline-block translate-y-1">🤩</span>
                             </span>
                         )}
                     </p>
