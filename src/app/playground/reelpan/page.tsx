@@ -522,6 +522,7 @@ export default function ReelPanPage() {
             showTouchText: showTouchText, // 유휴 상태 텍스트 표시 여부
             externalTouchText: countdown ? countdown.toString() : null, // 3D 카운트다운 텍스트 주입
             recordingCropMode: layoutMode === 'square' ? 'square' as 'square' : 'full' as 'full',
+            enableZoom: false, // 마우스 휠 줌인/줌아웃 비활성화
         };
 
         if (totalNotes === 18) return <Digipan18M {...commonProps} />;
