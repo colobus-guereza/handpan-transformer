@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { motion, AnimatePresence } from "framer-motion";
 import { SCALES } from '@/data/handpanScales';
-import { Layout, Check, Square, Circle, Smartphone, Keyboard, Play, Pause, Volume2, Download, Trash2, X, Type, ChevronDown, Share2, RefreshCcw, Drum, SlidersHorizontal, Settings2, Sparkles, ArrowLeft } from 'lucide-react';
+import { Layout, Check, Square, Circle, Smartphone, Keyboard, Play, Pause, Volume2, Download, Trash2, X, Type, ChevronDown, Share2, RefreshCcw, Drum, SlidersHorizontal, Settings2, Sparkles, ArrowLeft, Music2 } from 'lucide-react';
 import { Digipan3DHandle } from "@/components/digipan/Digipan3D";
 import { useHandpanAudio } from "@/hooks/useHandpanAudio";
 import { getNoteFrequency } from "@/constants/noteFrequencies";
@@ -32,7 +32,7 @@ export default function ReelPanPage() {
     const [showScaleSelector, setShowScaleSelector] = useState(false);
     const [targetScale, setTargetScale] = useState(SCALES.find(s => s.id === 'd_kurd_10') || SCALES[0]);
     const [previewingScaleId, setPreviewingScaleId] = useState<string | null>(null);
-    const [showTouchText, setShowTouchText] = useState(false); // Idle Ready/Set/Touch toggle
+    const [isChordPlaying, setIsChordPlaying] = useState(false); // Chord Pad 반주 토글
     const [recordingBlob, setRecordingBlob] = useState<Blob | null>(null);
     const [recordedVideoUrl, setRecordedVideoUrl] = useState<string | null>(null);
     const [viewMode, setViewMode] = useState<0 | 1 | 2 | 3 | 4>(2); // 2 = Labels Visible, 3 = Labels Hidden
@@ -45,6 +45,17 @@ export default function ReelPanPage() {
     const [drumBpm, setDrumBpm] = useState(100);
     const [drumPattern, setDrumPattern] = useState('Basic 8-beat');
     const [drumTimeSignature, setDrumTimeSignature] = useState('4/4');
+
+    // Chord Pad State (독립적 시스템 - Scale Recommender와 분리)
+    const chordPadSynthRef = useRef<Tone.PolySynth | null>(null);
+    const chordPartRef = useRef<Tone.Part | null>(null);
+    const chordMasterGainRef = useRef<Tone.Gain | null>(null);
+    const chordEffectsRef = useRef<Tone.ToneAudioNode[]>([]);
+    const chordSetsRef = useRef<{ barStart: number; notes: string[]; role: string }[]>([]);
+
+    // Ref for independent drum/chord control
+    const isDrumPlayingRef = useRef(false);
+    const isChordPlayingRef = useRef(false);
 
     // 녹화 타이머용
     const [recordTimer, setRecordTimer] = useState(0);
@@ -228,6 +239,37 @@ export default function ReelPanPage() {
         };
     }, []);
 
+    // [Chord Pad Engine] 독립적 초기화 (Scale Recommender와 완전 분리)
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        // Chord Pad Master Bus (독립적)
+        const chordMasterGain = new Tone.Gain(0.35).toDestination();
+        chordMasterGainRef.current = chordMasterGain;
+
+        // Reverb + Delay Effect Chain
+        const reverb = new Tone.Reverb({ decay: 8, wet: 0.4, preDelay: 0.1 }).connect(chordMasterGain);
+        const delay = new Tone.PingPongDelay({ delayTime: "4n.", feedback: 0.3, wet: 0.2 }).connect(reverb);
+        const chorus = new Tone.Chorus({ frequency: 0.3, delayTime: 4, depth: 0.6, spread: 180 }).connect(delay).start();
+
+        // PAD Synth (dreamy triangle waves)
+        chordPadSynthRef.current = new Tone.PolySynth(Tone.Synth, {
+            oscillator: { type: "fattriangle", count: 3, spread: 30 },
+            envelope: { attack: 2.0, decay: 1.5, sustain: 0.9, release: 3.0, attackCurve: "exponential" },
+            volume: -12
+        });
+        chordPadSynthRef.current.maxPolyphony = 6;
+        chordPadSynthRef.current.connect(chorus);
+
+        chordEffectsRef.current = [chordMasterGain, reverb, delay, chorus];
+
+        return () => {
+            chordPadSynthRef.current?.dispose();
+            chordPartRef.current?.dispose();
+            chordEffectsRef.current.forEach(e => e.dispose());
+        };
+    }, []);
+
     // [Drum Engine] Dynamic Pitch Update (Ding - 1 Octave)
     useEffect(() => {
         if (!targetScale?.notes?.ding) return;
@@ -271,6 +313,8 @@ export default function ReelPanPage() {
 
             if (drumTimeSignature === '4/4') {
                 // --- Simple 4/4 Basic 8-beat ---
+                // ★ isDrumPlayingRef 확인: 드럼 버튼이 활성화된 경우에만 소리 재생
+                if (!isDrumPlayingRef.current) return;
                 // Kick: 1, 3
                 if (step === 0 || step === 8) kickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.8);
                 // Snare: 2, 4
@@ -281,11 +325,13 @@ export default function ReelPanPage() {
                     hatSynthRef.current?.triggerAttackRelease("32n", time, isAccent ? 0.3 : 0.15);
                 }
             } else if (drumTimeSignature === '3/4') {
+                if (!isDrumPlayingRef.current) return;
                 // --- Simple 3/4 Waltz ---
                 if (step === 0) kickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.8);
                 if (step === 4 || step === 8) snareSynthRef.current?.triggerAttackRelease("8n", time, 0.4);
                 if (step % 2 === 0) hatSynthRef.current?.triggerAttackRelease("32n", time, 0.15);
             } else if (is68) {
+                if (!isDrumPlayingRef.current) return;
                 // --- Simple 6/8 ---
                 if (step === 0) kickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.8);
                 if (step === 6) snareSynthRef.current?.triggerAttackRelease("8n", time, 0.5);
@@ -297,12 +343,20 @@ export default function ReelPanPage() {
 
     // [Drum Engine] Playback Sync
     useEffect(() => {
+        isDrumPlayingRef.current = isDrumPlaying; // Ref 동기화
+
         if (isDrumPlaying) {
             Tone.start();
-            Tone.Transport.position = 0; // Restart from beginning
-            Tone.Transport.start();
+            // 이미 Transport가 돌고 있으면 리셋하지 않음
+            if (Tone.Transport.state !== 'started') {
+                Tone.Transport.position = 0;
+                Tone.Transport.start();
+            }
         } else {
-            Tone.Transport.stop(); // Stops and resets to 0
+            // 드럼 끄려는데 화음도 꺼져있으면 Transport 중지
+            if (!isChordPlayingRef.current) {
+                Tone.Transport.stop();
+            }
         }
     }, [isDrumPlaying]);
 
@@ -333,6 +387,120 @@ export default function ReelPanPage() {
     useEffect(() => {
         if (!showScaleSelector) stopPreview();
     }, [showScaleSelector]);
+
+    // [Chord Pad] 스케일 변경 시 화음 진행 계산 (독립 로직)
+    useEffect(() => {
+        if (!targetScale?.notes) return;
+
+        const allNotes = [targetScale.notes.ding, ...targetScale.notes.top, ...targetScale.notes.bottom];
+        if (allNotes.length < 5) return;
+
+        // 인라인 calculateChordProgression (Scale Recommender 의존 없이)
+        const noteToMidi = new Map<string, number>();
+        const midiToNote = new Map<number, string>();
+
+        allNotes.forEach(note => {
+            const midi = Tone.Frequency(note).toMidi();
+            noteToMidi.set(note, midi);
+            midiToNote.set(midi, note);
+        });
+
+        const sortedMidis = Array.from(noteToMidi.values()).sort((a, b) => a - b);
+
+        const findHarmonicNotes = (rootNote: string): string[] => {
+            const rootMidi = noteToMidi.get(rootNote);
+            if (rootMidi === undefined) return [rootNote];
+
+            const chordNotes = [rootNote];
+            const perfectFifth = sortedMidis.find(m => Math.abs(m - (rootMidi + 7)) <= 1);
+            const minor3rd = sortedMidis.find(m => m === rootMidi + 3);
+            const major3rd = sortedMidis.find(m => m === rootMidi + 4);
+
+            if (minor3rd) chordNotes.push(midiToNote.get(minor3rd)!);
+            else if (major3rd) chordNotes.push(midiToNote.get(major3rd)!);
+
+            if (perfectFifth) {
+                chordNotes.push(midiToNote.get(perfectFifth)!);
+            } else {
+                const octave = sortedMidis.find(m => m === rootMidi + 12);
+                if (octave) chordNotes.push(midiToNote.get(octave)!);
+            }
+            return chordNotes;
+        };
+
+        const len = allNotes.length;
+        const progressionIndices = [
+            { idx: 0, bar: 1, role: "Root (i)" },
+            { idx: 5 % len, bar: 5, role: "VI" },
+            { idx: 3 % len, bar: 9, role: "iv" },
+            { idx: 4 % len, bar: 13, role: "V" }
+        ];
+
+        chordSetsRef.current = progressionIndices.map(prog => ({
+            barStart: prog.bar,
+            notes: findHarmonicNotes(allNotes[prog.idx]),
+            role: prog.role
+        }));
+
+        // 재생 중이면 스케일 변경 시 중지
+        if (isChordPlaying && chordPartRef.current) {
+            chordPartRef.current.stop();
+            chordPadSynthRef.current?.releaseAll();
+            setIsChordPlaying(false);
+        }
+    }, [targetScale]);
+
+    // [Chord Pad] 화음 반주 토글 핸들러
+    const handleChordToggle = async () => {
+        await Tone.start();
+
+        if (isChordPlaying) {
+            // STOP - 화음 중지
+            isChordPlayingRef.current = false;
+            chordPartRef.current?.stop();
+            chordPadSynthRef.current?.releaseAll();
+            setIsChordPlaying(false);
+
+            // 화음 끄려는데 드럼도 꺼져있으면 Transport 중지
+            if (!isDrumPlayingRef.current) {
+                Tone.Transport.stop();
+            }
+        } else {
+            // START - 화음 시작 (무한 루프)
+            const chordSets = chordSetsRef.current;
+            if (chordSets.length < 4 || !chordPadSynthRef.current) return;
+
+            // 기존 Part 정리
+            if (chordPartRef.current) {
+                chordPartRef.current.dispose();
+            }
+
+            // BPM 동기화 (드럼 BPM 사용)
+            Tone.Transport.bpm.value = drumBpm;
+
+            // 화음 Part 생성 (16마디 무한 루프)
+            chordPartRef.current = new Tone.Part((time, value) => {
+                const chord = value as { notes: string[]; role: string };
+                chordPadSynthRef.current?.triggerAttackRelease(chord.notes, "4m", time);
+            }, [
+                ["0:0:0", chordSets[0]],
+                ["4:0:0", chordSets[1]],
+                ["8:0:0", chordSets[2]],
+                ["12:0:0", chordSets[3]]
+            ]);
+            chordPartRef.current.loop = true;
+            chordPartRef.current.loopEnd = "16:0:0";
+            chordPartRef.current.start(0);
+
+            isChordPlayingRef.current = true;
+            setIsChordPlaying(true);
+
+            // Transport가 멈춰있으면 시작
+            if (Tone.Transport.state !== 'started') {
+                Tone.Transport.start();
+            }
+        }
+    };
 
     // 1. 녹화 시작
     const startRecording = () => {
@@ -519,7 +687,7 @@ export default function ReelPanPage() {
             onIsRecordingChange: setIsRecording,
             onRecordingComplete: handleRecordingComplete,
             disableRecordingUI: true,
-            showTouchText: showTouchText, // 유휴 상태 텍스트 표시 여부
+            showTouchText: false, // 비활성화 (화음 반주로 대체됨)
             externalTouchText: countdown ? countdown.toString() : null, // 3D 카운트다운 텍스트 주입
             recordingCropMode: layoutMode === 'square' ? 'square' as 'square' : 'full' as 'full',
             enableZoom: false, // 마우스 휠 줌인/줌아웃 비활성화
@@ -546,9 +714,9 @@ export default function ReelPanPage() {
     }, []);
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-950 overflow-hidden touch-none overscroll-none">
+        <div className="flex items-center justify-center min-h-dvh bg-black overflow-hidden touch-none overscroll-none">
 
-            <main className="relative w-full max-w-[480px] h-[100dvh] bg-black shadow-2xl overflow-hidden flex flex-col items-center justify-center">
+            <main className="relative w-full max-w-[480px] h-dvh bg-black shadow-2xl overflow-hidden flex flex-col items-center justify-center" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
 
                 {/* === Layer 0: Initial Page Loading Skeleton === */}
                 <AnimatePresence>
@@ -558,7 +726,7 @@ export default function ReelPanPage() {
                             initial={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.5, ease: 'easeOut' }}
-                            className="absolute inset-0 z-[999] bg-black flex flex-col items-center justify-between"
+                            className="absolute inset-0 z-[999] bg-slate-950 flex flex-col items-center justify-between"
                         >
                             {/* Header Skeleton */}
                             <div className="w-full px-4 py-8 flex flex-col items-center gap-2">
@@ -620,7 +788,7 @@ export default function ReelPanPage() {
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
                                 transition={{ duration: 0.5, ease: 'easeOut' }}
-                                className="absolute inset-0 flex items-center justify-center z-10 bg-black"
+                                className="absolute inset-0 flex items-center justify-center z-10 bg-slate-950"
                             >
                                 {/* Skeleton Circle */}
                                 <div className="relative">
@@ -698,12 +866,11 @@ export default function ReelPanPage() {
                                 className="flex flex-col items-center group active:scale-95 transition-transform"
                             >
                                 <div className="flex items-center gap-1.5">
-                                    <h1 className="text-white font-bold text-xl tracking-[0.15em] drop-shadow-md group-hover:text-white/80 transition-colors">
+                                    <h1 className="text-white font-normal text-xl tracking-normal drop-shadow-md group-hover:text-white/80 transition-colors">
                                         {targetScale.name}
                                     </h1>
                                     <ChevronDown size={18} className="text-white/60 group-hover:text-white/80 transition-colors mt-0.5" />
                                 </div>
-                                <div className="w-16 h-1 bg-white/30 rounded-full mt-2 group-hover:bg-white/50 transition-colors" />
                             </motion.button>
                         </header>
 
@@ -791,13 +958,20 @@ export default function ReelPanPage() {
                                     </div>
                                 </button>
 
-                                {/* 5. Touch Text (Ready/Set/Touch) Toggle */}
+                                {/* 5. Chord Pad (화음 반주) Toggle */}
                                 <button
-                                    onClick={() => setShowTouchText(prev => !prev)}
-                                    className={`w-12 h-12 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center transition-all active:scale-95 ${showTouchText ? 'bg-orange-500/20 border-orange-500/50' : 'bg-white/10'}`}
-                                    title="Ready/Set/Touch 가이드 토글"
+                                    onClick={handleChordToggle}
+                                    className={`w-12 h-12 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center transition-all active:scale-95 relative overflow-hidden ${isChordPlaying ? 'bg-purple-500/30 border-purple-500/50' : 'bg-white/10 hover:bg-white/20'}`}
+                                    title="화음 반주 토글"
                                 >
-                                    <Sparkles size={18} className={showTouchText ? 'text-orange-400' : 'text-white/40'} />
+                                    <Music2 size={18} className={isChordPlaying ? 'text-purple-300' : 'text-white/40'} />
+                                    {isChordPlaying && (
+                                        <motion.div
+                                            animate={{ opacity: [0.3, 0.8, 0.3], scale: [1, 1.2, 1] }}
+                                            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                                            className="absolute inset-0 rounded-full bg-purple-500/20"
+                                        />
+                                    )}
                                 </button>
                             </div>
                         </footer>
@@ -1003,7 +1177,7 @@ export default function ReelPanPage() {
                                     {(() => {
                                         const currentScale = processedScales.find(s => s.id === targetScale.id);
                                         if (!currentScale) return null;
-                                        
+
                                         const topNotes = [currentScale.notes.ding, ...currentScale.notes.top].join(' ');
                                         const bottomNotes = currentScale.notes.bottom.length > 0 ? currentScale.notes.bottom.join(' ') : null;
 

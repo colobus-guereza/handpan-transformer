@@ -3,7 +3,7 @@
 import type { Viewport } from 'next';
 import { useState, useRef } from 'react';
 import Link from 'next/link';
-import { Camera, Music, Heart, Users, ArrowRight, ArrowLeft, Globe, Smartphone, Box } from 'lucide-react';
+import { Camera, Music, Heart, Users, ArrowRight, ArrowLeft, Globe, Smartphone, Box, Type, Drum, Sparkles, HelpCircle } from 'lucide-react';
 import ReelPanSlider from '@/components/playground/ReelPanSlider';
 
 /*
@@ -49,7 +49,7 @@ const translations = {
         subtitleThing: "Thing",
         subtitleEnd: "으로!",
         description: "릴팬 ReelPan은 디지털 핸드팬 연주를 즉시 공유 가능한 고품질 세로형 릴스 영상으로 변환해주는 창작 도구입니다.",
-        cta: "릴스 만들기",
+        cta: "새 릴스 만들기",
         chips: {
             community: "커뮤니티 바이브",
             visuals: "3D 비주얼",
@@ -142,7 +142,7 @@ export default function PlaygroundHome() {
                     className="absolute bottom-10 right-10 p-4 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-cyan-300 border border-white/5 transition-all shadow-lg backdrop-blur-md animate-pulse-slow group"
                     aria-label="Next Page"
                 >
-                    <ArrowRight size={24} className="group-hover:translate-x-1 transition-transform" />
+                    <HelpCircle size={24} className="group-hover:scale-110 transition-transform" />
                 </button>
             </section>
 
@@ -162,7 +162,7 @@ export default function PlaygroundHome() {
 
                     {/* Center Quote - 화면 정중앙 고정 */}
                     <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full px-4 z-10">
-                        <p className="text-lg md:text-2xl text-cyan-400 font-medium word-keep text-left">
+                        <p className="text-[1.35rem] md:text-[1.8rem] text-cyan-400 font-medium word-keep text-left">
                             "일상에서 영감이 왔을 때,<br className="md:hidden" /> 모바일 영상으로 바로 남길 수 있다면?"
                         </p>
                     </div>
@@ -177,11 +177,11 @@ export default function PlaygroundHome() {
 
                     {/* Section 1: Hero - Description Below Center (30px 아래) */}
                     <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 text-left w-full px-4" style={{ top: 'calc(50% + 30px + 1.5rem)' }}>
-                        <p className="text-slate-400 leading-relaxed text-base md:text-lg break-keep">
+                        <p className="text-slate-400 leading-relaxed text-[1.2rem] md:text-[1.35rem] break-keep">
                             물리적인 악기가 없어도 괜찮습니다. ReelPan은 당신의 음악적 아이디어를 가장 간편하게 시각화하고 기록할 수 있는 <span className="text-white font-semibold">'디지털 연주 기록 도구'</span>입니다.
                         </p>
-                        <p className="text-slate-400 leading-relaxed text-base md:text-lg break-keep mt-4">
-                            무거운 악기 대신 스마트폰이나 PC만 있다면, 언제 어디서든 당신만의 멜로디를 영상으로 저장할 수 있습니다.
+                        <p className="text-slate-400 leading-relaxed text-[1.2rem] md:text-[1.35rem] break-keep mt-4">
+                            악기가 없어도 스마트폰만 있다면, 언제 어디서든 당신만의 멜로디를 영상으로 저장할 수 있습니다.
                         </p>
                     </div>
                 </div>
@@ -205,9 +205,9 @@ export default function PlaygroundHome() {
                             <div className="w-12 h-12 rounded-2xl bg-purple-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                                 <Smartphone size={24} className="text-purple-400" />
                             </div>
-                            <h3 className="text-xl font-bold mb-3 text-slate-100">세로형 숏폼(9:16) 최적화</h3>
+                            <h3 className="text-xl font-bold mb-3 text-slate-100">세로형 숏폼(9:16)</h3>
                             <p className="text-slate-400 text-[1.05rem] leading-relaxed">
-                                별도의 편집 없이도 릴스(Reels), 숏츠(Shorts) 등 모바일 환경에 최적화된 9:16 비율의 연주 영상을 생성합니다. 1:1 정사각형 포맷도 제공합니다.
+                                별도의 편집 없이도 릴스, 숏츠 등 모바일 환경에 최적화된 9:16 비율의 연주 영상을 생성합니다. 1:1 정사각형 포맷도 제공합니다.
                             </p>
                         </div>
                         {/* Card 3 */}
@@ -215,7 +215,7 @@ export default function PlaygroundHome() {
                             <div className="w-12 h-12 rounded-2xl bg-pink-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                                 <Box size={24} className="text-pink-400" />
                             </div>
-                            <h3 className="text-xl font-bold mb-3 text-slate-100">아이디어를 곧바로 콘텐츠로</h3>
+                            <h3 className="text-xl font-bold mb-3 text-slate-100">영감을 즉시 컨텐츠로</h3>
                             <p className="text-slate-400 text-[1.05rem] leading-relaxed">
                                 머릿속에서 맴돌던 멜로디를 놓치지 마세요. 당신의 영감을 터치 몇 번만으로 시각과 청각이 결합된 특별한 영상 콘텐츠로 간편하게 완성할 수 있습니다.
                             </p>
@@ -224,25 +224,33 @@ export default function PlaygroundHome() {
 
                     {/* Section 3: How to Use (Vertical Stepper) */}
                     <div>
-                        <h3 className="text-3xl font-bold text-center mb-12">심플한 사용 방법</h3>
+                        <h3 className="text-3xl font-bold text-center mb-12">심플한 사용법</h3>
                         <div className="relative max-w-2xl mx-auto pl-8 border-l border-white/10 space-y-12">
                             {/* Step 1 */}
                             <div className="relative group">
-                                <div className="absolute -left-[41px] w-5 h-5 rounded-full bg-slate-900 border-4 border-cyan-500 group-hover:scale-125 transition-transform" />
+                                <div className="absolute -left-[41px] w-5 h-5 rounded-full bg-slate-900 border-4 border-emerald-500 group-hover:scale-125 transition-transform" />
                                 <div className="space-y-2">
-                                    <h4 className="text-xl font-bold text-white group-hover:text-cyan-400 transition-colors">스케일 탐색</h4>
-                                    <p className="text-slate-400">실제로는 연주해보기 어려운 다양한 스케일의 핸드팬들을 직접 골라보세요. 버튼 하나로 악기 분위기가 즉시 바뀝니다.</p>
+                                    <h4 className="text-xl font-bold text-white group-hover:text-emerald-400 transition-colors">새 릴스 만들기</h4>
+                                    <p className="text-slate-400">새로운 영상을 만들기 위해서 '릴스 만들기' 버튼을 클릭합니다.</p>
                                 </div>
                             </div>
                             {/* Step 2 */}
                             <div className="relative group">
-                                <div className="absolute -left-[41px] w-5 h-5 rounded-full bg-slate-900 border-4 border-purple-500 group-hover:scale-125 transition-transform" />
+                                <div className="absolute -left-[41px] w-5 h-5 rounded-full bg-slate-900 border-4 border-cyan-500 group-hover:scale-125 transition-transform" />
                                 <div className="space-y-2">
-                                    <h4 className="text-xl font-bold text-white group-hover:text-purple-400 transition-colors">연주 및 녹화</h4>
-                                    <p className="text-slate-400">화면 속 핸드팬을 두드리며 자유롭게 연주하세요. 준비 후 녹화 버튼을 누르면, 당신의 터치 타이밍과 멜로디가 실시간으로 영상에 담깁니다. 반주기능으로 멜로디를 보다 선명하게 만들어보세요.</p>
+                                    <h4 className="text-xl font-bold text-white group-hover:text-cyan-400 transition-colors">스케일 탐색</h4>
+                                    <p className="text-slate-400">스튜디오 상단의 '스케일 이름'을 터치하면, 스케일 선택 패널이 등장합니다. 이곳에서 실제로는 연주해보기 어려운 다양한 스케일의 핸드팬들을 직접 골라보세요. 버튼 하나로 악기 분위기가 즉시 바뀝니다.</p>
                                 </div>
                             </div>
                             {/* Step 3 */}
+                            <div className="relative group">
+                                <div className="absolute -left-[41px] w-5 h-5 rounded-full bg-slate-900 border-4 border-purple-500 group-hover:scale-125 transition-transform" />
+                                <div className="space-y-2">
+                                    <h4 className="text-xl font-bold text-white group-hover:text-purple-400 transition-colors">연주 및 녹화</h4>
+                                    <p className="text-slate-400">화면 속 핸드팬을 두드리며 자유롭게 연습하세요. 준비 후 녹화 버튼을 누르면고 연주를 시작하면, 당신의 멜로디가 실시간으로 영상에 담깁니다.</p>
+                                </div>
+                            </div>
+                            {/* Step 4 */}
                             <div className="relative group">
                                 <div className="absolute -left-[41px] w-5 h-5 rounded-full bg-slate-900 border-4 border-pink-500 group-hover:scale-125 transition-transform" />
                                 <div className="space-y-2">
@@ -255,32 +263,83 @@ export default function PlaygroundHome() {
 
                     {/* Section 4: Use Cases (Bento Grid) */}
                     <div>
-                        <h3 className="font-bold text-center mb-12 whitespace-nowrap" style={{ fontSize: 'clamp(1.25rem, 4vw, 1.875rem)' }}>일상에서 이렇게 활용해 보세요</h3>
+                        <h3 className="text-3xl font-bold text-center mb-12 whitespace-nowrap">실용적인 도구</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Box 1 */}
                             <div className="p-8 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex flex-col gap-4">
-                                <h4 className="text-xl font-bold text-cyan-200">나만의 음악 스케치북</h4>
-                                <p className="text-slate-400 text-[1.05rem]">이동 중인 버스나 잠들기 전, 문득 떠오른 멜로디가 휘발되기 전에 영상 메모로 스케치해 두세요.</p>
+                                <h4 className="text-xl font-bold text-cyan-200">영감 아카이빙 & SNS 공유</h4>
+                                <p className="text-slate-400 text-[1.05rem]">일상에서 문득 떠오른 멜로디를 즉시 영상으로 포착하고, 릴스나 숏츠로 공유해 나의 음악적 순간을 기록하세요.</p>
                             </div>
                             {/* Box 2 */}
                             <div className="p-8 rounded-3xl bg-gradient-to-bl from-white/10 to-white/5 border border-white/10 flex flex-col gap-4">
-                                <h4 className="text-xl font-bold text-purple-200">스케일 학습 및 시뮬레이션</h4>
-                                <p className="text-slate-400 text-[1.05rem]">새로운 핸드팬을 구매하기 전, 31가지 스케일을 미리 연주해보며 내 취향에 맞는 음계가 무엇인지 파악하는 교육용 도구로 활용할 수 있습니다.</p>
+                                <h4 className="text-xl font-bold text-purple-200">스케일 시뮬레이션</h4>
+                                <p className="text-slate-400 text-[1.05rem]">(구매 의사결정 기준) 고가의 악기를 구매하기 전, 다양한 스케일을 미리 연주해보며 내 취향에 딱 맞는 음계를 실패 없이 찾아보세요.</p>
                             </div>
                             {/* Box 3 */}
                             <div className="p-8 rounded-3xl bg-gradient-to-tr from-white/10 to-white/5 border border-white/10 flex flex-col gap-4">
-                                <h4 className="text-xl font-bold text-pink-200">연주 패턴 기록 (Logging)</h4>
-                                <p className="text-slate-400 text-[1.05rem]">연습 중인 리듬이나 타법 패턴을 시각적인 영상으로 기록하여, 텍스트 악보로는 표현하기 힘든 느낌을 저장해 두세요.</p>
+                                <h4 className="text-xl font-bold text-pink-200">교육자를 위한 레슨 자료 제작</h4>
+                                <p className="text-slate-400 text-[1.05rem]">멜로디, 패턴 등 아이디어를 교육용 영상자료로 제작해, 수강생들에게 더 직관적인 가이드를 제공하세요.</p>
                             </div>
                             {/* Box 4 */}
                             <div className="p-8 rounded-3xl bg-gradient-to-tl from-white/10 to-white/5 border border-white/10 flex flex-col gap-4">
-                                <h4 className="text-xl font-bold text-emerald-200">디지털 창작물 자산화</h4>
-                                <p className="text-slate-400 text-[1.05rem]">내가 만든 멜로디를 디지털 파일로 차곡차곡 모아, 나만의 음악 라이브러리(Digital Asset)를 구축할 수 있습니다.</p>
+                                <h4 className="text-xl font-bold text-emerald-200">2차 창작을 위한 디지털 소스</h4>
+                                <p className="text-slate-400 text-[1.05rem]">(플랫폼 및 리믹스 소스) 릴팬의 고음질 사운드와 영상을 소스(Source)로 활용해, 비트 메이킹이나 합주(Duet) 영상 등 새로운 디지털 콘텐츠로 재창조해 보세요.</p>
                             </div>
                         </div>
                     </div>
 
-                    {/* Section 5: Footer (CTA) */}
+                    {/* Section 5: UI 기능 설명 */}
+                    <div>
+                        <h3 className="text-3xl font-bold text-center mb-12 whitespace-nowrap">UI 기능 설명</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                            {/* 1. Label Toggle */}
+                            <div className="p-6 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex flex-col items-center gap-4">
+                                <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center">
+                                    <Type size={24} className="text-white/80" />
+                                </div>
+                                <h4 className="text-lg font-bold text-white">라벨 표시/숨김</h4>
+                                <p className="text-slate-400 text-[1.05rem] text-center">톤필드의 피치와 노트번호를 표시하거나 숨길 수 있습니다.</p>
+                            </div>
+
+                            {/* 2. Layout Mode */}
+                            <div className="p-6 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex flex-col items-center gap-4">
+                                <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center">
+                                    <span className="text-sm font-bold text-white tracking-widest">9:16</span>
+                                </div>
+                                <h4 className="text-lg font-bold text-white">레이아웃 모드</h4>
+                                <p className="text-slate-400 text-[1.05rem] text-center">세로형(9:16)과 정사각형(1:1) 레이아웃을 전환할 수 있습니다.</p>
+                            </div>
+
+                            {/* 3. Record Button */}
+                            <div className="p-6 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex flex-col items-center gap-4">
+                                <div className="w-16 h-16 rounded-full border-4 border-white flex items-center justify-center">
+                                    <div className="w-10 h-10 rounded-full bg-red-500" />
+                                </div>
+                                <h4 className="text-lg font-bold text-white">녹화 시작/정지</h4>
+                                <p className="text-slate-400 text-[1.05rem] text-center">중앙의 빨간 버튼을 눌러 연주를 녹화하거나 정지할 수 있습니다.</p>
+                            </div>
+
+                            {/* 4. Drum Accompaniment */}
+                            <div className="p-6 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex flex-col items-center gap-4">
+                                <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center">
+                                    <Drum size={24} className="text-white/80" />
+                                </div>
+                                <h4 className="text-lg font-bold text-white">드럼 반주</h4>
+                                <p className="text-slate-400 text-[1.05rem] text-center">심플한 드럼반주를 더하여 연주를 더욱 풍부하게 만들 수 있습니다. 아이콘을 길게 클릭해보세요.</p>
+                            </div>
+
+                            {/* 5. Touch Text Toggle */}
+                            <div className="p-6 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex flex-col items-center gap-4">
+                                <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center">
+                                    <Sparkles size={24} className="text-white/80" />
+                                </div>
+                                <h4 className="text-lg font-bold text-white">가이드 텍스트</h4>
+                                <p className="text-slate-400 text-[1.05rem] text-center">Ready/Set/Touch 가이드 텍스트를 표시하거나 숨길 수 있습니다.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Section 6: Footer (CTA) */}
                     <div className="text-center py-12 border-t border-white/10">
                         <p className="text-xl text-slate-300 font-medium tracking-wide">
                             당신의 일상 속 작은 영감, 이제 <span className="text-white font-bold">ReelPan</span>으로 놓치지 말고 기록하세요.
