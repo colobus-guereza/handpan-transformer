@@ -836,10 +836,18 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
 
     // [Chord Pad] 스케일 변경 시 화음 진행 계산 (독립 로직)
     useEffect(() => {
-        if (!targetScale?.notes) return;
+        if (!targetScale?.notes) {
+            console.log("[ChordDebug] No targetScale notes found");
+            return;
+        }
 
         const allNotes = [targetScale.notes.ding, ...targetScale.notes.top, ...targetScale.notes.bottom];
-        if (allNotes.length < 5) return;
+        console.log(`[ChordDebug] Analyzing scale: ${targetScale.name}, Notes count: ${allNotes.length}`);
+
+        if (allNotes.length < 5) {
+            console.warn("[ChordDebug] Not enough notes to generate chords (< 5)");
+            return;
+        }
 
         // 인라인 calculateChordProgression (Scale Recommender 의존 없이)
         const noteToMidi = new Map<string, number>();
@@ -888,8 +896,11 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
             role: prog.role
         }));
 
+        console.log("[ChordDebug] Generated Chord Sets:", chordSetsRef.current);
+
         // 재생 중이면 스케일 변경 시 중지
         if (isChordPlaying && chordPartRef.current) {
+            console.log("[ChordDebug] Stopping chord due to scale change");
             chordPartRef.current.stop();
             chordPadSynthRef.current?.releaseAll();
             setIsChordPlaying(false);
@@ -898,10 +909,12 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
 
     // [Chord Pad] 화음 반주 토글 핸들러
     const handleChordToggle = async () => {
+        console.log("[ChordDebug] Toggle clicked. Current state:", isChordPlaying);
         await Tone.start();
 
         if (isChordPlaying) {
             // STOP - 화음 중지
+            console.log("[ChordDebug] Stopping chord...");
             isChordPlayingRef.current = false;
             chordPartRef.current?.stop();
             chordPadSynthRef.current?.releaseAll();
@@ -910,13 +923,22 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
             // 화음 끄려는데 드럼도 꺼져있으면 Transport 중지
             // ★ 드럼이 재생 중이면 Transport 위치를 초기화하지 않음
             if (!isDrumPlayingRef.current) {
+                console.log("[ChordDebug] Stopping Transport (Drum is also off)");
                 Tone.Transport.position = 0;
                 Tone.Transport.stop();
+            } else {
+                console.log("[ChordDebug] Keeping Transport running (Drum is on)");
             }
         } else {
             // START - 화음 시작 (무한 루프)
             const chordSets = chordSetsRef.current;
-            if (chordSets.length < 4 || !chordPadSynthRef.current) return;
+            console.log("[ChordDebug] Starting chord. Sets available:", chordSets.length);
+
+            if (chordSets.length < 4 || !chordPadSynthRef.current) {
+                console.error("[ChordDebug] Failed to start. Sets:", chordSets.length, "Synth:", !!chordPadSynthRef.current);
+                alert(`화음 생성 실패! (Chords: ${chordSets.length})\n스케일 음이 너무 적거나 초기화 오류입니다.`);
+                return;
+            }
 
             // 기존 Part 정리
             if (chordPartRef.current) {
@@ -925,10 +947,12 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
 
             // BPM 동기화 (드럼 BPM 사용)
             Tone.Transport.bpm.value = drumBpm;
+            console.log("[ChordDebug] Syncing BPM to:", drumBpm);
 
             // 화음 Part 생성 (16마디 무한 루프)
             chordPartRef.current = new Tone.Part((time, value) => {
                 const chord = value as { notes: string[]; role: string };
+                // console.log("[ChordDebug] Triggering chord:", chord.notes); // Too verbose for loop
                 chordPadSynthRef.current?.triggerAttackRelease(chord.notes, "4m", time);
             }, [
                 ["0:0:0", chordSets[0]],
@@ -942,9 +966,11 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
             // ★ 드럼 재생 여부에 따라 시작 방식 결정
             if (isDrumPlayingRef.current) {
                 // 드럼이 재생 중이면 즉시 시작 (현재 Transport 시간 기준)
+                console.log("[ChordDebug] Sync start (joining existing transport)");
                 chordPartRef.current.start("+0");
             } else {
                 // 드럼이 없으면 처음부터 시작
+                console.log("[ChordDebug] Fresh start (reset transport)");
                 Tone.Transport.position = 0;
                 chordPartRef.current.start(0);
             }
@@ -954,6 +980,7 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
 
             // Transport가 멈춰있으면 시작
             if (Tone.Transport.state !== 'started') {
+                console.log("[ChordDebug] Starting Transport");
                 Tone.Transport.start();
             }
         }
@@ -1772,11 +1799,10 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                                                     tabIndex={isDisabled ? -1 : 0}
                                                     onClick={() => !isDisabled && handleScaleSelect(currentScale)}
                                                     onKeyDown={(e) => { if (!isDisabled && (e.key === 'Enter' || e.key === ' ')) handleScaleSelect(currentScale); }}
-                                                    className={`p-4 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border ${
-                                                        isDisabled 
-                                                            ? 'cursor-default bg-slate-300/[0.02] backdrop-blur-md border-slate-300/10 opacity-50 pointer-events-none' 
+                                                    className={`p-4 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border ${isDisabled
+                                                            ? 'cursor-default bg-slate-300/[0.02] backdrop-blur-md border-slate-300/10 opacity-50 pointer-events-none'
                                                             : 'cursor-pointer bg-slate-300/[0.06] backdrop-blur-md border-slate-300/30 hover:bg-slate-300/10 hover:border-slate-200/50'
-                                                    }`}
+                                                        }`}
                                                 >
                                                     <div className="flex items-center z-10 flex-1 min-w-0 pr-4">
                                                         <span className={`font-black text-xl tracking-tight truncate ${isDisabled ? 'text-white/40' : 'text-white'}`}>
@@ -1818,11 +1844,10 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                                                 tabIndex={isDisabled ? -1 : 0}
                                                 onClick={() => !isDisabled && handleScaleSelect(scale)}
                                                 onKeyDown={(e) => { if (!isDisabled && (e.key === 'Enter' || e.key === ' ')) handleScaleSelect(scale); }}
-                                                className={`p-4 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border ${
-                                                    isDisabled 
-                                                        ? 'cursor-default bg-white/[0.01] border-white/[0.02] text-white/40 opacity-50 pointer-events-none' 
+                                                className={`p-4 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border ${isDisabled
+                                                        ? 'cursor-default bg-white/[0.01] border-white/[0.02] text-white/40 opacity-50 pointer-events-none'
                                                         : 'cursor-pointer bg-white/[0.02] border-white/[0.05] text-white hover:bg-slate-300/[0.08] hover:border-slate-300/30'
-                                                }`}
+                                                    }`}
                                             >
                                                 <div className="flex items-center z-10 flex-1 min-w-0 pr-4">
                                                     <span className={`font-black text-xl tracking-tight truncate ${isDisabled ? 'text-white/40' : 'text-white/90'}`}>

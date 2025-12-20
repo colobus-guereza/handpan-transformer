@@ -126,7 +126,7 @@ const translations = {
         uiFeature4Title: "드럼 & 화음 반주",
         uiFeature4Description: "심플한 드럼/화음 반주를 더하여 연주를 더욱 풍부하게 만들 수 있습니다. 버튼을 길게 눌러보세요.",
         description: "릴팬 ReelPan은 디지털 핸드팬 연주를 즉시 공유 가능한 고품질 세로형 릴스 영상으로 변환해주는 창작 도구입니다.",
-        cta: "새 릴스 만들기",
+        cta: "새로 만들기",
         chips: {
             community: "커뮤니티 바이브",
             visuals: "3D 비주얼",
@@ -187,10 +187,10 @@ export default function PlaygroundHome() {
 
                 {/* Main Title - Exact Vertical Center */}
                 <h1 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 !text-5xl lg:!text-7xl font-black tracking-tight text-center leading-tight whitespace-nowrap">
-                        <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-400">
-                            ReelPan
-                        </span>
-                    </h1>
+                    <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-400">
+                        ReelPan
+                    </span>
+                </h1>
 
                 {/* Subtitle & CTA - Below Center */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 mt-12 flex flex-col items-center gap-6">
