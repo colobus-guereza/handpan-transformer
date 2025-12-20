@@ -254,7 +254,7 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
         // ═══════════════════════════════════════════════════════════════════════
         // 🔊 MASTER BUS: 전체 드럼 볼륨 제어
         // ═══════════════════════════════════════════════════════════════════════
-        const masterGain = new Tone.Gain(0.5).toDestination();
+        const masterGain = new Tone.Gain(0.8).toDestination();
         drumMasterGainRef.current = masterGain;
 
         // ═══════════════════════════════════════════════════════════════════════
@@ -290,7 +290,7 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                 release: 0.5,         // 짧은 릴리즈
                 attackCurve: "exponential"
             },
-            volume: 6  // 볼륨 부스트 (dB)
+            volume: 8  // 볼륨 부스트 (dB)
         }).connect(kickFilter);
 
         // ═══════════════════════════════════════════════════════════════════════
@@ -313,7 +313,8 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                 attack: 0.002,   // 2ms - 즉각적이지만 살짝 부드러운 시작 (쫀득함)
                 decay: 0.06,     // 60ms - 울림 반으로 줄임
                 sustain: 0       // 완전 끊김
-            }
+            },
+            volume: 2 // 스네어 부스트
         }).connect(snareFilter);
 
         // ═══════════════════════════════════════════════════════════════════════
@@ -332,7 +333,7 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                 decay: 0.05,     // 50ms - 짧은 지속
                 sustain: 0
             },
-            volume: -3  // 70% 볼륨
+            volume: 0  // 70% -> 100% (0dB)
         }).connect(hatFilter);
 
         // ═══════════════════════════════════════════════════════════════════════
@@ -357,7 +358,7 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                 release: 0.6,
                 attackCurve: "linear"
             },
-            volume: 0  // 볼륨 낮춤 (feathering)
+            volume: 4  // 볼륨 낮춤 (feathering) -> 약간 부스트
         }).connect(jazzKickFilter);
 
         // ═══════════════════════════════════════════════════════════════════════
@@ -379,7 +380,7 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                 decay: 0.15,     // 150ms - 브러쉬 스윕 지속
                 sustain: 0       // 끊김
             },
-            volume: -6  // 낮은 볼륨 (섬세함)
+            volume: -2  // 낮은 볼륨 (섬세함) -> 약간 부스트
         }).connect(jazzSnareFilter);
 
         // ═══════════════════════════════════════════════════════════════════════
@@ -400,7 +401,7 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                 decay: 0.35,     // 350ms - 긴 여운 (심벌 서스테인)
                 sustain: 0.02    // 살짝 유지
             },
-            volume: -4  // 볼륨 조절
+            volume: 0  // 볼륨 조절 -> 0dB
         }).connect(jazzRideFilter);
 
         // ═══════════════════════════════════════════════════════════════════════
@@ -424,7 +425,7 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                 release: 0.4,
                 attackCurve: "linear"
             },
-            volume: 3  // 약간 부스트
+            volume: 6  // 약간 부스트 -> 더 부스트
         }).connect(lofiKickFilter);
 
         // ═══════════════════════════════════════════════════════════════════════
@@ -442,7 +443,7 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                 decay: 0.08,     // 80ms - 짧고 건조
                 sustain: 0
             },
-            volume: -2  // 적당한 볼륨
+            volume: 2  // 적당한 볼륨 -> 부스트
         }).connect(lofiSnareFilter);
 
         // ═══════════════════════════════════════════════════════════════════════
@@ -460,7 +461,7 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                 decay: 0.04,     // 40ms - 매우 짧음
                 sustain: 0
             },
-            volume: -11  // 매우 작은 볼륨 (배경 역할)
+            volume: -6  // 매우 작은 볼륨 -> 약간 키움
         }).connect(lofiHatFilter);
 
         // ═══════════════════════════════════════════════════════════════════════
@@ -668,43 +669,48 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                         jazzSnareSynthRef.current?.triggerAttackRelease("16n", time, 0.1 + humanize());
                     }
                 }
-                else if (drumPattern === 'Bossa Nova') {
+                else if (drumPattern === 'Lofi Chill') {
                     // ═══════════════════════════════════════════════════════════════
-                    // 🎸 BOSSA NOVA 4/4: Clave 리듬의 라틴 그루브
+                    // 🎧 LOFI CHILL 4/4: Lazy Groove (J.Dilla Style)
                     // ═══════════════════════════════════════════════════════════════
                     // 16 steps = 4박 × 4 (16분음표 단위)
-                    // Kick (Surdo): Step 0 (강), Step 10 (중) - 심장박동 패턴
-                    // Snare (Rimshot): Clave 패턴 - Step 2, 5, 8, 11, 14
-                    // Hat (Shaker): 8분음표 찰찰
-                    // ※ Straight Feel (스윙 없음)
+                    // Kick: Step 0 (강), Step 7 (싱코페이션), Step 10 (3박 뒷박)
+                    // Snare: Step 4, 12 (백비트) + Micro-timing 딜레이
+                    // Hat: 8분음표 강-약-강-약 패턴
+                    // ※ Micro-timing: 스네어/햇이 그리드보다 약간 늦게 (Lazy Feel)
                     // ───────────────────────────────────────────────────────────────
 
-                    // 🦵 KICK (Surdo): 심장박동 패턴
-                    // Step 0: 정박 1 (강) / Step 10: 3박 뒷박 (중) = "둥...둥"
+                    // 📌 Humanize: velocity 랜덤화 (±0.1)
+                    const humanize = () => (Math.random() - 0.5) * 0.2;
+
+                    // ⏱️ Micro-timing: 스네어/햇에 미세한 딜레이 추가 (Lazy Feel)
+                    const lazyDelay = 0.035 + Math.random() * 0.02;  // 35~55ms 딜레이
+
+                    // 🦵 KICK: 간결한 패턴 (정박+싱코페이션)
                     if (step === 0) {
-                        bossaKickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "4n", time, 0.75);
+                        lofiKickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.7 + humanize());
+                    }
+                    if (step === 7) {
+                        // 2박 뒷박 (싱코페이션)
+                        lofiKickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.45 + humanize());
                     }
                     if (step === 10) {
-                        // 3박자의 뒷박 (And of 3) - 보사노바 그루브의 핵심!
-                        bossaKickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.55);
+                        // 3박 뒷박
+                        lofiKickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.55 + humanize());
                     }
 
-                    // 🪘 SNARE (Rimshot): Clave 패턴
-                    // Step 2: And of 1 / Step 5: 당김음 / Step 8: 정박 3
-                    // Step 11: 당김음 / Step 14: And of 4
-                    const claveSteps = [2, 5, 8, 11, 14];
-                    if (claveSteps.includes(step)) {
-                        // 정박(8)은 약간 강하게, 나머지는 균등
-                        const rimVel = step === 8 ? 0.65 : 0.55;
-                        bossaSnareSynthRef.current?.triggerAttackRelease("16n", time, rimVel);
+                    // 🪘 SNARE: 백비트 + Lazy Delay
+                    if (step === 4 || step === 12) {
+                        // Micro-timing: 그리드보다 살짝 늦게 (나른한 느낌)
+                        lofiSnareSynthRef.current?.triggerAttackRelease("8n", time + lazyDelay, 0.55 + humanize());
                     }
 
-                    // 🎩 HAT (Shaker): 8분음표 찰찰 (정박 약하게)
+                    // 🎩 HAT: 8분음표 강-약-강-약 패턴 + Lazy Delay
                     if (step % 2 === 0) {
-                        // 정박(0,4,8,12)은 약하게, 업비트는 살짝 강조
-                        const isDownbeat = step % 4 === 0;
-                        const shakerVel = isDownbeat ? 0.25 : 0.35;
-                        bossaHatSynthRef.current?.triggerAttackRelease("16n", time, shakerVel);
+                        // 강(0)-약(2)-강(4)-약(6)... 고개 끄덕이는 그루브
+                        const isStrong = step % 4 === 0;
+                        const hatVel = isStrong ? 0.35 : 0.2;
+                        lofiHatSynthRef.current?.triggerAttackRelease("32n", time + lazyDelay * 0.5, hatVel + humanize());
                     }
                 }
             }
@@ -765,33 +771,37 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                         jazzSnareSynthRef.current?.triggerAttackRelease("8n", time, 0.15 + humanize());
                     }
                 }
-                else if (drumPattern === 'Bossa Nova') {
+                else if (drumPattern === 'Lofi Chill') {
                     // ═══════════════════════════════════════════════════════════════
-                    // 🎸 BOSSA NOVA 3/4: 라틴 왈츠 스타일
+                    // 🎧 LOFI CHILL 3/4: Lazy Waltz
                     // ═══════════════════════════════════════════════════════════════
                     // 12 steps = 3박 × 4
-                    // Kick (Surdo): Step 0 (1박)
-                    // Snare (Rimshot): Step 3, 7 (당김음 느낌)
-                    // Hat (Shaker): 8분음표
+                    // Kick: Step 0 (1박)
+                    // Snare: Step 4 (2박, Delayed), Step 8 (3박, Delayed)
+                    // Hat: 8분음표 (Lazy Micro-timing)
                     // ───────────────────────────────────────────────────────────────
 
-                    // 🦵 KICK (Surdo): 1박에만
+                    const humanize = () => (Math.random() - 0.5) * 0.2;
+                    const lazyDelay = 0.035 + Math.random() * 0.02;
+
+                    // 🦵 KICK: 1박에만 묵직하게
                     if (step === 0) {
-                        bossaKickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "4n", time, 0.7);
+                        lofiKickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "4n", time, 0.7 + humanize());
                     }
 
-                    // 🪘 SNARE (Rimshot): 당김음 패턴
-                    if (step === 3 || step === 7) {
-                        bossaSnareSynthRef.current?.triggerAttackRelease("16n", time, 0.55);
+                    // 🪘 SNARE: 2박, 3박에 Lazy하게
+                    if (step === 4 || step === 8) {
+                        lofiSnareSynthRef.current?.triggerAttackRelease("16n", time + lazyDelay, 0.5 + humanize());
                     }
 
-                    // 🎩 HAT (Shaker): 8분음표
+                    // 🎩 HAT: 8분음표
                     if (step % 2 === 0) {
                         const isDownbeat = step === 0 || step === 4 || step === 8;
                         const shakerVel = isDownbeat ? 0.25 : 0.35;
-                        bossaHatSynthRef.current?.triggerAttackRelease("16n", time, shakerVel);
+                        lofiHatSynthRef.current?.triggerAttackRelease("16n", time + lazyDelay * 0.5, shakerVel + humanize());
                     }
                 }
+
                 else {
                     // 다른 프리셋도 3/4에선 Waltz 기본 사용
                     if (step === 0) kickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.8);
@@ -873,36 +883,41 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                         jazzSnareSynthRef.current?.triggerAttackRelease("8n", time, 0.22 + humanize());
                     }
                 }
-                else if (drumPattern === 'Bossa Nova') {
+                else if (drumPattern === 'Lofi Chill') {
                     // ═══════════════════════════════════════════════════════════════
-                    // 🎸 BOSSA NOVA 6/8: 라틴 복합박자
+                    // 🎧 LOFI CHILL 6/8: Lazy Compound
                     // ═══════════════════════════════════════════════════════════════
                     // 12 steps = 2그룹 × 6
-                    // Kick (Surdo): Step 0 (1박), Step 6 (4박)
-                    // Snare (Rimshot): Step 3, 9 (당김음)
-                    // Hat (Shaker): 8분음표
+                    // Kick: Step 0 (1박)
+                    // Snare: Step 6 (4박 Backbeat, Delayed)
+                    // Hat: 8분음표 (Lazy Micro-timing)
                     // ───────────────────────────────────────────────────────────────
 
-                    // 🦵 KICK (Surdo): 복합박자의 두 강박
+                    const humanize = () => (Math.random() - 0.5) * 0.2;
+                    const lazyDelay = 0.035 + Math.random() * 0.02;
+
+                    // 🦵 KICK (1박)
                     if (step === 0) {
-                        bossaKickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "4n", time, 0.7);
+                        lofiKickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "4n", time, 0.7 + humanize());
                     }
+                    // Step 8 (5박 뒷박?) 아니면 Step 10? -> Step 10 (6박 앞)에 살짝
+                    if (step === 10) {
+                        lofiKickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.4 + humanize());
+                    }
+
+                    // 🪘 SNARE (4박 백비트)
                     if (step === 6) {
-                        bossaKickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "4n", time, 0.55);
+                        lofiSnareSynthRef.current?.triggerAttackRelease("16n", time + lazyDelay, 0.55 + humanize());
                     }
 
-                    // 🪘 SNARE (Rimshot): 당김음 패턴
-                    if (step === 3 || step === 9) {
-                        bossaSnareSynthRef.current?.triggerAttackRelease("16n", time, 0.55);
-                    }
-
-                    // 🎩 HAT (Shaker): 8분음표 (정박 약하게)
+                    // 🎩 HAT (8분음표)
                     if (step % 2 === 0) {
                         const isDownbeat = step === 0 || step === 6;
                         const shakerVel = isDownbeat ? 0.25 : 0.35;
-                        bossaHatSynthRef.current?.triggerAttackRelease("16n", time, shakerVel);
+                        lofiHatSynthRef.current?.triggerAttackRelease("16n", time + lazyDelay * 0.5, shakerVel + humanize());
                     }
                 }
+
                 else {
                     // 다른 프리셋도 6/8에선 기본 사용
                     if (step === 0) kickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.8);
@@ -1690,10 +1705,17 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                                     <div className="flex flex-col gap-3">
                                         <span className="text-xs font-bold text-white/40 uppercase tracking-widest px-1">Preset</span>
                                         <div className="grid grid-cols-1 gap-2">
-                                            {['Basic 8-beat', 'Acoustic Pop', 'Jazz Swing', 'Bossa Nova'].map((p) => (
+                                            {['Basic 8-beat', 'Acoustic Pop', 'Jazz Swing', 'Lofi Chill'].map((p) => (
                                                 <button
                                                     key={p}
-                                                    onClick={() => setDrumPattern(p)}
+                                                    onClick={() => {
+                                                        setDrumPattern(p);
+                                                        // 프리셋별 권장 BPM 자동 설정
+                                                        if (p === 'Basic 8-beat') setDrumBpm(90);
+                                                        else if (p === 'Acoustic Pop') setDrumBpm(100);
+                                                        else if (p === 'Jazz Swing') setDrumBpm(120);
+                                                        else if (p === 'Lofi Chill') setDrumBpm(80);
+                                                    }}
                                                     className={`px-4 py-3 rounded-2xl text-sm font-medium transition-all text-left flex items-center justify-between
                                                           ${drumPattern === p
                                                             ? 'bg-orange-500 text-black'

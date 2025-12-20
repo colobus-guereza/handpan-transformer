@@ -181,10 +181,10 @@ export default function PlaygroundHome() {
                         {/* 3. "물리적인 악기" 설명 */}
                         <div className="text-left">
                             <p className="text-slate-400 leading-relaxed text-[1.2rem] md:text-[1.35rem] break-keep">
-                                물리적인 악기가 없어도 괜찮습니다. ReelPan은 당신의 음악적 아이디어를 가장 간편하게 시각화하고 기록할 수 있는 <span className="text-white font-semibold">'디지털 연주 기록 도구'</span>입니다.
+                                실물 핸드팬이 없어도 괜찮습니다. <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-400">ReelPan</span>은 당신의 음악적 아이디어를 가장 간편하게 시각화하고 기록할 수 있는 <span className="text-white font-semibold">'디지털 연주 기록 도구'</span>입니다.
                             </p>
                             <p className="text-slate-400 leading-relaxed text-[1.2rem] md:text-[1.35rem] break-keep mt-4">
-                                악기가 없어도 스마트폰만 있다면, 언제 어디서든 당신만의 멜로디를 영상으로 저장할 수 있습니다.
+                                스마트폰만 있다면, 언제 어디서든 나만의 핸드팬 멜로디를 영상으로 저장할 수 있습니다.
                             </p>
                         </div>
                     </div>
@@ -339,24 +339,6 @@ export default function PlaygroundHome() {
                                 </div>
                                 <h4 className="text-lg font-bold text-white">화음 반주</h4>
                                 <p className="text-slate-400 text-[1.05rem] text-center">화음반주를 추가하여 연주를 더욱 풍부하게 만들 수 있습니다. 버튼을 길게 눌러보세요.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Section 5.5: 9:16 동영상 컨테이너 */}
-                    <div className="w-full flex justify-center">
-                        <div className="w-full max-w-[280px] rounded-2xl overflow-hidden bg-white/5 border border-white/10">
-                            <div 
-                                style={{ 
-                                    aspectRatio: '9/16', 
-                                    width: '100%'
-                                }} 
-                                className="w-full relative bg-slate-900/50 flex items-center justify-center"
-                            >
-                                {/* 재생 버튼 */}
-                                <button className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center hover:bg-white/30 hover:scale-110 transition-all duration-200 group">
-                                    <Play size={32} className="text-white/90 ml-1 group-hover:text-white" fill="currentColor" />
-                                </button>
                             </div>
                         </div>
                     </div>
