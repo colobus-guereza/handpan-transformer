@@ -10,7 +10,7 @@ import { Digipan3DHandle } from "@/components/digipan/Digipan3D";
 import { useHandpanAudio } from "@/hooks/useHandpanAudio";
 import { getNoteFrequency } from "@/constants/noteFrequencies";
 import * as Tone from 'tone';
-import { useLoungeDrum } from '@/hooks/useLoungeDrum';
+
 
 const Digipan9 = dynamic(() => import('@/components/digipan/Digipan9'), { ssr: false });
 const Digipan10 = dynamic(() => import('@/components/digipan/Digipan10'), { ssr: false });
@@ -232,11 +232,7 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
     const hatSynthRef = useRef<Tone.NoiseSynth | null>(null);
     const drumLoopIdRef = useRef<number | null>(null);
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // 🍸 MODERN LOUNGE HOOK (Deep House)
-    // ═══════════════════════════════════════════════════════════════════════════
-    const [masterGainNode, setMasterGainNode] = useState<Tone.Gain | null>(null);
-    const { kickRef: loungeKickRef, snareRef: loungeSnareRef, hatRef: loungeHatRef } = useLoungeDrum(masterGainNode);
+
 
     // ═══════════════════════════════════════════════════════════════════════════
     // 🎧 LOFI CHILL DRUM AUDIO REFS (빈티지 더스티 사운드 - 먹먹한 질감)
@@ -258,7 +254,7 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
         // ═══════════════════════════════════════════════════════════════════════
         const masterGain = new Tone.Gain(0.8).toDestination();
         drumMasterGainRef.current = masterGain;
-        setMasterGainNode(masterGain);
+
 
         // ═══════════════════════════════════════════════════════════════════════
         // 🦵 KICK DRUM: Deep & Heavy Bass (딩 피치 - 1옥타브)
@@ -479,23 +475,18 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
         }
     }, [targetScale]);
 
+    // [Drum Engine] BPM Management (Separated for smooth transitions)
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        Tone.Transport.bpm.value = drumBpm;
+    }, [drumBpm]);
+
     // [Drum Engine] Pattern Management
     useEffect(() => {
         if (typeof window === 'undefined') return;
 
         // ★ Play 상태가 아니면 루프 스케줄링 하지 않음 (리소스 절약 및 즉시 시작 보장)
         if (!isDrumPlaying) return;
-
-        Tone.Transport.bpm.value = drumBpm;
-
-        // [User Request] Seamless Transition: BPM 변경 없이 프리셋만 변경
-        // Phase Reset 로직 비활성화 -> 현재 비트(Step) 유지하며 자연스럽게 패턴만 바뀜
-        /*
-        if (isDrumPlayingRef.current) {
-            const secondsPerStep = 60 / drumBpm / 4;
-            drumStartOffsetRef.current = Math.round(Tone.Transport.seconds / secondsPerStep);
-        }
-        */
 
         // 🎷 Jazz Swing Logic Removed
         Tone.Transport.swing = 0;          // 스윙 없음
@@ -507,10 +498,16 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
             // ★ 드럼 버튼이 활성화된 경우에만 소리 재생
             if (!isDrumPlayingRef.current) return;
 
-            // Derive step from Transport seconds to ensure reset on stop()
-            // 4 steps per beat (16th notes)
-            const secondsPerStep = 60 / drumBpm / 4;
-            const absoluteStep = Math.round(Tone.Transport.seconds / secondsPerStep);
+            // [FIX] Use TICKS for robust step calculation independent of BPM changes
+            // PPQ (Pulses Per Quarter) is usually 192 in Tone.js
+            // 16th note = 1/4 beat = PPQ / 4 ticks
+            const TICKS_PER_STEP = Tone.Transport.PPQ / 4; // 192 / 4 = 48 ticks per 16th note
+
+            // Current Transport Position in Ticks
+            const currentTicks = Tone.Transport.ticks;
+
+            // Absolute Step Index
+            const absoluteStep = Math.round(currentTicks / TICKS_PER_STEP);
 
             // ★ 드럼 시작 오프셋을 빼서 항상 step 0부터 시작
             const relativeStep = absoluteStep - drumStartOffsetRef.current;
@@ -567,39 +564,7 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                         snareSynthRef.current?.triggerAttackRelease("16n", time, 0.15); // Ghost Snare
                     }
                 }
-                else if (drumPattern === 'Modern Lounge') {
-                    // ═══════════════════════════════════════════════════════════════
-                    // 🍸 MODERN LOUNGE (Deep House): Boots-Cats Groove
-                    // ═══════════════════════════════════════════════════════════════
-                    // Spec:
-                    // Kick: 0, 4, 8, 12 (Every beat, Four-on-the-floor, Metronome)
-                    // Snare (Clap): 4, 12 (Backbeat)
-                    // Hat (Open): 2, 6, 10, 14 (Off-beat 'And')
-                    // Ghost Hat: 0, 8 (Weak)
 
-                    // 1. Kick (The Metronome) - Low Pitch (C1~C2 range)
-                    // Deep House needs punchy but steady kick.
-                    if (step % 4 === 0) {
-                        // Kick Pitch: Ensure it's not too low.
-                        // drumPitchRef.current is usually Ding-1octave.
-                        loungeKickRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 1.0);
-                    }
-
-                    // 2. Snare (The Clap) - Tight Backbeat
-                    if (step === 4 || step === 12) {
-                        loungeSnareRef.current?.triggerAttackRelease("16n", time, 0.8);
-                    }
-
-                    // 3. Hat (The Groove) - Open Hat on Off-beats, Closed on Downbeats
-                    if (step === 2 || step === 6 || step === 10 || step === 14) {
-                        // Open Hat (Strong off-beat)
-                        loungeHatRef.current?.triggerAttackRelease("16n", time, 0.8);
-                    } else if (step === 0 || step === 8) {
-                        // Closed Hat (Ghost notes on downbeats to glue rhythm)
-                        // Trigger with very short release or lower volume
-                        loungeHatRef.current?.triggerAttackRelease("32n", time, 0.1);
-                    }
-                }
                 else if (drumPattern === 'Lofi Chill') {
                     // ═══════════════════════════════════════════════════════════════
                     // 🎧 LOFI CHILL: Basic 8-beat Rhythm + Lofi Tones
@@ -648,22 +613,7 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                         hatSynthRef.current?.triggerAttackRelease("32n", time, hatVel);
                     }
                 }
-                else if (drumPattern === 'Modern Lounge') {
-                    // 🍸 MODERN LOUNGE 3/4
-                    // Kick: 0 (Downbeat)
-                    // Clap: 4, 8 (Beats 2, 3)
-                    // Hat: Off-beats (2, 6, 10)
 
-                    if (step === 0) {
-                        loungeKickRef.current?.triggerAttackRelease(drumPitchRef.current, "4n", time, 1.0);
-                    }
-                    if (step === 4 || step === 8) {
-                        loungeSnareRef.current?.triggerAttackRelease("16n", time, 0.7);
-                    }
-                    if (step === 2 || step === 6 || step === 10) {
-                        loungeHatRef.current?.triggerAttackRelease("16n", time, 0.6);
-                    }
-                }
                 else if (drumPattern === 'Lofi Chill') {
                     // ═══════════════════════════════════════════════════════════════
                     // 🎧 LOFI CHILL 3/4: Lazy Waltz
@@ -739,31 +689,7 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                         hatSynthRef.current?.triggerAttackRelease("32n", time, hatVel);
                     }
                 }
-                else if (drumPattern === 'Modern Lounge') {
-                    // 🍸 MODERN LOUNGE 6/8
-                    // Kick: 0, 6 (Dotted Quarters)
-                    // Clap: 3, 9 (Triplets Backbeat? No, probably 6? Let's do Standard Backbeat feel)
-                    // Let's do: Kick 0. Clap 6. (Simple)
-                    // Hat: 2, 4, 8, 10?
-                    // Standard 6/8 House: Kick on 0, 3, 6, 9 (Driving 4-on-floor feel over triplets)
 
-                    // Kick: 0, 3, 6, 9 (Steps of 3)
-                    if (step % 3 === 0) {
-                        // Accent 0 and 6 slightly more
-                        const vel = (step === 0 || step === 6) ? 1.0 : 0.8;
-                        loungeKickRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, vel);
-                    }
-                    // Clap: 6? Or 3, 9?
-                    // Let's do Clap on 6.
-                    if (step === 6) {
-                        loungeSnareRef.current?.triggerAttackRelease("16n", time, 0.8);
-                    }
-                    // Hat: Offbeats in triplets? (step 1, 2, 4, 5...)
-                    // Let's do Open Hat on 2, 5, 8, 11 (The "Ah" of 1-and-ah)
-                    if (step === 2 || step === 5 || step === 8 || step === 11) {
-                        loungeHatRef.current?.triggerAttackRelease("16n", time, 0.5);
-                    }
-                }
                 else if (drumPattern === 'Lofi Chill') {
                     // ═══════════════════════════════════════════════════════════════
                     // 🎧 LOFI CHILL 6/8: Lazy Compound
@@ -818,7 +744,8 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
             }
         };
 
-    }, [drumBpm, drumPattern, drumTimeSignature, isDrumPlaying]);
+        // [FIX] drumBpm removed from dependency! This prevents restart on tempo change.
+    }, [drumPattern, drumTimeSignature, isDrumPlaying]);
 
     // [Drum Engine] Playback Sync
     useEffect(() => {
@@ -828,14 +755,17 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
             Tone.start();
 
             // ★ 드럼 시작 오프셋 설정 (항상 step 0부터 시작)
-            const secondsPerStep = 60 / drumBpm / 4;
-            const currentAbsoluteStep = Math.round(Tone.Transport.seconds / secondsPerStep);
+            // [FIX] USE TICKS
+            const TICKS_PER_STEP = Tone.Transport.PPQ / 4;
+            const currentTicks = Tone.Transport.ticks;
+            const currentAbsoluteStep = Math.round(currentTicks / TICKS_PER_STEP);
             drumStartOffsetRef.current = currentAbsoluteStep;
 
             // 화음이 재생 중이 아닐 때만 Transport position 리셋
             if (!isChordPlayingRef.current) {
                 Tone.Transport.position = 0;
-                drumStartOffsetRef.current = 0; // Transport도 리셋했으므로 오프셋도 0
+                // If we reset position to 0, ticks become 0, so offset is 0.
+                drumStartOffsetRef.current = 0;
             }
             if (Tone.Transport.state !== 'started') {
                 Tone.Transport.start();
@@ -847,7 +777,8 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                 Tone.Transport.stop();
             }
         }
-    }, [isDrumPlaying, drumBpm]);
+    }, [isDrumPlaying]); // drumBpm removed from sync trigger as well
+
 
     // Drum Handlers
     const handleDrumDown = (e: React.PointerEvent) => {
@@ -1082,6 +1013,10 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
     };
 
     const handleScaleSelect = (scale: any) => {
+        // E Amara 18은 수리 중으로 선택 불가
+        if (scale.id === 'e_amara_18') {
+            return;
+        }
         if (scale.id === targetScale.id) {
             setShowScaleSelector(false);
             return;
@@ -1608,7 +1543,7 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                                     <div className="flex flex-col gap-3">
                                         <span className="text-xs font-bold text-white/40 uppercase tracking-widest px-1">Preset</span>
                                         <div className="grid grid-cols-1 gap-2">
-                                            {['Basic 8-beat', 'Funky Groove', 'Modern Lounge', 'Lofi Chill'].map((p) => (
+                                            {['Basic 8-beat', 'Funky Groove', 'Lofi Chill'].map((p) => (
                                                 <button
                                                     key={p}
                                                     onClick={() => {
@@ -1632,7 +1567,7 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                                                             ? 'bg-orange-500 text-black'
                                                             : 'bg-white/5 text-white/60 hover:bg-white/10'}`}
                                                 >
-                                                    {p}
+                                                    {p === 'Lofi Chill' ? 'Lofi Chill (70BPM Recommended)' : p}
                                                     {drumPattern === p && <Check size={16} />}
                                                 </button>
                                             ))}
@@ -1827,35 +1762,47 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                                     {(() => {
                                         const currentScale = processedScales.find(s => s.id === targetScale.id);
                                         if (!currentScale) return null;
+                                        const isDisabled = currentScale.id === 'e_amara_18';
 
                                         return (
                                             <div key={currentScale.id} className="mb-2">
                                                 <div className="text-[12px] font-black uppercase tracking-[0.3em] text-white/30 mb-2 px-2">CURRENT SELECTED</div>
                                                 <div
                                                     role="button"
-                                                    tabIndex={0}
-                                                    onClick={() => handleScaleSelect(currentScale)}
-                                                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleScaleSelect(currentScale); }}
-                                                    className="p-4 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border cursor-pointer bg-slate-300/[0.06] backdrop-blur-md border-slate-300/30 hover:bg-slate-300/10 hover:border-slate-200/50"
+                                                    tabIndex={isDisabled ? -1 : 0}
+                                                    onClick={() => !isDisabled && handleScaleSelect(currentScale)}
+                                                    onKeyDown={(e) => { if (!isDisabled && (e.key === 'Enter' || e.key === ' ')) handleScaleSelect(currentScale); }}
+                                                    className={`p-4 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border ${
+                                                        isDisabled 
+                                                            ? 'cursor-default bg-slate-300/[0.02] backdrop-blur-md border-slate-300/10 opacity-50 pointer-events-none' 
+                                                            : 'cursor-pointer bg-slate-300/[0.06] backdrop-blur-md border-slate-300/30 hover:bg-slate-300/10 hover:border-slate-200/50'
+                                                    }`}
                                                 >
                                                     <div className="flex items-center z-10 flex-1 min-w-0 pr-4">
-                                                        <span className="font-black text-xl tracking-tight truncate text-white">
+                                                        <span className={`font-black text-xl tracking-tight truncate ${isDisabled ? 'text-white/40' : 'text-white'}`}>
                                                             {currentScale.name}
                                                         </span>
+                                                        {isDisabled && (
+                                                            <span className="ml-3 text-xs font-medium text-white/30 uppercase tracking-wider">
+                                                                Under Maintenance
+                                                            </span>
+                                                        )}
                                                     </div>
 
-                                                    <div className="flex items-center gap-3 z-10 shrink-0">
-                                                        <button
-                                                            onClick={(e) => handlePreview(e, currentScale)}
-                                                            className="w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-lg bg-slate-300/25 hover:bg-slate-300/40 text-slate-100 border border-slate-200/30 backdrop-blur-sm"
-                                                        >
-                                                            {previewingScaleId === currentScale.id ? (
-                                                                <Volume2 size={20} className="animate-pulse" />
-                                                            ) : (
-                                                                <Play size={22} fill="currentColor" className="ml-1" />
-                                                            )}
-                                                        </button>
-                                                    </div>
+                                                    {!isDisabled && (
+                                                        <div className="flex items-center gap-3 z-10 shrink-0">
+                                                            <button
+                                                                onClick={(e) => handlePreview(e, currentScale)}
+                                                                className="w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-lg bg-slate-300/25 hover:bg-slate-300/40 text-slate-100 border border-slate-200/30 backdrop-blur-sm"
+                                                            >
+                                                                {previewingScaleId === currentScale.id ? (
+                                                                    <Volume2 size={20} className="animate-pulse" />
+                                                                ) : (
+                                                                    <Play size={22} fill="currentColor" className="ml-1" />
+                                                                )}
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         );
@@ -1863,33 +1810,45 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
 
                                     {/* Other Scales */}
                                     {processedScales.filter(scale => scale.id !== targetScale.id).map((scale) => {
+                                        const isDisabled = scale.id === 'e_amara_18';
                                         return (
                                             <div
                                                 key={scale.id}
                                                 role="button"
-                                                tabIndex={0}
-                                                onClick={() => handleScaleSelect(scale)}
-                                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleScaleSelect(scale); }}
-                                                className="p-4 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border cursor-pointer bg-white/[0.02] border-white/[0.05] text-white hover:bg-slate-300/[0.08] hover:border-slate-300/30"
+                                                tabIndex={isDisabled ? -1 : 0}
+                                                onClick={() => !isDisabled && handleScaleSelect(scale)}
+                                                onKeyDown={(e) => { if (!isDisabled && (e.key === 'Enter' || e.key === ' ')) handleScaleSelect(scale); }}
+                                                className={`p-4 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border ${
+                                                    isDisabled 
+                                                        ? 'cursor-default bg-white/[0.01] border-white/[0.02] text-white/40 opacity-50 pointer-events-none' 
+                                                        : 'cursor-pointer bg-white/[0.02] border-white/[0.05] text-white hover:bg-slate-300/[0.08] hover:border-slate-300/30'
+                                                }`}
                                             >
                                                 <div className="flex items-center z-10 flex-1 min-w-0 pr-4">
-                                                    <span className="font-black text-xl tracking-tight truncate text-white/90">
+                                                    <span className={`font-black text-xl tracking-tight truncate ${isDisabled ? 'text-white/40' : 'text-white/90'}`}>
                                                         {scale.name}
                                                     </span>
+                                                    {isDisabled && (
+                                                        <span className="ml-3 text-xs font-medium text-white/30 uppercase tracking-wider">
+                                                            Under Maintenance
+                                                        </span>
+                                                    )}
                                                 </div>
 
-                                                <div className="flex items-center gap-3 z-10 shrink-0">
-                                                    <button
-                                                        onClick={(e) => handlePreview(e, scale)}
-                                                        className="w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-lg bg-white/10 hover:bg-slate-300/25 text-white hover:text-slate-100 border border-white/10 hover:border-slate-200/30"
-                                                    >
-                                                        {previewingScaleId === scale.id ? (
-                                                            <Volume2 size={20} className="animate-pulse" />
-                                                        ) : (
-                                                            <Play size={22} fill="currentColor" className="ml-1" />
-                                                        )}
-                                                    </button>
-                                                </div>
+                                                {!isDisabled && (
+                                                    <div className="flex items-center gap-3 z-10 shrink-0">
+                                                        <button
+                                                            onClick={(e) => handlePreview(e, scale)}
+                                                            className="w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-lg bg-white/10 hover:bg-slate-300/25 text-white hover:text-slate-100 border border-white/10 hover:border-slate-200/30"
+                                                        >
+                                                            {previewingScaleId === scale.id ? (
+                                                                <Volume2 size={20} className="animate-pulse" />
+                                                            ) : (
+                                                                <Play size={22} fill="currentColor" className="ml-1" />
+                                                            )}
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </div>
                                         );
                                     })}
