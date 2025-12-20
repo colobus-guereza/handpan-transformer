@@ -1308,23 +1308,15 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
         toggleIdleBoat: () => setShowIdleBoat(prev => !prev),
         toggleTouchText: () => setShowTouchText(prev => !prev),
         triggerNote: (noteId: number) => {
-            // Visual feedback
+            // Visual feedback - This sets demoActive=true for the matching ToneFieldMesh
+            // ToneFieldMesh's useEffect will then automatically play the audio
             setDemoNoteId(noteId);
             setTimeout(() => setDemoNoteId(null), 150);
 
-            // Audio feedback (if not handled by parent scheduling, but usually Digipan handles audio)
-            // Ideally parent schedules audio via Tone.js directly for precision?
-            // The requirement says: "visualized in the center... automatically played"
-            // If we use Digipan's audio, we leverage its preloaded samples.
-            // Let's find the note label.
-            const note = notes.find(n => n.id === noteId);
-            if (note && playNote) {
-                playNote(note.label);
-            }
-            // Trigger pulses
-            // We need to access the child ToneFieldMesh trigger? 
-            // ToneFieldMesh listens to `demoActive` prop (demoNoteId === note.id).
-            // So setting demoNoteId will trigger the effect in ToneFieldMesh!
+            // NOTE: Do NOT call playNote here!
+            // ToneFieldMesh listens to `demoActive` prop (demoNoteId === note.id)
+            // and its useEffect (line 307-317) already calls playNote when demoActive becomes true.
+            // Calling playNote here would cause DOUBLE audio playback and distortion!
         }
     }));
 
