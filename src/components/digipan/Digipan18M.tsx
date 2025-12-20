@@ -30,6 +30,8 @@ interface Digipan18MProps {
     showAxes?: boolean;
     onIsRecordingChange?: (isRecording: boolean) => void;
     hideTouchText?: boolean;
+    onRecordingComplete?: (blob: Blob) => void;
+    disableRecordingUI?: boolean;
 }
 
 // Composite Background Component for Digipan 18M (Currently same as 15M: Mutant image)
@@ -109,7 +111,9 @@ const Digipan18M = React.forwardRef<Digipan3DHandle, Digipan18MProps>(({
     notes: externalNotes,
     showAxes = false,
     onIsRecordingChange,
-    hideTouchText = false
+    hideTouchText = false,
+    onRecordingComplete,
+    disableRecordingUI
 }, ref) => {
 
     // 15-Note Base Coordinates (COPIED FROM 15M AS STARTING POINT)
@@ -370,6 +374,8 @@ const Digipan18M = React.forwardRef<Digipan3DHandle, Digipan18MProps>(({
             ref={ref}
             onIsRecordingChange={onIsRecordingChange}
             hideTouchText={hideTouchText}
+            onRecordingComplete={onRecordingComplete}
+            disableRecordingUI={disableRecordingUI}
             scale={scale}
             notes={notesToRender.length > 0 ? notesToRender : baseNotes18.map(n => ({ ...n, label: '', frequency: 440, visualFrequency: 440, offset: [0, 0, 0] as [number, number, number] }))}
             onNoteClick={onNoteClick}

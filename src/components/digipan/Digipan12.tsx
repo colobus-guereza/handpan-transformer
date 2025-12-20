@@ -30,6 +30,8 @@ interface Digipan12Props {
     showAxes?: boolean;
     onIsRecordingChange?: (isRecording: boolean) => void;
     hideTouchText?: boolean;
+    onRecordingComplete?: (blob: Blob) => void;
+    disableRecordingUI?: boolean;
 }
 
 // Composite Background Component for Digipan 12 (10 notes image + 2 visual tonefields)
@@ -112,7 +114,9 @@ const Digipan12 = React.forwardRef<Digipan3DHandle, Digipan12Props>(({
     notes: externalNotes,
     showAxes = false,
     onIsRecordingChange,
-    hideTouchText = false
+    hideTouchText = false,
+    onRecordingComplete,
+    disableRecordingUI
 }, ref) => {
 
     // 10-Note Base Coordinates (from Digipan10.tsx)
@@ -137,13 +141,35 @@ const Digipan12 = React.forwardRef<Digipan3DHandle, Digipan12Props>(({
         if (externalNotes && externalNotes.length > 0) return externalNotes;
         if (!scale) return baseNotes10.map(n => ({ ...n, label: '', frequency: 440, visualFrequency: 440, offset: [0, 0, 0] as [number, number, number] }));
 
+        // Special handling for F# Low Pygmy 12: Swap bottom note positions (D3 and E3)
+        // Default: ID 10 (Right), ID 11 (Left)
+        // F# Low Pygmy 12: ID 10 (Left), ID 11 (Right) - swap positions to match visual expectation
+        let activeTemplateNotes = JSON.parse(JSON.stringify(baseNotes10)); // Deep copy
+
+        if (scale.id === 'fs_low_pygmy_12') {
+            console.log("[Digipan12] F# Low Pygmy 12 detected. Swapping bottom note positions.");
+            const t10Index = activeTemplateNotes.findIndex((t: any) => t.id === 10);
+            const t11Index = activeTemplateNotes.findIndex((t: any) => t.id === 11);
+
+            if (t10Index !== -1 && t11Index !== -1) {
+                const t10 = activeTemplateNotes[t10Index];
+                const t11 = activeTemplateNotes[t11Index];
+
+                // Swap geometric properties (cx, cy, rotate, scaleX, scaleY)
+                const tempProps = { cx: t10.cx, cy: t10.cy, rotate: t10.rotate, scaleX: t10.scaleX, scaleY: t10.scaleY };
+
+                t10.cx = t11.cx; t10.cy = t11.cy; t10.rotate = t11.rotate; t10.scaleX = t11.scaleX; t10.scaleY = t11.scaleY;
+                t11.cx = tempProps.cx; t11.cy = tempProps.cy; t11.rotate = tempProps.rotate; t11.scaleX = tempProps.scaleX; t11.scaleY = tempProps.scaleY;
+            }
+        }
+
         // Template Notes for frequency lookup (Visual Sizing)
         const TEMPLATE_NOTES = ["D3", "A3", "Bb3", "C4", "D4", "E4", "F4", "G4", "A4", "C5", "D5", "E5"]; // Extended for 12
 
         // Determine Scale Notes (Ding + Top + Bottom)
         const currentScaleNotes = [scale.notes.ding, ...scale.notes.top, ...(scale.notes.bottom || [])];
 
-        const generatedNotes = baseNotes10.map((n, i) => {
+        const generatedNotes = activeTemplateNotes.map((n: any, i: number) => {
             const noteName = currentScaleNotes[i] || ''; // e.g., "D3", "A3"
             const frequency = getNoteFrequency(noteName);
 
@@ -194,7 +220,7 @@ const Digipan12 = React.forwardRef<Digipan3DHandle, Digipan12Props>(({
         // Sort for numbering by frequency (lowest = 1)
         const sortedByPitch = [...generatedNotes].sort((a, b) => a.frequency - b.frequency);
 
-        return generatedNotes.map(n => {
+        return generatedNotes.map((n: any) => {
             // All notes get their frequency-based rank (1 = lowest frequency)
             const rank = sortedByPitch.findIndex(x => x.id === n.id) + 1;
             const subLabel = rank.toString();
@@ -207,7 +233,7 @@ const Digipan12 = React.forwardRef<Digipan3DHandle, Digipan12Props>(({
 
     // Filter notes for the Permanent Visual Layer (Bottom 2 notes: IDs 10, 11)
     const visualNotes = useMemo(() => {
-        return notesToRender.filter(n => n.id >= 10);
+        return notesToRender.filter((n: any) => n.id >= 10);
     }, [notesToRender]);
 
     // Define sceneSize based on forceCompactView
@@ -235,6 +261,8 @@ const Digipan12 = React.forwardRef<Digipan3DHandle, Digipan12Props>(({
             showAxes={showAxes}
             onIsRecordingChange={onIsRecordingChange}
             hideTouchText={hideTouchText}
+            onRecordingComplete={onRecordingComplete}
+            disableRecordingUI={disableRecordingUI}
             sceneSize={forceCompactView ? { width: 66, height: 50 } : { width: 64, height: 60 }}
             cameraZoom={DIGIPAN_VIEW_CONFIG['12'].zoom}
             cameraTargetY={DIGIPAN_VIEW_CONFIG['12'].targetY}

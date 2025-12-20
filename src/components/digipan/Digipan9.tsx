@@ -26,6 +26,8 @@ export interface Digipan9Props {
     showAxes?: boolean;
     onIsRecordingChange?: (isRecording: boolean) => void;
     hideTouchText?: boolean;
+    onRecordingComplete?: (blob: Blob) => void;
+    disableRecordingUI?: boolean;
 }
 
 const Digipan9 = React.forwardRef<Digipan3DHandle, Digipan9Props>(({
@@ -34,7 +36,6 @@ const Digipan9 = React.forwardRef<Digipan3DHandle, Digipan9Props>(({
     onNoteClick,
     isCameraLocked = false,
     extraControls,
-    notes: externalNotes,
     showControls = true,
     showInfoPanel = true,
     initialViewMode = 2,
@@ -44,9 +45,12 @@ const Digipan9 = React.forwardRef<Digipan3DHandle, Digipan9Props>(({
     enablePan = true,
     showLabelToggle = false,
     forceCompactView = false,
+    notes: externalNotes,
     showAxes = false,
     onIsRecordingChange,
-    hideTouchText = false
+    hideTouchText = false,
+    onRecordingComplete,
+    disableRecordingUI
 }, ref) => {
 
     // Internal Note Generation (Standard 9-Note D Kurd Layout)
@@ -138,6 +142,8 @@ const Digipan9 = React.forwardRef<Digipan3DHandle, Digipan9Props>(({
             showAxes={showAxes}
             onIsRecordingChange={onIsRecordingChange}
             hideTouchText={hideTouchText}
+            onRecordingComplete={onRecordingComplete}
+            disableRecordingUI={disableRecordingUI}
             sceneSize={forceCompactView ? { width: 66, height: 50 } : { width: 64, height: 60 }}
             cameraZoom={DIGIPAN_VIEW_CONFIG['9'].zoom}
             cameraTargetY={DIGIPAN_VIEW_CONFIG['9'].targetY}

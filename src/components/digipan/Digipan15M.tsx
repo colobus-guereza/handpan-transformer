@@ -30,6 +30,8 @@ interface Digipan15MProps {
     showAxes?: boolean;
     onIsRecordingChange?: (isRecording: boolean) => void;
     hideTouchText?: boolean;
+    onRecordingComplete?: (blob: Blob) => void;
+    disableRecordingUI?: boolean;
 }
 
 // Composite Background Component for Digipan 15M (Mutant image + 4 visual tonefields)
@@ -109,7 +111,9 @@ const Digipan15M = React.forwardRef<Digipan3DHandle, Digipan15MProps>(({
     notes: externalNotes,
     showAxes = false,
     onIsRecordingChange,
-    hideTouchText = false
+    hideTouchText = false,
+    onRecordingComplete,
+    disableRecordingUI
 }, ref) => {
 
     // 15-Note Base Coordinates (Cloned from Digipan14M)
@@ -333,6 +337,8 @@ const Digipan15M = React.forwardRef<Digipan3DHandle, Digipan15MProps>(({
             scale={scale}
             onIsRecordingChange={onIsRecordingChange}
             hideTouchText={hideTouchText}
+            onRecordingComplete={onRecordingComplete}
+            disableRecordingUI={disableRecordingUI}
             notes={notesToRender.length > 0 ? notesToRender : baseNotes15.map(n => ({ ...n, label: '', frequency: 440, visualFrequency: 440, offset: [0, 0, 0] as [number, number, number] }))}
             onNoteClick={onNoteClick}
             isCameraLocked={isCameraLocked}

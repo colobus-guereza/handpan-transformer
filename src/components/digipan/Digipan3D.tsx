@@ -128,6 +128,8 @@ interface Digipan3DProps {
     onIsRecordingChange?: (isRecording: boolean) => void;
     cameraZoom?: number; // Optional override for initial camera zoom
     hideTouchText?: boolean; // New Prop to hide Ready/Set/Touch text
+    onRecordingComplete?: (blob: Blob) => void; // New: Callback when recording finishes
+    disableRecordingUI?: boolean; // New: Disable internal recording finished overlay
 }
 
 export interface Digipan3DHandle {
@@ -730,7 +732,9 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
     harmonicSettings, // Optional Override
     onIsRecordingChange,
     cameraZoom, // Destructure new prop
-    hideTouchText = false // Default to false (Show text)
+    hideTouchText = false, // Default to false (Show text)
+    onRecordingComplete, // Destructure new prop
+    disableRecordingUI = false // Default to false (Show UI)
 }, ref) => {
     const pathname = usePathname();
     // ScaleInfoPanel은 /digipan-3d-test 경로에서만 표시
@@ -825,6 +829,16 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
     };
 
     const handleRecordingComplete = useCallback((blob: Blob) => {
+        // 1. Notify Parent
+        if (onRecordingComplete) {
+            onRecordingComplete(blob);
+        }
+
+        // 2. If UI is disabled, stop here (Parent handles the rest)
+        if (disableRecordingUI) {
+            return;
+        }
+
         // Detect Mobile Environment:
         // Strictly rely on User Agent to distinct PC vs Mobile Behavior.
         // We do NOT use isMobileButtonLayout here because we want PC users (even with small windows) to get direct download.
@@ -844,7 +858,7 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
                 setCurrentBlob(blob);
             }
         }
-    }, []);
+    }, [onRecordingComplete, disableRecordingUI]);
 
     const { isRecording, startRecording, stopRecording } = useDigipanRecorder({
         canvasRef,

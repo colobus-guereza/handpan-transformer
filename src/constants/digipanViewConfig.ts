@@ -12,15 +12,21 @@ export interface DigipanViewSettings {
 }
 
 export const DIGIPAN_VIEW_CONFIG: Record<string, DigipanViewSettings> = {
-    '9': { zoom: 13.5, targetY: 0 },    // Reset to 0 for perfect centering
-    '10': { zoom: 13.5, targetY: -1.5 }, // Lift slightly UP to fix visual centering (D Kurd 10)
-    '11': { zoom: 12, targetY: 3 },   // Adjusted to +3 (User Request)
-    '12': { zoom: 12, targetY: 3 },   // Adjusted to +3 (User Request)
-    '14': { zoom: 12, targetY: 5 },   // Adjusted to +5 per user request
-    '14M': { zoom: 12, targetY: 5 },  // Adjusted to +5 per user request
-    '15M': { zoom: 12, targetY: 3 },  // Adjusted to +3 per user request
-    '18M': { zoom: 12, targetY: 5 },  // Adjusted to +5 per user request
+    '9': { zoom: 13.5, targetY: 0 },
+    '10': { zoom: 13.5, targetY: 0 },
+    '11': { zoom: 12, targetY: 0 },
+    '12': { zoom: 12, targetY: 0 },
+    '14': { zoom: 12, targetY: 0 },
+    '14M': { zoom: 12, targetY: 0 },
+    '15M': { zoom: 12, targetY: 0 },
+    '18M': { zoom: 12, targetY: 0 },
     'DM': { zoom: 12, targetY: 0 },
+};
+
+// Independent Scale-Specific Overrides
+// Use this to fine-tune specific scales without affecting the entire template group
+export const DIGIPAN_SCALE_OVERRIDES: Record<string, DigipanViewSettings> = {
+    'e_equinox_14': { zoom: 12, targetY: 2 },
 };
 
 export const DIGIPAN_LABEL_POS_FACTOR = 0.20;

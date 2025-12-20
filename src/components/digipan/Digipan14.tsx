@@ -4,7 +4,7 @@ import React, { useMemo } from 'react';
 import Digipan3D, { svgTo3D, getTonefieldDimensions, Digipan3DHandle } from './Digipan3D';
 import { Scale } from '@/data/handpanScales';
 import { getNoteFrequency } from '@/constants/noteFrequencies';
-import { DIGIPAN_VIEW_CONFIG } from '@/constants/digipanViewConfig';
+import { DIGIPAN_VIEW_CONFIG, DIGIPAN_SCALE_OVERRIDES } from '@/constants/digipanViewConfig';
 import * as THREE from 'three';
 import { VisualTonefield } from './VisualTonefield';
 import { useTexture } from '@react-three/drei';
@@ -30,6 +30,8 @@ interface Digipan14Props {
     showAxes?: boolean;
     onIsRecordingChange?: (isRecording: boolean) => void;
     hideTouchText?: boolean;
+    onRecordingComplete?: (blob: Blob) => void;
+    disableRecordingUI?: boolean;
 }
 
 // Composite Background Component for Digipan 14 (10 notes image + 4 visual tonefields)
@@ -109,7 +111,9 @@ const Digipan14 = React.forwardRef<Digipan3DHandle, Digipan14Props>(({
     notes: externalNotes,
     showAxes = false,
     onIsRecordingChange,
-    hideTouchText = false
+    hideTouchText = false,
+    onRecordingComplete,
+    disableRecordingUI
 }, ref) => {
 
     // 10-Note Base Coordinates (from Digipan10.tsx)
@@ -334,6 +338,8 @@ const Digipan14 = React.forwardRef<Digipan3DHandle, Digipan14Props>(({
             ref={ref}
             onIsRecordingChange={onIsRecordingChange}
             hideTouchText={hideTouchText}
+            onRecordingComplete={onRecordingComplete}
+            disableRecordingUI={disableRecordingUI}
             scale={scale}
             notes={notesToRender.length > 0 ? notesToRender : baseNotes10.map(n => ({ ...n, label: '', frequency: 440, visualFrequency: 440, offset: [0, 0, 0] as [number, number, number] }))}
             onNoteClick={onNoteClick}
@@ -351,8 +357,8 @@ const Digipan14 = React.forwardRef<Digipan3DHandle, Digipan14Props>(({
             forceCompactView={forceCompactView}
             hideStaticLabels={true}
             sceneSize={forceCompactView ? { width: 66, height: 66 } : { width: 64, height: 66 }} // Tighter vertical bounds (60 + 10%)
-            cameraZoom={DIGIPAN_VIEW_CONFIG['14'].zoom}
-            cameraTargetY={DIGIPAN_VIEW_CONFIG['14'].targetY}
+            cameraZoom={(scale && DIGIPAN_SCALE_OVERRIDES[scale.id]?.zoom) || DIGIPAN_VIEW_CONFIG['14'].zoom}
+            cameraTargetY={(scale && DIGIPAN_SCALE_OVERRIDES[scale.id]?.targetY) ?? DIGIPAN_VIEW_CONFIG['14'].targetY}
             showAxes={showAxes}
         />
     );

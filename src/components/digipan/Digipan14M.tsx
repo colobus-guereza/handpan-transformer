@@ -30,6 +30,8 @@ interface Digipan14MProps {
     showAxes?: boolean;
     onIsRecordingChange?: (isRecording: boolean) => void;
     hideTouchText?: boolean;
+    onRecordingComplete?: (blob: Blob) => void;
+    disableRecordingUI?: boolean;
 }
 
 // Composite Background Component for Digipan 14M (Mutant image + 4 visual tonefields)
@@ -109,7 +111,9 @@ const Digipan14M = React.forwardRef<Digipan3DHandle, Digipan14MProps>(({
     notes: externalNotes,
     showAxes = false,
     onIsRecordingChange,
-    hideTouchText = false
+    hideTouchText = false,
+    onRecordingComplete,
+    disableRecordingUI
 }, ref) => {
 
     // 10-Note Base Coordinates (from Digipan10.tsx) - Starting point for 14M as well
@@ -330,6 +334,8 @@ const Digipan14M = React.forwardRef<Digipan3DHandle, Digipan14MProps>(({
             ref={ref}
             onIsRecordingChange={onIsRecordingChange}
             hideTouchText={hideTouchText}
+            onRecordingComplete={onRecordingComplete}
+            disableRecordingUI={disableRecordingUI}
             scale={scale}
             notes={notesToRender.length > 0 ? notesToRender : baseNotes10.map(n => ({ ...n, label: '', frequency: 440, visualFrequency: 440, offset: [0, 0, 0] as [number, number, number] }))}
             onNoteClick={onNoteClick}
