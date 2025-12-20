@@ -10,6 +10,7 @@ import { Digipan3DHandle } from "@/components/digipan/Digipan3D";
 import { useHandpanAudio } from "@/hooks/useHandpanAudio";
 import { getNoteFrequency } from "@/constants/noteFrequencies";
 import * as Tone from 'tone';
+import { useLoungeDrum } from '@/hooks/useLoungeDrum';
 
 const Digipan9 = dynamic(() => import('@/components/digipan/Digipan9'), { ssr: false });
 const Digipan10 = dynamic(() => import('@/components/digipan/Digipan10'), { ssr: false });
@@ -49,7 +50,9 @@ const PianoKeysIcon = ({ size = 18, className = '' }: { size?: number; className
 type RecordState = 'idle' | 'recording' | 'reviewing';
 
 export default function ReelPanPage(props: { params: Promise<Record<string, never>> }) {
-    const params = use(props.params); // Unwrap params to satisfy Next.js 16 requirement
+    // Unwrap params to satisfy Next.js 16 requirement
+    // params is not used in this component, but must be unwrapped to avoid enumeration errors
+    const _params = use(props.params);
     // 1. State Management
     const [recordState, setRecordState] = useState<RecordState>('idle');
     const [isRecording, setIsRecording] = useState(false); // 기존 호환성 유지
@@ -100,7 +103,7 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
 
     // Filter & Sort State
     const [filterNoteCount, setFilterNoteCount] = useState<string>('all');
-    const [sortBy, setSortBy] = useState<'default' | 'name' | 'notes'>('default');
+    const [sortBy, setSortBy] = useState<'name' | 'notes'>('name');
 
     const [countdown, setCountdown] = useState<number | 'Touch!' | null>(null);
 
@@ -230,11 +233,10 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
     const drumLoopIdRef = useRef<number | null>(null);
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // 🎷 JAZZ DRUM AUDIO REFS (Swing/Brush 전용 - 별도 튜닝)
+    // 🍸 MODERN LOUNGE HOOK (Deep House)
     // ═══════════════════════════════════════════════════════════════════════════
-    const jazzKickSynthRef = useRef<Tone.MembraneSynth | null>(null);  // Feathered Kick
-    const jazzSnareSynthRef = useRef<Tone.NoiseSynth | null>(null);    // Brush Snare
-    const jazzRideSynthRef = useRef<Tone.NoiseSynth | null>(null);     // Ride Cymbal
+    const [masterGainNode, setMasterGainNode] = useState<Tone.Gain | null>(null);
+    const { kickRef: loungeKickRef, snareRef: loungeSnareRef, hatRef: loungeHatRef } = useLoungeDrum(masterGainNode);
 
     // ═══════════════════════════════════════════════════════════════════════════
     // 🎧 LOFI CHILL DRUM AUDIO REFS (빈티지 더스티 사운드 - 먹먹한 질감)
@@ -256,6 +258,7 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
         // ═══════════════════════════════════════════════════════════════════════
         const masterGain = new Tone.Gain(0.8).toDestination();
         drumMasterGainRef.current = masterGain;
+        setMasterGainNode(masterGain);
 
         // ═══════════════════════════════════════════════════════════════════════
         // 🦵 KICK DRUM: Deep & Heavy Bass (딩 피치 - 1옥타브)
@@ -336,73 +339,9 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
             volume: 0  // 70% -> 100% (0dB)
         }).connect(hatFilter);
 
-        // ═══════════════════════════════════════════════════════════════════════
-        // 🎷 JAZZ KICK: Feathering (둥... 하는 부드러운 베이스)
-        // ═══════════════════════════════════════════════════════════════════════
-        // 특성: 락 드럼처럼 때리는 게 아니라 베이스를 살짝 받쳐주는 느낌
-        // - 느린 attack, 긴 pitchDecay, 낮은 필터
-        // ───────────────────────────────────────────────────────────────────────
-        const jazzKickFilter = new Tone.Filter(90, "lowpass").connect(masterGain);
-        // └─ 90Hz 이상 차단: 더 부드럽고 둥근 베이스
-
-        jazzKickSynthRef.current = new Tone.MembraneSynth({
-            pitchDecay: 0.08,   // 긴 피치 하강 (부드러운 "둥...")
-            octaves: 1.2,       // 좁은 옥타브 범위 (안정적)
-            oscillator: {
-                type: "sine"   // 순수 사인파 (배음 없이 깨끗)
-            },
-            envelope: {
-                attack: 0.02,         // 느린 어택 (부드러운 시작)
-                decay: 0.4,           // 긴 디케이 (여운)
-                sustain: 0.02,        // 살짝 유지
-                release: 0.6,
-                attackCurve: "linear"
-            },
-            volume: 4  // 볼륨 낮춤 (feathering) -> 약간 부스트
-        }).connect(jazzKickFilter);
-
-        // ═══════════════════════════════════════════════════════════════════════
-        // 🎷 JAZZ SNARE: Brush (치익- 하는 브러쉬 질감)
-        // ═══════════════════════════════════════════════════════════════════════
-        // 특성: 브러쉬로 긁거나 가볍게 탭하는 소리
-        // - Pink Noise + 긴 attack = "치익-" 질감
-        // ───────────────────────────────────────────────────────────────────────
-        const jazzSnareFilter = new Tone.Filter({
-            frequency: 1500,    // 낮은 중심 주파수 (부드러운 톤)
-            type: "bandpass",
-            Q: 1.5              // 넓은 Q (자연스러운 브러쉬)
-        }).connect(masterGain);
-
-        jazzSnareSynthRef.current = new Tone.NoiseSynth({
-            noise: { type: "pink" },  // 핑크 노이즈 (부드러운 톤)
-            envelope: {
-                attack: 0.06,    // 60ms - 느린 어택 ("치익-" 느낌)
-                decay: 0.15,     // 150ms - 브러쉬 스윕 지속
-                sustain: 0       // 끊김
-            },
-            volume: -2  // 낮은 볼륨 (섬세함) -> 약간 부스트
-        }).connect(jazzSnareFilter);
-
-        // ═══════════════════════════════════════════════════════════════════════
-        // 🎷 JAZZ RIDE: Cymbal (금속성 여운의 라이드 심벌)
-        // ═══════════════════════════════════════════════════════════════════════
-        // 특성: Jazz의 메인 타임키퍼, "딩~" 하는 금속성 여운
-        // - High-pass 필터, 긴 decay
-        // ───────────────────────────────────────────────────────────────────────
-        const jazzRideFilter = new Tone.Filter({
-            frequency: 4500,    // 높은 주파수 (밝은 심벌 톤)
-            type: "highpass"    // 저음 차단, 금속성 유지
-        }).connect(masterGain);
-
-        jazzRideSynthRef.current = new Tone.NoiseSynth({
-            noise: { type: "white" },  // 화이트 노이즈 (밝은 톤)
-            envelope: {
-                attack: 0.002,   // 즉각적 어택 ("딩!")
-                decay: 0.35,     // 350ms - 긴 여운 (심벌 서스테인)
-                sustain: 0.02    // 살짝 유지
-            },
-            volume: 0  // 볼륨 조절 -> 0dB
-        }).connect(jazzRideFilter);
+        // ═══════════════════════════════════════════════════════════════════════════
+        // 🎷 JAZZ REMOVED (Replaced by Tribal Hook)
+        // ═══════════════════════════════════════════════════════════════════════════
 
         // ═══════════════════════════════════════════════════════════════════════
         // 🎧 LOFI KICK: Soft Thump (먹먹하고 둥근 저음)
@@ -473,9 +412,8 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
             snareSynthRef.current?.dispose();
             hatSynthRef.current?.dispose();
             // Jazz synths
-            jazzKickSynthRef.current?.dispose();
-            jazzSnareSynthRef.current?.dispose();
-            jazzRideSynthRef.current?.dispose();
+            hatSynthRef.current?.dispose();
+            // Jazz synths removed
             // Lofi Chill synths
             lofiKickSynthRef.current?.dispose();
             lofiSnareSynthRef.current?.dispose();
@@ -545,24 +483,27 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
     useEffect(() => {
         if (typeof window === 'undefined') return;
 
-        if (drumLoopIdRef.current !== null) {
-            Tone.Transport.clear(drumLoopIdRef.current);
-            drumLoopIdRef.current = null;
-        }
+        // ★ Play 상태가 아니면 루프 스케줄링 하지 않음 (리소스 절약 및 즉시 시작 보장)
+        if (!isDrumPlaying) return;
 
         Tone.Transport.bpm.value = drumBpm;
 
-        // 🎷 Jazz Swing: Transport에 스윙 적용 (다른 패턴은 스윙 없음)
-        if (drumPattern === 'Jazz Swing') {
-            Tone.Transport.swing = 0.3;        // 30% 스윙감
-            Tone.Transport.swingSubdivision = "8n";  // 8분음표 기준 스윙
-        } else {
-            Tone.Transport.swing = 0;          // 스윙 없음
+        // [User Request] Seamless Transition: BPM 변경 없이 프리셋만 변경
+        // Phase Reset 로직 비활성화 -> 현재 비트(Step) 유지하며 자연스럽게 패턴만 바뀜
+        /*
+        if (isDrumPlayingRef.current) {
+            const secondsPerStep = 60 / drumBpm / 4;
+            drumStartOffsetRef.current = Math.round(Tone.Transport.seconds / secondsPerStep);
         }
+        */
+
+        // 🎷 Jazz Swing Logic Removed
+        Tone.Transport.swing = 0;          // 스윙 없음
 
         // Pattern logic based on drumPattern & drumTimeSignature
         // ★ 킥 피치는 drumPitchRef.current (딩 피치 - 1옥타브)와 연결됨
-        drumLoopIdRef.current = Tone.Transport.scheduleRepeat((time) => {
+        // [FIX] startTime 제거 (Tone.js Default: Current Transport Time)
+        const loopId = Tone.Transport.scheduleRepeat((time) => {
             // ★ 드럼 버튼이 활성화된 경우에만 소리 재생
             if (!isDrumPlayingRef.current) return;
 
@@ -597,120 +538,88 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                         hatSynthRef.current?.triggerAttackRelease("32n", time, isAccent ? 0.3 : 0.15);
                     }
                 }
-                else if (drumPattern === 'Acoustic Pop') {
+                else if (drumPattern === 'Funky Groove') {
                     // ═══════════════════════════════════════════════════════════
-                    // ★ Acoustic Pop: 싱코페이션 & 고스트 노트가 특징
+                    // ★ Funky Groove (Funky): 16비트 그루브 & 싱코페이션
                     // ═══════════════════════════════════════════════════════════
-                    // 킥: Step 0 (강), Step 7 (싱코페이션), Step 10 (3박 and)
-                    const kickVel = step === 0 ? 0.8 : step === 7 ? 0.6 : step === 10 ? 0.8 : 0;
-                    if (step === 0 || step === 7 || step === 10) {
-                        kickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, kickVel);
-                    }
-                    // 스네어: Step 4, 12 (백비트) + Step 15 (고스트 노트)
-                    const snareVel = (step === 4 || step === 12) ? 0.6 : step === 15 ? 0.2 : 0;
-                    if (step === 4 || step === 12 || step === 15) {
-                        snareSynthRef.current?.triggerAttackRelease("8n", time, snareVel);
-                    }
-                    // 하이햇: 8분음표, 업비트(홀수 8분음표) 강조
-                    if (step % 2 === 0) {
-                        const isUpbeat = (step / 2) % 2 === 1; // 2, 6, 10, 14번째 step
-                        const hatVel = isUpbeat ? 0.25 : 0.15;
-                        hatSynthRef.current?.triggerAttackRelease("32n", time, hatVel);
+                    // 요청: "더 펑키하게, 리듬을 쪼개달라" -> 16비트 하이햇 & 고스트 노트 추가
+
+                    // 1. Hi-Hat: 16분음표 연속 연주 (Funky Feel)
+                    // 강약: 강(0) 약(1) 중(2) 약(3)...
+                    let hatVel = 0.1;
+                    if (step % 4 === 0) hatVel = 0.3;      // Downbeat (강)
+                    else if (step % 2 === 0) hatVel = 0.2; // Upbeat '&' (중)
+
+                    hatSynthRef.current?.triggerAttackRelease("32n", time, hatVel);
+
+                    // 2. Kick: 펑키한 싱코페이션
+                    // 0(One), 3(1'e&'a), 10(3'e&'a')
+                    if (step === 0) kickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.8);
+                    if (step === 3) kickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.5); // Ghost Kick
+                    if (step === 10) kickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.7);
+
+                    // 3. Snare: Backbeat + Ghost Notes
+                    // Main: 4, 12
+                    // Ghost: 7("2e&'a'"), 9("3e'&'a"), 15("4e&'a'")
+                    if (step === 4 || step === 12) {
+                        snareSynthRef.current?.triggerAttackRelease("8n", time, 0.6);
+                    } else if (step === 7 || step === 9 || step === 15) {
+                        snareSynthRef.current?.triggerAttackRelease("16n", time, 0.15); // Ghost Snare
                     }
                 }
-                else if (drumPattern === 'Jazz Swing') {
+                else if (drumPattern === 'Modern Lounge') {
                     // ═══════════════════════════════════════════════════════════════
-                    // 🎷 JAZZ SWING 4/4: "Spang-a-lang" 라이드 패턴
+                    // 🍸 MODERN LOUNGE (Deep House): Boots-Cats Groove
                     // ═══════════════════════════════════════════════════════════════
-                    // 16 steps = 4박 × 4 (16분음표 단위)
-                    // Ride: 정박(0,4,8,12) + 스윙 뒷박(10,14) = "딩~딩~딩다딩다"
-                    // Kick: Feathering (1박에만 약하게)
-                    // Snare: Ghost notes (엇박에 아주 약하게)
-                    // ───────────────────────────────────────────────────────────────
+                    // Spec:
+                    // Kick: 0, 4, 8, 12 (Every beat, Four-on-the-floor, Metronome)
+                    // Snare (Clap): 4, 12 (Backbeat)
+                    // Hat (Open): 2, 6, 10, 14 (Off-beat 'And')
+                    // Ghost Hat: 0, 8 (Weak)
 
-                    // 📌 Humanize: 미세한 velocity 랜덤화 (±0.05)
-                    const humanize = () => (Math.random() - 0.5) * 0.1;
-
-                    // 🎹 RIDE CYMBAL: "Spang-a-lang" 패턴
-                    // 정박 (4분음표): Step 0, 4, 8, 12
-                    // 스윙 뒷박 (트리플렛 느낌): Step 10, 14
-                    if (step === 0 || step === 4 || step === 8 || step === 12) {
-                        // 정박 (강)
-                        const rideVel = 0.5 + humanize();
-                        jazzRideSynthRef.current?.triggerAttackRelease("4n", time, rideVel);
-                    }
-                    if (step === 10 || step === 14) {
-                        // 스윙 뒷박 (중) - 트리플렛 느낌
-                        const rideVel = 0.35 + humanize();
-                        jazzRideSynthRef.current?.triggerAttackRelease("8n", time, rideVel);
+                    // 1. Kick (The Metronome) - Low Pitch (C1~C2 range)
+                    // Deep House needs punchy but steady kick.
+                    if (step % 4 === 0) {
+                        // Kick Pitch: Ensure it's not too low.
+                        // drumPitchRef.current is usually Ding-1octave.
+                        loungeKickRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 1.0);
                     }
 
-                    // 🦵 KICK: Feathering (1박에만 아주 약하게)
-                    if (step === 0) {
-                        const kickVel = 0.25 + humanize();
-                        jazzKickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "4n", time, kickVel);
-                    }
-                    // 가끔 당김음 (Step 10 or 11에서 50% 확률로)
-                    if (step === 10 && Math.random() > 0.5) {
-                        jazzKickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.18 + humanize());
+                    // 2. Snare (The Clap) - Tight Backbeat
+                    if (step === 4 || step === 12) {
+                        loungeSnareRef.current?.triggerAttackRelease("16n", time, 0.8);
                     }
 
-                    // 🪘 SNARE: Ghost Notes (엇박에 아주 약하게)
-                    // Step 13, 15에 랜덤하게 브러쉬 탭
-                    if (step === 13 || step === 15) {
-                        // 70% 확률로 고스트 노트 재생
-                        if (Math.random() > 0.3) {
-                            const ghostVel = 0.12 + humanize();
-                            jazzSnareSynthRef.current?.triggerAttackRelease("16n", time, ghostVel);
-                        }
-                    }
-                    // 가끔 Step 7에서 살짝 탭
-                    if (step === 7 && Math.random() > 0.6) {
-                        jazzSnareSynthRef.current?.triggerAttackRelease("16n", time, 0.1 + humanize());
+                    // 3. Hat (The Groove) - Open Hat on Off-beats, Closed on Downbeats
+                    if (step === 2 || step === 6 || step === 10 || step === 14) {
+                        // Open Hat (Strong off-beat)
+                        loungeHatRef.current?.triggerAttackRelease("16n", time, 0.8);
+                    } else if (step === 0 || step === 8) {
+                        // Closed Hat (Ghost notes on downbeats to glue rhythm)
+                        // Trigger with very short release or lower volume
+                        loungeHatRef.current?.triggerAttackRelease("32n", time, 0.1);
                     }
                 }
                 else if (drumPattern === 'Lofi Chill') {
                     // ═══════════════════════════════════════════════════════════════
-                    // 🎧 LOFI CHILL 4/4: Lazy Groove (J.Dilla Style)
+                    // 🎧 LOFI CHILL: Basic 8-beat Rhythm + Lofi Tones
                     // ═══════════════════════════════════════════════════════════════
-                    // 16 steps = 4박 × 4 (16분음표 단위)
-                    // Kick: Step 0 (강), Step 7 (싱코페이션), Step 10 (3박 뒷박)
-                    // Snare: Step 4, 12 (백비트) + Micro-timing 딜레이
-                    // Hat: 8분음표 강-약-강-약 패턴
-                    // ※ Micro-timing: 스네어/햇이 그리드보다 약간 늦게 (Lazy Feel)
-                    // ───────────────────────────────────────────────────────────────
+                    // 요청: "박자/리듬을 Basic 8-beat와 동일하게 설정하되 톤은 유지"
 
-                    // 📌 Humanize: velocity 랜덤화 (±0.1)
-                    const humanize = () => (Math.random() - 0.5) * 0.2;
-
-                    // ⏱️ Micro-timing: 스네어/햇에 미세한 딜레이 추가 (Lazy Feel)
-                    const lazyDelay = 0.035 + Math.random() * 0.02;  // 35~55ms 딜레이
-
-                    // 🦵 KICK: 간결한 패턴 (정박+싱코페이션)
-                    if (step === 0) {
-                        lofiKickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.7 + humanize());
-                    }
-                    if (step === 7) {
-                        // 2박 뒷박 (싱코페이션)
-                        lofiKickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.45 + humanize());
-                    }
-                    if (step === 10) {
-                        // 3박 뒷박
-                        lofiKickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.55 + humanize());
+                    // Kick: 1박, 3박 (step 0, 8)
+                    if (step === 0 || step === 8) {
+                        lofiKickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.8);
                     }
 
-                    // 🪘 SNARE: 백비트 + Lazy Delay
+                    // Snare: 2박, 4박 (step 4, 12)
                     if (step === 4 || step === 12) {
-                        // Micro-timing: 그리드보다 살짝 늦게 (나른한 느낌)
-                        lofiSnareSynthRef.current?.triggerAttackRelease("8n", time + lazyDelay, 0.55 + humanize());
+                        lofiSnareSynthRef.current?.triggerAttackRelease("8n", time, 0.5);
                     }
 
-                    // 🎩 HAT: 8분음표 강-약-강-약 패턴 + Lazy Delay
+                    // Hat: 8th notes (정박마다)
                     if (step % 2 === 0) {
-                        // 강(0)-약(2)-강(4)-약(6)... 고개 끄덕이는 그루브
-                        const isStrong = step % 4 === 0;
-                        const hatVel = isStrong ? 0.35 : 0.2;
-                        lofiHatSynthRef.current?.triggerAttackRelease("32n", time + lazyDelay * 0.5, hatVel + humanize());
+                        const isAccent = step % 4 === 0;
+                        lofiHatSynthRef.current?.triggerAttackRelease("32n", time, isAccent ? 0.3 : 0.15);
                     }
                 }
             }
@@ -722,8 +631,8 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                     if (step === 4 || step === 8) snareSynthRef.current?.triggerAttackRelease("8n", time, 0.4);
                     if (step % 2 === 0) hatSynthRef.current?.triggerAttackRelease("32n", time, 0.15);
                 }
-                else if (drumPattern === 'Acoustic Pop') {
-                    // ★ Acoustic Pop 3/4: 발라드 스타일
+                else if (drumPattern === 'Funky Groove') {
+                    // ★ Funky Groove 3/4: 발라드 스타일
                     // 킥: Step 0 (강)
                     if (step === 0) {
                         kickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.8);
@@ -739,36 +648,20 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                         hatSynthRef.current?.triggerAttackRelease("32n", time, hatVel);
                     }
                 }
-                else if (drumPattern === 'Jazz Swing') {
-                    // ═══════════════════════════════════════════════════════════════
-                    // 🎷 JAZZ WALTZ 3/4: 유려한 스윙 왈츠
-                    // ═══════════════════════════════════════════════════════════════
-                    // 12 steps = 3박 × 4 (16분음표 단위)
-                    // Ride: 정박(0,4,8) + 마지막 스윙 뒷박(11)
-                    // Kick: 1박에만 feathering
-                    // Snare: 2박, 3박에 아주 약한 브러쉬 탭
-                    // ───────────────────────────────────────────────────────────────
+                else if (drumPattern === 'Modern Lounge') {
+                    // 🍸 MODERN LOUNGE 3/4
+                    // Kick: 0 (Downbeat)
+                    // Clap: 4, 8 (Beats 2, 3)
+                    // Hat: Off-beats (2, 6, 10)
 
-                    const humanize = () => (Math.random() - 0.5) * 0.1;
-
-                    // 🎹 RIDE CYMBAL: 왈츠 스윙 패턴
-                    if (step === 0 || step === 4 || step === 8) {
-                        const rideVel = step === 0 ? 0.5 : 0.4;
-                        jazzRideSynthRef.current?.triggerAttackRelease("4n", time, rideVel + humanize());
-                    }
-                    // 마지막 박자의 스윙 뒷박
-                    if (step === 11) {
-                        jazzRideSynthRef.current?.triggerAttackRelease("8n", time, 0.3 + humanize());
-                    }
-
-                    // 🦵 KICK: Feathering (1박에만)
                     if (step === 0) {
-                        jazzKickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "4n", time, 0.25 + humanize());
+                        loungeKickRef.current?.triggerAttackRelease(drumPitchRef.current, "4n", time, 1.0);
                     }
-
-                    // 🪘 SNARE: 브러쉬 탭 (2박, 3박에 아주 약하게)
                     if (step === 4 || step === 8) {
-                        jazzSnareSynthRef.current?.triggerAttackRelease("8n", time, 0.15 + humanize());
+                        loungeSnareRef.current?.triggerAttackRelease("16n", time, 0.7);
+                    }
+                    if (step === 2 || step === 6 || step === 10) {
+                        loungeHatRef.current?.triggerAttackRelease("16n", time, 0.6);
                     }
                 }
                 else if (drumPattern === 'Lofi Chill') {
@@ -817,8 +710,8 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                     if (step === 6) snareSynthRef.current?.triggerAttackRelease("8n", time, 0.5);
                     if (step % 2 === 0) hatSynthRef.current?.triggerAttackRelease("32n", time, 0.2);
                 }
-                else if (drumPattern === 'Acoustic Pop') {
-                    // ★ Acoustic Pop 6/8: 어쿠스틱 팝 그루브 스타일
+                else if (drumPattern === 'Funky Groove') {
+                    // ★ Funky Groove 6/8: 어쿠스틱 팝 그루브 스타일
                     // 6/8 = 12 steps (셔플 느낌의 복합박자)
                     // 
                     // 킥: Step 0 (1박 강) + Step 9 (서브 펀치, 다음 박 앞당김)
@@ -846,41 +739,29 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                         hatSynthRef.current?.triggerAttackRelease("32n", time, hatVel);
                     }
                 }
-                else if (drumPattern === 'Jazz Swing') {
-                    // ═══════════════════════════════════════════════════════════════
-                    // 🎷 JAZZ SWING 6/8: 단순화된 복합박자 스윙
-                    // ═══════════════════════════════════════════════════════════════
-                    // 12 steps = 2그룹 × 6
-                    // Ride: 1박(0), 4박(6) 강조 + 스윙 뒷박(10) 하나만
-                    // Kick: 1박에만 feathering
-                    // Snare: 4박에 브러쉬 탭 (고스트 노트 없음)
-                    // ───────────────────────────────────────────────────────────────
+                else if (drumPattern === 'Modern Lounge') {
+                    // 🍸 MODERN LOUNGE 6/8
+                    // Kick: 0, 6 (Dotted Quarters)
+                    // Clap: 3, 9 (Triplets Backbeat? No, probably 6? Let's do Standard Backbeat feel)
+                    // Let's do: Kick 0. Clap 6. (Simple)
+                    // Hat: 2, 4, 8, 10?
+                    // Standard 6/8 House: Kick on 0, 3, 6, 9 (Driving 4-on-floor feel over triplets)
 
-                    const humanize = () => (Math.random() - 0.5) * 0.08;
-
-                    // 🎹 RIDE CYMBAL: 단순한 6/8 스윙 패턴
-                    // 강박만 (1박, 4박) + 스윙 뒷박 하나 (마디 끝)
-                    if (step === 0) {
-                        // 1박 (가장 강)
-                        jazzRideSynthRef.current?.triggerAttackRelease("4n", time, 0.5 + humanize());
+                    // Kick: 0, 3, 6, 9 (Steps of 3)
+                    if (step % 3 === 0) {
+                        // Accent 0 and 6 slightly more
+                        const vel = (step === 0 || step === 6) ? 1.0 : 0.8;
+                        loungeKickRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, vel);
                     }
+                    // Clap: 6? Or 3, 9?
+                    // Let's do Clap on 6.
                     if (step === 6) {
-                        // 4박 (백비트)
-                        jazzRideSynthRef.current?.triggerAttackRelease("4n", time, 0.4 + humanize());
+                        loungeSnareRef.current?.triggerAttackRelease("16n", time, 0.8);
                     }
-                    if (step === 10) {
-                        // 스윙 뒷박 (다음 마디로 이어지는 느낌)
-                        jazzRideSynthRef.current?.triggerAttackRelease("8n", time, 0.3 + humanize());
-                    }
-
-                    // 🦵 KICK: Feathering (1박에만)
-                    if (step === 0) {
-                        jazzKickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "4n", time, 0.28 + humanize());
-                    }
-
-                    // 🪘 SNARE: 4박에 브러쉬 탭만 (고스트 노트 제거)
-                    if (step === 6) {
-                        jazzSnareSynthRef.current?.triggerAttackRelease("8n", time, 0.22 + humanize());
+                    // Hat: Offbeats in triplets? (step 1, 2, 4, 5...)
+                    // Let's do Open Hat on 2, 5, 8, 11 (The "Ah" of 1-and-ah)
+                    if (step === 2 || step === 5 || step === 8 || step === 11) {
+                        loungeHatRef.current?.triggerAttackRelease("16n", time, 0.5);
                     }
                 }
                 else if (drumPattern === 'Lofi Chill') {
@@ -927,7 +808,17 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
             }
         }, "16n");
 
-    }, [drumBpm, drumPattern, drumTimeSignature]);
+        drumLoopIdRef.current = loopId;
+
+        // Cleanup: Effect가 다시 실행되거나 언마운트될 때 루프 해제
+        // ★ 이를 통해 중복 루프 실행(CPU 부하, 렉)을 방지
+        return () => {
+            if (loopId !== null) {
+                Tone.Transport.clear(loopId);
+            }
+        };
+
+    }, [drumBpm, drumPattern, drumTimeSignature, isDrumPlaying]);
 
     // [Drum Engine] Playback Sync
     useEffect(() => {
@@ -978,6 +869,7 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
 
         if (!isLongPressActive.current) {
             // 짧게 눌렀을 때만 토글
+            Tone.start(); // [UX 개선] 즉시 AudioContext 활성화
             setIsDrumPlaying(prev => !prev);
         }
         isLongPressActive.current = false;
@@ -1360,23 +1252,10 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                             initial={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.5, ease: 'easeOut' }}
-                            className="absolute inset-0 z-[999] bg-slate-950 flex flex-col"
+                            className="absolute inset-0 z-[999] bg-slate-950"
                         >
-                            {/* Header Skeleton - matches real header (px-4 py-8, centered scale name) */}
-                            <header className="relative flex items-center justify-center px-4 py-8 bg-gradient-to-b from-black/80 to-transparent">
-                                {/* Back button placeholder */}
-                                <div className="absolute left-4 w-10 h-10 rounded-full bg-white/5 animate-pulse" />
-                                {/* Scale name placeholder */}
-                                <div className="flex flex-col items-center gap-1">
-                                    <div className="flex items-center gap-1.5">
-                                        <div className="w-28 h-6 bg-white/10 rounded-md animate-pulse" />
-                                        <div className="w-4 h-4 bg-white/10 rounded animate-pulse" />
-                                    </div>
-                                </div>
-                            </header>
-
-                            {/* Center: Digipan Skeleton - fills available space */}
-                            <div className="flex-1 flex items-center justify-center">
+                            {/* 1. Center: Digipan Skeleton (Background Layer) */}
+                            <div className="absolute inset-0 flex items-center justify-center">
                                 <div className="relative w-[85vw] max-w-[360px] aspect-square">
                                     <div className="w-full h-full rounded-full bg-gradient-to-br from-white/10 to-white/5 animate-pulse" />
                                     <div className="absolute inset-0 flex items-center justify-center">
@@ -1389,22 +1268,40 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                                 </div>
                             </div>
 
-                            {/* Footer Skeleton - matches real footer (px-6 py-8 pb-10, min-h-[180px], max-w-[380px] justify-between) */}
-                            <footer className="w-full px-6 py-8 pb-10 bg-gradient-to-t from-black/95 to-transparent min-h-[180px] flex flex-col items-center gap-6">
-                                {/* Timer badge placeholder (invisible in idle state, keeps spacing) */}
-                                <div className="h-8 opacity-0" />
-                                {/* Button group placeholder */}
-                                <div className="w-full flex items-center justify-between max-w-[380px]">
-                                    <div className="w-12 h-12 rounded-full bg-white/10 animate-pulse" />
-                                    <div className="w-12 h-12 rounded-full bg-white/10 animate-pulse" />
-                                    {/* Center record button - larger */}
-                                    <div className="w-16 h-16 rounded-full border-4 border-white/20 flex items-center justify-center">
-                                        <div className="w-[85%] h-[85%] rounded-full bg-white/10 animate-pulse" />
+                            {/* 2. UI Overlay: Header & Footer (Foreground Layer) */}
+                            <div className="absolute inset-0 flex flex-col justify-between">
+                                {/* Header Skeleton - matches real header (px-4 py-8, centered scale name) */}
+                                <header className="relative flex items-center justify-center px-4 py-8 bg-gradient-to-b from-black/80 to-transparent">
+                                    {/* Back button placeholder */}
+                                    <div className="absolute left-4 w-10 h-10 rounded-full bg-white/5 animate-pulse" />
+                                    {/* Scale name placeholder */}
+                                    <div className="flex flex-col items-center gap-1">
+                                        <div className="flex items-center gap-1.5">
+                                            <div className="w-28 h-6 bg-white/10 rounded-md animate-pulse" />
+                                            <div className="w-4 h-4 bg-white/10 rounded animate-pulse" />
+                                        </div>
                                     </div>
-                                    <div className="w-12 h-12 rounded-full bg-white/10 animate-pulse" />
-                                    <div className="w-12 h-12 rounded-full bg-white/10 animate-pulse" />
-                                </div>
-                            </footer>
+                                </header>
+
+                                {/* Spacer equivalent to keep flex layout consistent if needed, but justify-between handles it */}
+
+                                {/* Footer Skeleton - matches real footer (px-6 py-8 pb-10, min-h-[180px], max-w-[380px] justify-between) */}
+                                <footer className="w-full px-6 py-8 pb-10 bg-gradient-to-t from-black/95 to-transparent min-h-[180px] flex flex-col items-center gap-6">
+                                    {/* Timer badge placeholder (invisible in idle state, keeps spacing) */}
+                                    <div className="h-8 opacity-0" />
+                                    {/* Button group placeholder */}
+                                    <div className="w-full flex items-center justify-between max-w-[380px]">
+                                        <div className="w-12 h-12 rounded-full bg-white/10 animate-pulse" />
+                                        <div className="w-12 h-12 rounded-full bg-white/10 animate-pulse" />
+                                        {/* Center record button - larger */}
+                                        <div className="w-16 h-16 rounded-full border-4 border-white/20 flex items-center justify-center">
+                                            <div className="w-[85%] h-[85%] rounded-full bg-white/10 animate-pulse" />
+                                        </div>
+                                        <div className="w-12 h-12 rounded-full bg-white/10 animate-pulse" />
+                                        <div className="w-12 h-12 rounded-full bg-white/10 animate-pulse" />
+                                    </div>
+                                </footer>
+                            </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -1439,16 +1336,22 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                                 transition={{ duration: 0.5, ease: 'easeOut' }}
                                 className="absolute inset-0 flex items-center justify-center z-10 bg-slate-950"
                             >
-                                {/* Skeleton Circle */}
-                                <div className="relative">
-                                    <div className="w-64 h-64 rounded-full bg-gradient-to-br from-white/10 to-white/5 animate-pulse" />
+                                {/* Skeleton Circle - matches actual digipan size and position */}
+                                <div className="relative w-full h-full">
                                     <div className="absolute inset-0 flex items-center justify-center">
-                                        <div className="w-20 h-20 rounded-full bg-white/10 animate-pulse" />
+                                        <div className="w-[85vw] max-w-[360px] aspect-square rounded-full bg-gradient-to-br from-white/10 to-white/5 animate-pulse" />
+                                    </div>
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <div className="w-[85vw] max-w-[360px] aspect-square flex items-center justify-center">
+                                            <div className="w-[30%] h-[30%] rounded-full bg-white/10 animate-pulse" />
+                                        </div>
                                     </div>
                                     {/* Orbiting dots */}
-                                    <div className="absolute inset-0 animate-spin" style={{ animationDuration: '3s' }}>
-                                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-white/20" />
-                                        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-white/20" />
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <div className="w-[85vw] max-w-[360px] aspect-square relative animate-spin" style={{ animationDuration: '3s' }}>
+                                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-white/20" />
+                                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-white/20" />
+                                        </div>
                                     </div>
                                 </div>
                             </motion.div>
@@ -1705,16 +1608,24 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                                     <div className="flex flex-col gap-3">
                                         <span className="text-xs font-bold text-white/40 uppercase tracking-widest px-1">Preset</span>
                                         <div className="grid grid-cols-1 gap-2">
-                                            {['Basic 8-beat', 'Acoustic Pop', 'Jazz Swing', 'Lofi Chill'].map((p) => (
+                                            {['Basic 8-beat', 'Funky Groove', 'Modern Lounge', 'Lofi Chill'].map((p) => (
                                                 <button
                                                     key={p}
                                                     onClick={() => {
+                                                        // 1. 프리셋 변경 (BPM 유지)
                                                         setDrumPattern(p);
-                                                        // 프리셋별 권장 BPM 자동 설정
+                                                        // NOTE: BPM 자동 변경 비활성화 (Seamless Transition 위해)
+                                                        /*
                                                         if (p === 'Basic 8-beat') setDrumBpm(90);
-                                                        else if (p === 'Acoustic Pop') setDrumBpm(100);
+                                                        else if (p === 'Funky Groove') setDrumBpm(100);
                                                         else if (p === 'Jazz Swing') setDrumBpm(120);
                                                         else if (p === 'Lofi Chill') setDrumBpm(80);
+                                                        */
+
+                                                        // 2. [UX 개선] 즉시 재생 (Audition Mode)
+                                                        // 프리셋을 누르면 바로 소리가 나야 사용자가 알 수 있음
+                                                        Tone.start();
+                                                        setIsDrumPlaying(true);
                                                     }}
                                                     className={`px-4 py-3 rounded-2xl text-sm font-medium transition-all text-left flex items-center justify-between
                                                           ${drumPattern === p
@@ -1729,17 +1640,6 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                                     </div>
                                 </div>
 
-                                <button
-                                    onClick={() => {
-                                        // 보장: 오디오 컨텍스트 재개 후 재생
-                                        Tone.start();
-                                        setIsDrumPlaying(true);
-                                        setShowDrumSettings(false);
-                                    }}
-                                    className="w-full mt-8 py-4 rounded-2xl bg-white text-black font-bold hover:bg-gray-100 transition-all active:scale-95"
-                                >
-                                    Apply & Play
-                                </button>
                             </motion.div>
                         </motion.div>
                     )}
@@ -1835,16 +1735,6 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                                     </div>
                                 </div>
 
-                                <button
-                                    onClick={() => {
-                                        Tone.start();
-                                        handleChordToggle();
-                                        setShowChordSettings(false);
-                                    }}
-                                    className="w-full mt-8 py-4 rounded-2xl bg-white text-black font-bold hover:bg-gray-100 transition-all active:scale-95"
-                                >
-                                    Apply & Play
-                                </button>
                             </motion.div>
                         </motion.div>
                     )}
@@ -1907,8 +1797,8 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                                                             ? 'bg-slate-300/80 border-slate-200 text-slate-900 shadow-[0_0_15px_rgba(200,200,210,0.4)]'
                                                             : 'bg-white/[0.03] border-white/[0.08] text-white/40 hover:text-slate-200/80 hover:bg-slate-300/10'}`}
                                                 >
-                                                    <span className="text-[10px] font-black uppercase tracking-widest">{filter.label}</span>
-                                                    <span className={`text-[10px] font-bold ${filterNoteCount === filter.value ? 'opacity-80' : 'opacity-30'}`}>
+                                                    <span className="text-[13px] font-black uppercase tracking-widest">{filter.label}</span>
+                                                    <span className={`text-[13px] font-bold ${filterNoteCount === filter.value ? 'opacity-80' : 'opacity-30'}`}>
                                                         {filter.count}
                                                     </span>
                                                 </button>
@@ -1917,20 +1807,14 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                                     </div>
                                     <div className="flex justify-end gap-5 px-1 pt-1">
                                         <button
-                                            onClick={() => setSortBy('default')}
-                                            className={`text-[9px] font-black uppercase tracking-[0.2em] transition-all ${sortBy === 'default' ? 'text-slate-200' : 'text-white/20 hover:text-slate-200/60'}`}
-                                        >
-                                            Default
-                                        </button>
-                                        <button
                                             onClick={() => setSortBy('name')}
-                                            className={`text-[9px] font-black uppercase tracking-[0.2em] transition-all ${sortBy === 'name' ? 'text-slate-200' : 'text-white/20 hover:text-slate-200/60'}`}
+                                            className={`text-[12px] font-black uppercase tracking-[0.2em] transition-all ${sortBy === 'name' ? 'text-slate-200' : 'text-white/20 hover:text-slate-200/60'}`}
                                         >
                                             A-Z
                                         </button>
                                         <button
                                             onClick={() => setSortBy('notes')}
-                                            className={`text-[9px] font-black uppercase tracking-[0.2em] transition-all ${sortBy === 'notes' ? 'text-slate-200' : 'text-white/20 hover:text-slate-200/60'}`}
+                                            className={`text-[12px] font-black uppercase tracking-[0.2em] transition-all ${sortBy === 'notes' ? 'text-slate-200' : 'text-white/20 hover:text-slate-200/60'}`}
                                         >
                                             Notes
                                         </button>
@@ -1944,46 +1828,20 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                                         const currentScale = processedScales.find(s => s.id === targetScale.id);
                                         if (!currentScale) return null;
 
-                                        const topNotes = [currentScale.notes.ding, ...currentScale.notes.top].join(' ');
-                                        const bottomNotes = currentScale.notes.bottom.length > 0 ? currentScale.notes.bottom.join(' ') : null;
-
                                         return (
                                             <div key={currentScale.id} className="mb-2">
-                                                <div className="text-[9px] font-black uppercase tracking-[0.3em] text-white/30 mb-2 px-2">CURRENT SELECTED</div>
+                                                <div className="text-[12px] font-black uppercase tracking-[0.3em] text-white/30 mb-2 px-2">CURRENT SELECTED</div>
                                                 <div
                                                     role="button"
                                                     tabIndex={0}
                                                     onClick={() => handleScaleSelect(currentScale)}
                                                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleScaleSelect(currentScale); }}
-                                                    className="p-6 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border cursor-pointer bg-slate-300/[0.06] backdrop-blur-md border-slate-300/30 hover:bg-slate-300/10 hover:border-slate-200/50"
+                                                    className="p-4 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border cursor-pointer bg-slate-300/[0.06] backdrop-blur-md border-slate-300/30 hover:bg-slate-300/10 hover:border-slate-200/50"
                                                 >
-                                                    <div className="flex flex-col gap-2 z-10 flex-1 min-w-0 pr-4">
-                                                        <div className="flex items-center justify-between">
-                                                            <span className="font-black text-xl tracking-tight truncate text-white">
-                                                                {currentScale.name}
-                                                            </span>
-                                                        </div>
-
-                                                        <div className="flex flex-col gap-1 text-[10px] font-bold tracking-wide transition-opacity duration-300 text-white/40">
-                                                            <div className="flex gap-2">
-                                                                <span className="opacity-50 w-3">T</span>
-                                                                <span className="truncate">{topNotes}</span>
-                                                            </div>
-                                                            {bottomNotes && (
-                                                                <div className="flex gap-2">
-                                                                    <span className="opacity-50 w-3">B</span>
-                                                                    <span className="truncate">{bottomNotes}</span>
-                                                                </div>
-                                                            )}
-                                                        </div>
-
-                                                        <div className="flex gap-1.5 flex-wrap mt-2">
-                                                            {(currentScale.tagsEn || currentScale.tags).map((tag, idx) => (
-                                                                <span key={idx} className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all bg-slate-300/15 text-slate-200/70 border border-slate-300/20">
-                                                                    {tag}
-                                                                </span>
-                                                            ))}
-                                                        </div>
+                                                    <div className="flex items-center z-10 flex-1 min-w-0 pr-4">
+                                                        <span className="font-black text-xl tracking-tight truncate text-white">
+                                                            {currentScale.name}
+                                                        </span>
                                                     </div>
 
                                                     <div className="flex items-center gap-3 z-10 shrink-0">
@@ -2005,9 +1863,6 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
 
                                     {/* Other Scales */}
                                     {processedScales.filter(scale => scale.id !== targetScale.id).map((scale) => {
-                                        const topNotes = [scale.notes.ding, ...scale.notes.top].join(' ');
-                                        const bottomNotes = scale.notes.bottom.length > 0 ? scale.notes.bottom.join(' ') : null;
-
                                         return (
                                             <div
                                                 key={scale.id}
@@ -2015,35 +1870,12 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                                                 tabIndex={0}
                                                 onClick={() => handleScaleSelect(scale)}
                                                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleScaleSelect(scale); }}
-                                                className="p-6 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border cursor-pointer bg-white/[0.02] border-white/[0.05] text-white hover:bg-slate-300/[0.08] hover:border-slate-300/30"
+                                                className="p-4 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border cursor-pointer bg-white/[0.02] border-white/[0.05] text-white hover:bg-slate-300/[0.08] hover:border-slate-300/30"
                                             >
-                                                <div className="flex flex-col gap-2 z-10 flex-1 min-w-0 pr-4">
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="font-black text-xl tracking-tight truncate text-white/90">
-                                                            {scale.name}
-                                                        </span>
-                                                    </div>
-
-                                                    <div className="flex flex-col gap-1 text-[10px] font-bold tracking-wide transition-opacity duration-300 text-white/20">
-                                                        <div className="flex gap-2">
-                                                            <span className="opacity-50 w-3">T</span>
-                                                            <span className="truncate">{topNotes}</span>
-                                                        </div>
-                                                        {bottomNotes && (
-                                                            <div className="flex gap-2">
-                                                                <span className="opacity-50 w-3">B</span>
-                                                                <span className="truncate">{bottomNotes}</span>
-                                                            </div>
-                                                        )}
-                                                    </div>
-
-                                                    <div className="flex gap-1.5 flex-wrap mt-2">
-                                                        {(scale.tagsEn || scale.tags).map((tag, idx) => (
-                                                            <span key={idx} className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all bg-white/5 text-white/30 group-hover:bg-slate-300/10 group-hover:text-slate-200/50">
-                                                                {tag}
-                                                            </span>
-                                                        ))}
-                                                    </div>
+                                                <div className="flex items-center z-10 flex-1 min-w-0 pr-4">
+                                                    <span className="font-black text-xl tracking-tight truncate text-white/90">
+                                                        {scale.name}
+                                                    </span>
                                                 </div>
 
                                                 <div className="flex items-center gap-3 z-10 shrink-0">
