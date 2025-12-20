@@ -3,7 +3,7 @@
 import type { Viewport } from 'next';
 import { useState, useRef } from 'react';
 import Link from 'next/link';
-import { Camera, Music, Heart, Users, ArrowRight, ArrowLeft, Globe, Smartphone, Box, Type, Drum, Sparkles, HelpCircle } from 'lucide-react';
+import { Camera, Music, Heart, Users, ArrowRight, ArrowLeft, Globe, Smartphone, Box, Type, Drum, Sparkles, HelpCircle, Music2 } from 'lucide-react';
 import ReelPanSlider from '@/components/playground/ReelPanSlider';
 
 /*
@@ -112,14 +112,14 @@ export default function PlaygroundHome() {
 
                 {/* Subtitle & CTA - Below Center */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 mt-12 flex flex-col items-center gap-6">
-                    <p className="!text-xs sm:!text-sm lg:!text-xl text-slate-400 font-medium tracking-wide flex items-center gap-2 whitespace-nowrap justify-center">
+                    <p className="!text-[0.975rem] sm:!text-[1.1375rem] lg:!text-[1.625rem] text-slate-400 font-medium tracking-wide flex items-center gap-2 whitespace-nowrap justify-center">
                         {lang === 'en' ? (
                             <>
                                 {t.subtitleStart}<span className="text-cyan-400 font-bold">{t.subtitleDing}</span>
                                 {t.subtitleMiddle}<span className="text-purple-400 font-bold">{t.subtitleThing}</span>
                             </>
                         ) : (
-                            <span className="font-bold text-slate-300">
+                            <span className="font-bold text-slate-300 whitespace-nowrap">
                                 오늘도 하나 남겨볼까? <span className="text-2xl inline-block translate-y-1">🤩</span>
                             </span>
                         )}
@@ -160,29 +160,29 @@ export default function PlaygroundHome() {
 
                 <div className="w-full max-w-4xl mx-auto px-6 min-h-dvh relative flex items-center justify-center">
 
-                    {/* Center Quote - 화면 정중앙 고정 */}
-                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full px-4 z-10">
-                        <p className="text-[1.35rem] md:text-[1.8rem] text-cyan-400 font-medium word-keep text-left">
-                            "일상에서 영감이 왔을 때,<br className="md:hidden" /> 모바일 영상으로 바로 남길 수 있다면?"
-                        </p>
-                    </div>
+                    {/* Hero Section - Flex Column으로 자연스럽게 배치 */}
+                    <div className="flex flex-col items-start w-full px-4" style={{ marginTop: '-10vh' }}>
 
-                    {/* Section 1: Hero - Title Above Center (30px 위) */}
-                    <div className="absolute left-1/2 transform -translate-x-1/2 text-left w-full px-4" style={{ bottom: 'calc(50% + 30px + 1.5rem)' }}>
-                        <h2 className="text-3xl md:text-6xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-400 leading-tight flex flex-col">
+                        {/* 1. 릴팬 타이틀 */}
+                        <h2 className="text-3xl md:text-6xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-400 leading-tight flex flex-col mb-8">
                             <span className="whitespace-nowrap">내 손안의 디지털 핸드팬</span>
                             <span>ReelPan</span>
                         </h2>
-                    </div>
 
-                    {/* Section 1: Hero - Description Below Center (30px 아래) */}
-                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 text-left w-full px-4" style={{ top: 'calc(50% + 30px + 1.5rem)' }}>
-                        <p className="text-slate-400 leading-relaxed text-[1.2rem] md:text-[1.35rem] break-keep">
-                            물리적인 악기가 없어도 괜찮습니다. ReelPan은 당신의 음악적 아이디어를 가장 간편하게 시각화하고 기록할 수 있는 <span className="text-white font-semibold">'디지털 연주 기록 도구'</span>입니다.
+                        {/* 2. "일상에서" 중앙 텍스트 */}
+                        <p className="text-[1.35rem] md:text-[1.8rem] text-cyan-400 font-medium word-keep text-left mb-8">
+                            "일상에서 영감이 왔을 때,<br className="md:hidden" /> 모바일 영상으로 바로 남길 수 있다면?"
                         </p>
-                        <p className="text-slate-400 leading-relaxed text-[1.2rem] md:text-[1.35rem] break-keep mt-4">
-                            악기가 없어도 스마트폰만 있다면, 언제 어디서든 당신만의 멜로디를 영상으로 저장할 수 있습니다.
-                        </p>
+
+                        {/* 3. "물리적인 악기" 설명 */}
+                        <div className="text-left">
+                            <p className="text-slate-400 leading-relaxed text-[1.2rem] md:text-[1.35rem] break-keep">
+                                물리적인 악기가 없어도 괜찮습니다. ReelPan은 당신의 음악적 아이디어를 가장 간편하게 시각화하고 기록할 수 있는 <span className="text-white font-semibold">'디지털 연주 기록 도구'</span>입니다.
+                            </p>
+                            <p className="text-slate-400 leading-relaxed text-[1.2rem] md:text-[1.35rem] break-keep mt-4">
+                                악기가 없어도 스마트폰만 있다면, 언제 어디서든 당신만의 멜로디를 영상으로 저장할 수 있습니다.
+                            </p>
+                        </div>
                     </div>
                 </div>
 
@@ -268,22 +268,22 @@ export default function PlaygroundHome() {
                             {/* Box 1 */}
                             <div className="p-8 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex flex-col gap-4">
                                 <h4 className="text-xl font-bold text-cyan-200">영감 아카이빙 & SNS 공유</h4>
-                                <p className="text-slate-400 text-[1.05rem]">일상에서 문득 떠오른 멜로디를 즉시 영상으로 포착하고, 릴스나 숏츠로 공유해 나의 음악적 순간을 기록하세요.</p>
+                                <p className="text-slate-400 text-[1.05rem]">일상에서 문득 떠오른 멜로디를 즉시 영상으로 포착하고, 릴스나 숏츠로 공유해 나의 고유한 감성을 기록하세요.</p>
                             </div>
                             {/* Box 2 */}
                             <div className="p-8 rounded-3xl bg-gradient-to-bl from-white/10 to-white/5 border border-white/10 flex flex-col gap-4">
                                 <h4 className="text-xl font-bold text-purple-200">스케일 시뮬레이션</h4>
-                                <p className="text-slate-400 text-[1.05rem]">(구매 의사결정 기준) 고가의 악기를 구매하기 전, 다양한 스케일을 미리 연주해보며 내 취향에 딱 맞는 음계를 실패 없이 찾아보세요.</p>
+                                <p className="text-slate-400 text-[1.05rem]">고가의 악기를 구매하기 전, 다양한 스케일을 미리 연주해보며 내 취향에 딱 맞는 음계를 실패 없이 찾아보세요.</p>
                             </div>
                             {/* Box 3 */}
                             <div className="p-8 rounded-3xl bg-gradient-to-tr from-white/10 to-white/5 border border-white/10 flex flex-col gap-4">
                                 <h4 className="text-xl font-bold text-pink-200">교육자를 위한 레슨 자료 제작</h4>
-                                <p className="text-slate-400 text-[1.05rem]">멜로디, 패턴 등 아이디어를 교육용 영상자료로 제작해, 수강생들에게 더 직관적인 가이드를 제공하세요.</p>
+                                <p className="text-slate-400 text-[1.05rem]">멜로디, 연주패턴과 같은 아이디어를 교육용 영상자료로 제작해, 수강생들에게 더 직관적인 가이드를 편리하게 제공하세요.</p>
                             </div>
                             {/* Box 4 */}
                             <div className="p-8 rounded-3xl bg-gradient-to-tl from-white/10 to-white/5 border border-white/10 flex flex-col gap-4">
                                 <h4 className="text-xl font-bold text-emerald-200">2차 창작을 위한 디지털 소스</h4>
-                                <p className="text-slate-400 text-[1.05rem]">(플랫폼 및 리믹스 소스) 릴팬의 고음질 사운드와 영상을 소스(Source)로 활용해, 비트 메이킹이나 합주(Duet) 영상 등 새로운 디지털 콘텐츠로 재창조해 보세요.</p>
+                                <p className="text-slate-400 text-[1.05rem]">제작된 릴스 영상은 끝이 아닌 시작입니다. 당신만의 창의적인 아이디어를 더하고 가공하여, 원본을 뛰어넘는 완전히 새로운 콘텐츠로 재창조해 보세요.</p>
                             </div>
                         </div>
                     </div>
@@ -328,13 +328,13 @@ export default function PlaygroundHome() {
                                 <p className="text-slate-400 text-[1.05rem] text-center">심플한 드럼반주를 더하여 연주를 더욱 풍부하게 만들 수 있습니다. 아이콘을 길게 클릭해보세요.</p>
                             </div>
 
-                            {/* 5. Touch Text Toggle */}
+                            {/* 5. Chord Pad (화음 반주) */}
                             <div className="p-6 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex flex-col items-center gap-4">
                                 <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center">
-                                    <Sparkles size={24} className="text-white/80" />
+                                    <Music2 size={24} className="text-white/80" />
                                 </div>
-                                <h4 className="text-lg font-bold text-white">가이드 텍스트</h4>
-                                <p className="text-slate-400 text-[1.05rem] text-center">Ready/Set/Touch 가이드 텍스트를 표시하거나 숨길 수 있습니다.</p>
+                                <h4 className="text-lg font-bold text-white">화음 반주</h4>
+                                <p className="text-slate-400 text-[1.05rem] text-center">화음반주를 추가하여 연주를 더욱 풍부하게 만들 수 있습니다. 버튼을 길게 눌러보세요.</p>
                             </div>
                         </div>
                     </div>

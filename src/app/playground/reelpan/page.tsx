@@ -1308,8 +1308,8 @@ export default function ReelPanPage() {
                                                     onClick={() => setFilterNoteCount(filter.value)}
                                                     className={`px-3 py-1.5 rounded-full flex items-center gap-2 transition-all border whitespace-nowrap
                                                         ${filterNoteCount === filter.value
-                                                            ? 'bg-white border-white text-black shadow-[0_0_15px_rgba(255,255,255,0.3)]'
-                                                            : 'bg-white/[0.03] border-white/[0.08] text-white/40 hover:text-white/80 hover:bg-white/[0.08]'}`}
+                                                            ? 'bg-cyan-500 border-cyan-400 text-black shadow-[0_0_15px_rgba(34,211,238,0.4)]'
+                                                            : 'bg-white/[0.03] border-white/[0.08] text-white/40 hover:text-cyan-300/80 hover:bg-cyan-500/10'}`}
                                                 >
                                                     <span className="text-[10px] font-black uppercase tracking-widest">{filter.label}</span>
                                                     <span className={`text-[10px] font-bold ${filterNoteCount === filter.value ? 'opacity-80' : 'opacity-30'}`}>
@@ -1322,19 +1322,19 @@ export default function ReelPanPage() {
                                     <div className="flex justify-end gap-5 px-1 pt-1">
                                         <button
                                             onClick={() => setSortBy('default')}
-                                            className={`text-[9px] font-black uppercase tracking-[0.2em] transition-all ${sortBy === 'default' ? 'text-white' : 'text-white/20 hover:text-white/40'}`}
+                                            className={`text-[9px] font-black uppercase tracking-[0.2em] transition-all ${sortBy === 'default' ? 'text-cyan-400' : 'text-white/20 hover:text-cyan-300/60'}`}
                                         >
                                             Default
                                         </button>
                                         <button
                                             onClick={() => setSortBy('name')}
-                                            className={`text-[9px] font-black uppercase tracking-[0.2em] transition-all ${sortBy === 'name' ? 'text-white' : 'text-white/20 hover:text-white/40'}`}
+                                            className={`text-[9px] font-black uppercase tracking-[0.2em] transition-all ${sortBy === 'name' ? 'text-cyan-400' : 'text-white/20 hover:text-cyan-300/60'}`}
                                         >
                                             A-Z
                                         </button>
                                         <button
                                             onClick={() => setSortBy('notes')}
-                                            className={`text-[9px] font-black uppercase tracking-[0.2em] transition-all ${sortBy === 'notes' ? 'text-white' : 'text-white/20 hover:text-white/40'}`}
+                                            className={`text-[9px] font-black uppercase tracking-[0.2em] transition-all ${sortBy === 'notes' ? 'text-cyan-400' : 'text-white/20 hover:text-cyan-300/60'}`}
                                         >
                                             Notes
                                         </button>
@@ -1359,7 +1359,7 @@ export default function ReelPanPage() {
                                                     tabIndex={0}
                                                     onClick={() => handleScaleSelect(currentScale)}
                                                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleScaleSelect(currentScale); }}
-                                                    className="p-6 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border cursor-pointer bg-white/[0.02] backdrop-blur-md border-white/[0.05] hover:bg-white/[0.05] hover:border-white/[0.1]"
+                                                    className="p-6 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border cursor-pointer bg-cyan-500/[0.06] backdrop-blur-md border-cyan-500/30 hover:bg-cyan-500/10 hover:border-cyan-400/50"
                                                 >
                                                     <div className="flex flex-col gap-2 z-10 flex-1 min-w-0 pr-4">
                                                         <div className="flex items-center justify-between">
@@ -1383,7 +1383,7 @@ export default function ReelPanPage() {
 
                                                         <div className="flex gap-1.5 flex-wrap mt-2">
                                                             {(currentScale.tagsEn || currentScale.tags).map((tag, idx) => (
-                                                                <span key={idx} className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all bg-white/10 text-white/50 border border-white/10">
+                                                                <span key={idx} className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all bg-cyan-500/15 text-cyan-300/70 border border-cyan-500/20">
                                                                     {tag}
                                                                 </span>
                                                             ))}
@@ -1393,7 +1393,7 @@ export default function ReelPanPage() {
                                                     <div className="flex items-center gap-3 z-10 shrink-0">
                                                         <button
                                                             onClick={(e) => handlePreview(e, currentScale)}
-                                                            className="w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-lg bg-white/20 hover:bg-white/30 text-white border border-white/20 backdrop-blur-sm"
+                                                            className="w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-lg bg-cyan-500/25 hover:bg-cyan-500/40 text-cyan-100 border border-cyan-400/30 backdrop-blur-sm"
                                                         >
                                                             {previewingScaleId === currentScale.id ? (
                                                                 <Volume2 size={20} className="animate-pulse" />
@@ -1419,7 +1419,7 @@ export default function ReelPanPage() {
                                                 tabIndex={0}
                                                 onClick={() => handleScaleSelect(scale)}
                                                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleScaleSelect(scale); }}
-                                                className="p-6 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border cursor-pointer bg-white/[0.02] border-white/[0.05] text-white hover:bg-white/[0.05] hover:border-white/[0.1]"
+                                                className="p-6 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border cursor-pointer bg-white/[0.02] border-white/[0.05] text-white hover:bg-cyan-500/[0.08] hover:border-cyan-500/30"
                                             >
                                                 <div className="flex flex-col gap-2 z-10 flex-1 min-w-0 pr-4">
                                                     <div className="flex items-center justify-between">
@@ -1443,7 +1443,7 @@ export default function ReelPanPage() {
 
                                                     <div className="flex gap-1.5 flex-wrap mt-2">
                                                         {(scale.tagsEn || scale.tags).map((tag, idx) => (
-                                                            <span key={idx} className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all bg-white/5 text-white/30">
+                                                            <span key={idx} className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all bg-white/5 text-white/30 group-hover:bg-cyan-500/10 group-hover:text-cyan-300/50">
                                                                 {tag}
                                                             </span>
                                                         ))}
@@ -1453,7 +1453,7 @@ export default function ReelPanPage() {
                                                 <div className="flex items-center gap-3 z-10 shrink-0">
                                                     <button
                                                         onClick={(e) => handlePreview(e, scale)}
-                                                        className="w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-lg bg-white/10 hover:bg-white/20 text-white border border-white/10"
+                                                        className="w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-lg bg-white/10 hover:bg-cyan-500/25 text-white hover:text-cyan-100 border border-white/10 hover:border-cyan-400/30"
                                                     >
                                                         {previewingScaleId === scale.id ? (
                                                             <Volume2 size={20} className="animate-pulse" />
@@ -1468,11 +1468,6 @@ export default function ReelPanPage() {
                                 </div>
                             </div>
 
-                            <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black via-black/90 to-transparent pointer-events-none">
-                                <p className="text-center text-white/20 text-[9px] tracking-[0.5em] font-black uppercase pointer-events-auto">
-                                    {SCALES.length} MASTER SCALES
-                                </p>
-                            </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
