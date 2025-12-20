@@ -2,9 +2,10 @@
 
 import React, { Suspense, useMemo, useState, useRef, useEffect } from "react";
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import { motion, AnimatePresence } from "framer-motion";
 import { SCALES } from '@/data/handpanScales';
-import { Layout, Check, Square, Circle, Smartphone, Keyboard, Play, Pause, Volume2, Download, Trash2, X, Type, ChevronDown, Share2, RefreshCcw, Drum, SlidersHorizontal, Settings2, Sparkles } from 'lucide-react';
+import { Layout, Check, Square, Circle, Smartphone, Keyboard, Play, Pause, Volume2, Download, Trash2, X, Type, ChevronDown, Share2, RefreshCcw, Drum, SlidersHorizontal, Settings2, Sparkles, ArrowLeft } from 'lucide-react';
 import { Digipan3DHandle } from "@/components/digipan/Digipan3D";
 import { useHandpanAudio } from "@/hooks/useHandpanAudio";
 import { getNoteFrequency } from "@/constants/noteFrequencies";
@@ -656,7 +657,13 @@ export default function ReelPanPage() {
                 {recordState !== 'reviewing' && (
                     <div className="absolute inset-0 z-20 pointer-events-none flex flex-col justify-between">
 
-                        <header className="flex items-center justify-center px-4 py-8 bg-gradient-to-b from-black/80 to-transparent pointer-events-auto">
+                        <header className="relative flex items-center justify-center px-4 py-8 bg-gradient-to-b from-black/80 to-transparent pointer-events-auto">
+                            <Link
+                                href="/playground"
+                                className="absolute left-4 w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all border border-white/5 backdrop-blur-md"
+                            >
+                                <ArrowLeft size={20} />
+                            </Link>
                             <motion.button
                                 onClick={() => setShowScaleSelector(true)}
                                 key={targetScale.id}
