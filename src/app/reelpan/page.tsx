@@ -4,7 +4,7 @@ import React, { Suspense, useMemo, useState, useRef, useEffect } from "react";
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from "framer-motion";
 import { SCALES } from '@/data/handpanScales';
-import { Layout, Check, Square, Circle, Smartphone, Keyboard, Play, Pause, Volume2, Download, Trash2, X, Type, ChevronDown, Share2, RefreshCcw, Drum, SlidersHorizontal, Settings2 } from 'lucide-react';
+import { Layout, Check, Square, Circle, Smartphone, Keyboard, Play, Pause, Volume2, Download, Trash2, X, Type, ChevronDown, Share2, RefreshCcw, Drum, SlidersHorizontal, Settings2, Sparkles } from 'lucide-react';
 import { Digipan3DHandle } from "@/components/digipan/Digipan3D";
 import { useHandpanAudio } from "@/hooks/useHandpanAudio";
 import { getNoteFrequency } from "@/constants/noteFrequencies";
@@ -22,7 +22,7 @@ const Digipan18M = dynamic(() => import('@/components/digipan/Digipan18M'), { ss
 // 상태 정의: 대기중 | 녹화중 | 검토중(완료후)
 type RecordState = 'idle' | 'recording' | 'reviewing';
 
-export default function PanReelPage() {
+export default function ReelPanPage() {
     // 1. State Management
     const [recordState, setRecordState] = useState<RecordState>('idle');
     const [isRecording, setIsRecording] = useState(false); // 기존 호환성 유지
@@ -31,6 +31,7 @@ export default function PanReelPage() {
     const [showScaleSelector, setShowScaleSelector] = useState(false);
     const [targetScale, setTargetScale] = useState(SCALES.find(s => s.id === 'd_kurd_10') || SCALES[0]);
     const [previewingScaleId, setPreviewingScaleId] = useState<string | null>(null);
+    const [showTouchText, setShowTouchText] = useState(false); // Idle Ready/Set/Touch toggle
     const [recordingBlob, setRecordingBlob] = useState<Blob | null>(null);
     const [recordedVideoUrl, setRecordedVideoUrl] = useState<string | null>(null);
     const [viewMode, setViewMode] = useState<0 | 1 | 2 | 3 | 4>(2); // 2 = Labels Visible, 3 = Labels Hidden
@@ -395,7 +396,7 @@ export default function PanReelPage() {
         const url = URL.createObjectURL(recordingBlob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `PanReel_${Date.now()}.${extension}`;
+        a.download = `ReelPan_${Date.now()}.${extension}`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -423,7 +424,7 @@ export default function PanReelPage() {
             shareType = 'video/mp4';
         }
 
-        const fileName = `PanReel_${Date.now()}.${extension}`;
+        const fileName = `ReelPan_${Date.now()}.${extension}`;
         const file = new File([recordingBlob], fileName, { type: shareType });
 
         // 모바일에서 Web Share API 시도 (HTTPS 환경에서만 작동)
@@ -472,7 +473,7 @@ export default function PanReelPage() {
             onIsRecordingChange: setIsRecording,
             onRecordingComplete: handleRecordingComplete,
             disableRecordingUI: true,
-            hideTouchText: countdown === null, // 카운트다운 시에만 3D 텍스트 표시
+            showTouchText: showTouchText, // 유휴 상태 텍스트 표시 여부
             externalTouchText: countdown ? countdown.toString() : null, // 3D 카운트다운 텍스트 주입
             recordingCropMode: layoutMode === 'square' ? 'square' as 'square' : 'full' as 'full',
         };
@@ -737,8 +738,13 @@ export default function PanReelPage() {
                                     </div>
                                 </button>
 
-                                {/* 5. Right Extra 2 */}
-                                <button className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center hover:bg-white/20 transition-all active:scale-95">
+                                {/* 5. Touch Text (Ready/Set/Touch) Toggle */}
+                                <button
+                                    onClick={() => setShowTouchText(prev => !prev)}
+                                    className={`w-12 h-12 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center transition-all active:scale-95 ${showTouchText ? 'bg-orange-500/20 border-orange-500/50' : 'bg-white/10'}`}
+                                    title="Ready/Set/Touch 가이드 토글"
+                                >
+                                    <Sparkles size={18} className={showTouchText ? 'text-orange-400' : 'text-white/40'} />
                                 </button>
                             </div>
                         </footer>
