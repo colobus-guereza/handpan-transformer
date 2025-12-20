@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState, Suspense, useMemo, use } from 'react';
+import React, { useState, Suspense, useMemo, use, useRef, useCallback, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { parseMidi, findBestMatchScale, getScaleNotes } from '@/lib/midiUtils';
+import { parseMidi, findBestMatchScale, getScaleNotes, mapMidiToDigipan } from '@/lib/midiUtils';
 import { useMidiStore, TrackRole } from '@/store/useMidiStore';
 import { SCALES } from '@/data/handpanScales';
 import { Language } from '@/constants/translations';
+import { useHandpanAudio } from '@/hooks/useHandpanAudio';
 
 const MiniDigiPan = dynamic(() => import('@/components/digipan/MiniDigiPan'), {
     ssr: false,
@@ -18,6 +19,8 @@ export default function DevDashboard(props: { params: Promise<any> }) {
     const params = use(props.params); // Unwrap params to satisfy Next.js 15 requirement
     const [logs, setLogs] = useState<string[]>([]);
     const [manualScaleId, setManualScaleId] = useState<string | null>(null);
+    const [isMidiPlaying, setIsMidiPlaying] = useState(false);
+    const abortControllerRef = useRef<AbortController | null>(null);
 
 
 
@@ -50,12 +53,110 @@ export default function DevDashboard(props: { params: Promise<any> }) {
         setLogs(prev => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...prev]);
     };
 
+    // Audio Hook for preloading
+    const { resumeAudio, preloadScaleNotes } = useHandpanAudio();
+
+    // Preload audio when scale changes
+    useEffect(() => {
+        if (!targetScale) return;
+
+        const allNotes = [targetScale.notes.ding, ...targetScale.notes.top, ...targetScale.notes.bottom];
+        preloadScaleNotes(allNotes);
+        addLog(`[Audio] Preloading ${allNotes.length} notes for ${targetScale.name}`);
+    }, [targetScale, preloadScaleNotes]);
+
     const digiPanRef = React.useRef<any>(null); // Use any for dynamic component ref
 
+    // --- MIDI Playback Functions ---
+    const stopMidiPlay = useCallback(() => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+            abortControllerRef.current = null;
+        }
+        setIsMidiPlaying(false);
+    }, []);
+
+    const handleMidiPlay = useCallback(async () => {
+        if (!midiData || !targetScale || !digiPanRef.current) {
+            addLog('[Play] No MIDI data or Digipan ref');
+            return;
+        }
+
+        // If already playing, stop
+        if (isMidiPlaying) {
+            stopMidiPlay();
+            addLog('[Play] Stopped');
+            return;
+        }
+
+        // Find melody track
+        const melodyTrack = midiData.tracks.find(t => t.role === 'melody');
+        if (!melodyTrack) {
+            addLog('[Play] No melody track found');
+            return;
+        }
+
+        const transposition = midiData.matchResult?.transposition || 0;
+        const mappedNotes = mapMidiToDigipan(melodyTrack.notes, transposition, targetScale);
+
+        if (mappedNotes.length === 0) {
+            addLog('[Play] No playable notes mapped');
+            return;
+        }
+
+        addLog(`[Play] Starting playback: ${mappedNotes.length} notes`);
+
+        // Resume audio context before playback
+        resumeAudio();
+
+        setIsMidiPlaying(true);
+
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+
+        const wait = (ms: number) => new Promise<void>((resolve, reject) => {
+            if (controller.signal.aborted) return reject(new Error('Aborted'));
+            const id = setTimeout(() => {
+                if (controller.signal.aborted) reject(new Error('Aborted'));
+                else resolve();
+            }, ms);
+            controller.signal.addEventListener('abort', () => clearTimeout(id));
+        });
+
+        try {
+            const startTime = Date.now();
+            for (let i = 0; i < mappedNotes.length; i++) {
+                const note = mappedNotes[i];
+                const targetTime = note.time * 1000; // Convert to ms
+                const elapsed = Date.now() - startTime;
+                const waitTime = Math.max(0, targetTime - elapsed);
+
+                if (waitTime > 0) {
+                    await wait(waitTime);
+                }
+
+                // Trigger the note on Digipan
+                digiPanRef.current.triggerNote(note.noteId);
+            }
+
+            addLog('[Play] Playback complete');
+        } catch (err: any) {
+            if (err.message !== 'Aborted') {
+                console.error('[Play] Error:', err);
+                addLog(`[Play] Error: ${err.message}`);
+            }
+        } finally {
+            setIsMidiPlaying(false);
+            abortControllerRef.current = null;
+        }
+    }, [midiData, targetScale, isMidiPlaying, stopMidiPlay]);
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+
+        // Stop any playing MIDI when uploading new file
+        stopMidiPlay();
 
         addLog(`File selected: ${file.name}`);
 
@@ -134,6 +235,34 @@ export default function DevDashboard(props: { params: Promise<any> }) {
                                 className="w-full text-sm text-neutral-300 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700"
                             />
                         </div>
+
+                        {/* MIDI Playback Button */}
+                        {midiData && (
+                            <div className="border-t border-neutral-700 pt-4">
+                                <button
+                                    onClick={handleMidiPlay}
+                                    className={`w-full py-3 px-4 rounded-lg font-bold text-lg flex items-center justify-center gap-2 transition-all ${isMidiPlaying
+                                        ? 'bg-red-600 hover:bg-red-700 text-white'
+                                        : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                                        }`}
+                                >
+                                    {isMidiPlaying ? (
+                                        <>
+                                            <span className="text-xl">⏹</span>
+                                            정지 (Stop)
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span className="text-xl">▶</span>
+                                            MIDI 재생 (Play)
+                                        </>
+                                    )}
+                                </button>
+                                <p className="text-xs text-neutral-500 mt-2 text-center">
+                                    멜로디 트랙을 Digipan으로 자동 연주합니다
+                                </p>
+                            </div>
+                        )}
 
                         <div className="border-t border-neutral-700 pt-4 space-y-4">
 

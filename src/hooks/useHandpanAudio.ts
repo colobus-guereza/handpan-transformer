@@ -48,6 +48,7 @@ export interface UseHandpanAudioReturn {
     resumeAudio: () => void;
     getAudioContext: () => any; // Returns AudioContext
     getMasterGain: () => any; // Returns Head Master Gain
+    preloadScaleNotes: (notes: string[]) => Promise<void>; // Preload specific notes for a scale
 }
 
 // Type for Howl instance (avoid importing at top level for SSR compatibility)
@@ -192,6 +193,7 @@ export const useHandpanAudio = (): UseHandpanAudioReturn => {
 
         if (sound) {
             try {
+                // Simple direct playback (no fade - testing if fade causes issues)
                 sound.volume(volume);
                 sound.play();
                 return;
@@ -217,5 +219,36 @@ export const useHandpanAudio = (): UseHandpanAudioReturn => {
         return GLOBAL_HOWLER?.masterGain;
     }, []);
 
-    return { isLoaded, loadingProgress, playNote, resumeAudio, getAudioContext, getMasterGain };
+    // Preload specific notes for a scale (ensures they're decoded and ready)
+    const preloadScaleNotes = useCallback(async (notes: string[]): Promise<void> => {
+        if (!notes || notes.length === 0) return;
+
+        const promises: Promise<void>[] = [];
+
+        notes.forEach(note => {
+            const normalized = normalizeNote(note);
+            const sound = GLOBAL_SOUND_CACHE[normalized];
+
+            if (sound && sound.state() !== 'loaded') {
+                // Wait for this sound to finish loading
+                promises.push(new Promise<void>((resolve) => {
+                    const checkState = () => {
+                        if (sound.state() === 'loaded') {
+                            resolve();
+                        } else {
+                            setTimeout(checkState, 50);
+                        }
+                    };
+                    checkState();
+                }));
+            }
+        });
+
+        if (promises.length > 0) {
+            await Promise.all(promises);
+            console.log(`[useHandpanAudio] Preloaded ${notes.length} scale notes`);
+        }
+    }, []);
+
+    return { isLoaded, loadingProgress, playNote, resumeAudio, getAudioContext, getMasterGain, preloadScaleNotes };
 };

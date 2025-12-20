@@ -207,6 +207,100 @@ const sortNotes = (a: string, b: string) => {
     return getVal(a) - getVal(b);
 };
 
+// --- MIDI to Digipan Mapping ---
+export interface MappedNote {
+    time: number;        // Start time in seconds
+    noteId: number;      // Digipan tonefield ID (0 = Ding, 1+ = tonefields)
+    noteName: string;    // The note that will be played on Digipan
+    originalNote: string; // Original MIDI note
+    duration: number;    // Duration in seconds
+}
+
+export interface Scale {
+    id: string;
+    notes: {
+        ding: string;
+        top: string[];
+        bottom: string[];
+    };
+}
+
+/**
+ * Maps MIDI melody notes to Digipan tonefield IDs
+ * @param melodyNotes - Array of MIDI notes with { name, time, duration }
+ * @param transposition - Semitones to transpose (from matchResult)
+ * @param targetScale - The matched handpan scale
+ * @returns Array of mapped notes ready for playback scheduling
+ */
+export const mapMidiToDigipan = (
+    melodyNotes: any[],
+    transposition: number,
+    targetScale: Scale
+): MappedNote[] => {
+    if (!melodyNotes || melodyNotes.length === 0 || !targetScale) {
+        return [];
+    }
+
+    // Build playable notes map: noteName -> noteId
+    // Order: Ding (0), Top (1-N), Bottom (N+1...)
+    const playableNotesMap = new Map<string, number>();
+    const playablePCMap = new Map<string, string>(); // pitchClass -> first matching note
+
+    // Ding is always ID 0
+    playableNotesMap.set(targetScale.notes.ding, 0);
+    playablePCMap.set(getPitchClass(targetScale.notes.ding), targetScale.notes.ding);
+
+    // Top notes (1 to N)
+    targetScale.notes.top.forEach((note, i) => {
+        playableNotesMap.set(note, i + 1);
+        const pc = getPitchClass(note);
+        if (!playablePCMap.has(pc)) playablePCMap.set(pc, note);
+    });
+
+    // Bottom notes (N+1 onwards)
+    const bottomStart = targetScale.notes.top.length + 1;
+    targetScale.notes.bottom.forEach((note, i) => {
+        playableNotesMap.set(note, bottomStart + i);
+        const pc = getPitchClass(note);
+        if (!playablePCMap.has(pc)) playablePCMap.set(pc, note);
+    });
+
+    // Map each MIDI note
+    const mappedNotes: MappedNote[] = [];
+
+    melodyNotes.forEach(midiNote => {
+        const transposedNote = transposeNoteWithOctave(midiNote.name, transposition);
+        const transposedPC = getPitchClass(transposedNote);
+
+        let noteId = -1;
+        let playedNote = '';
+
+        // First: Try exact match
+        if (playableNotesMap.has(transposedNote)) {
+            noteId = playableNotesMap.get(transposedNote)!;
+            playedNote = transposedNote;
+        }
+        // Second: Try octave folding (same pitch class, different octave)
+        else if (playablePCMap.has(transposedPC)) {
+            playedNote = playablePCMap.get(transposedPC)!;
+            noteId = playableNotesMap.get(playedNote)!;
+        }
+
+        // Only add if we found a match
+        if (noteId !== -1) {
+            mappedNotes.push({
+                time: midiNote.time,
+                noteId,
+                noteName: playedNote,
+                originalNote: midiNote.name,
+                duration: midiNote.duration
+            });
+        }
+    });
+
+    return mappedNotes;
+};
+
 // --- Key Detection Logic (Improved) ---
 const detectKeyInternal = (notes: any[], metadataKey?: any): string => {
     // 0. Metadata Check (Fallback Only - Don't trust blindly)

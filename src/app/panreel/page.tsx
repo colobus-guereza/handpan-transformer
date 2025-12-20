@@ -35,6 +35,7 @@ export default function PanReelPage() {
     const [recordedVideoUrl, setRecordedVideoUrl] = useState<string | null>(null);
     const [viewMode, setViewMode] = useState<0 | 1 | 2 | 3 | 4>(2); // 2 = Labels Visible, 3 = Labels Hidden
     const [isScaleLoading, setIsScaleLoading] = useState(false); // 스케일 전환 로딩 상태
+    const [isPageReady, setIsPageReady] = useState(false); // 페이지 초기 로딩 상태
 
     // 녹화 타이머용
     const [recordTimer, setRecordTimer] = useState(0);
@@ -362,10 +363,60 @@ export default function PanReelPage() {
         return <Digipan10 {...commonProps} />;
     };
 
+    // 페이지 초기 로딩 - 모든 요소가 마운트된 후 ready
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setIsPageReady(true);
+        }, 800); // 충분한 로딩 시간
+        return () => clearTimeout(timer);
+    }, []);
+
     return (
         <div className="flex items-center justify-center min-h-screen bg-gray-950 overflow-hidden touch-none overscroll-none">
 
             <main className="relative w-full max-w-[480px] h-[100dvh] bg-black shadow-2xl overflow-hidden flex flex-col items-center justify-center">
+
+                {/* === Layer 0: Initial Page Loading Skeleton === */}
+                <AnimatePresence>
+                    {!isPageReady && (
+                        <motion.div
+                            key="page-skeleton"
+                            initial={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.5, ease: 'easeOut' }}
+                            className="absolute inset-0 z-[999] bg-black flex flex-col items-center justify-between"
+                        >
+                            {/* Header Skeleton */}
+                            <div className="w-full px-4 py-8 flex flex-col items-center gap-2">
+                                <div className="w-32 h-6 bg-white/10 rounded-full animate-pulse" />
+                                <div className="w-16 h-1 bg-white/10 rounded-full animate-pulse" />
+                            </div>
+
+                            {/* Center: Digipan Skeleton */}
+                            <div className="flex-1 flex items-center justify-center">
+                                <div className="relative">
+                                    <div className="w-64 h-64 rounded-full bg-gradient-to-br from-white/10 to-white/5 animate-pulse" />
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <div className="w-20 h-20 rounded-full bg-white/10 animate-pulse" />
+                                    </div>
+                                    <div className="absolute inset-0 animate-spin" style={{ animationDuration: '3s' }}>
+                                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-white/20" />
+                                        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-white/20" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Footer Skeleton */}
+                            <div className="w-full px-6 py-8 pb-10 flex justify-center gap-4">
+                                <div className="w-12 h-12 rounded-full bg-white/10 animate-pulse" />
+                                <div className="w-12 h-12 rounded-full bg-white/10 animate-pulse" />
+                                <div className="w-16 h-16 rounded-full bg-white/10 animate-pulse" />
+                                <div className="w-12 h-12 rounded-full bg-white/10 animate-pulse" />
+                                <div className="w-12 h-12 rounded-full bg-white/10 animate-pulse" />
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {/* === Layer 1: 3D Scene (STABLE) === */}
                 {/* 리뷰 모드일 때는 살짝 어둡게(Blur) 처리해서 결과창에 집중하게 함 */}
@@ -746,47 +797,44 @@ export default function PanReelPage() {
                             )}
                         </div>
 
-                        {/* Action Card (Bottom Sheet style) */}
+                        {/* Action Bar (Compact Bottom Bar) */}
                         <motion.div
-                            initial={{ y: 100, opacity: 0 }}
+                            initial={{ y: 60, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
-                            exit={{ y: 100, opacity: 0 }}
-                            transition={{ duration: 0.3, delay: 0.1 }}
-                            className="w-full max-w-md bg-zinc-900/95 border-t border-white/10 rounded-t-3xl p-6 pb-8 flex flex-col gap-5 shadow-2xl backdrop-blur-xl"
+                            exit={{ y: 60, opacity: 0 }}
+                            transition={{ duration: 0.25, delay: 0.1 }}
+                            className="w-full max-w-md bg-zinc-900/95 border-t border-white/10 rounded-t-2xl px-5 py-3 flex items-center justify-center gap-4 shadow-2xl backdrop-blur-xl"
                         >
-                            {/* Time Badge */}
-                            <div className="flex justify-center">
-                                <div className="px-4 py-1.5 rounded-full bg-white/10 text-white/80 text-sm font-mono tracking-wider">
-                                    {formatTime(recordTimer)}
-                                </div>
-                            </div>
-
-                            {/* Primary Actions (Save & Share) */}
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={handleSaveRecording}
-                                    className="flex-1 h-14 rounded-2xl bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center gap-2.5 font-semibold text-white transition active:scale-95"
-                                >
-                                    <Download size={22} />
-                                    Save
-                                </button>
-
-                                <button
-                                    onClick={handleShareRecording}
-                                    className="flex-1 h-14 rounded-2xl bg-white hover:bg-gray-100 flex items-center justify-center gap-2.5 font-semibold text-black shadow-lg transition active:scale-95"
-                                >
-                                    <Share2 size={22} />
-                                    Share
-                                </button>
-                            </div>
-
-                            {/* Secondary Action (Discard) */}
+                            {/* Retake (Red) */}
                             <button
                                 onClick={handleDiscardRecording}
-                                className="w-full py-2.5 rounded-xl flex items-center justify-center gap-2 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition active:scale-95 text-sm"
+                                className="w-11 h-11 rounded-full bg-red-500/20 flex items-center justify-center text-red-400 hover:bg-red-500/30 transition active:scale-95"
+                                aria-label="Retake"
                             >
-                                <RefreshCcw size={16} />
-                                Retake
+                                <RefreshCcw size={20} />
+                            </button>
+
+                            {/* Time Badge */}
+                            <span className="px-3 py-1.5 rounded-full bg-white/10 text-white/80 text-sm font-mono tracking-wider">
+                                {formatTime(recordTimer)}
+                            </span>
+
+                            {/* Save */}
+                            <button
+                                onClick={handleSaveRecording}
+                                className="w-11 h-11 rounded-full bg-zinc-800 flex items-center justify-center text-white hover:bg-zinc-700 transition active:scale-95"
+                                aria-label="Save"
+                            >
+                                <Download size={20} />
+                            </button>
+
+                            {/* Share */}
+                            <button
+                                onClick={handleShareRecording}
+                                className="w-11 h-11 rounded-full bg-white flex items-center justify-center text-black hover:bg-gray-100 shadow-md transition active:scale-95"
+                                aria-label="Share"
+                            >
+                                <Share2 size={20} />
                             </button>
                         </motion.div>
                     </motion.div>
