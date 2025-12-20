@@ -567,18 +567,21 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
 
                 else if (drumPattern === 'Lofi Chill') {
                     // ═══════════════════════════════════════════════════════════════
-                    // 🎧 LOFI CHILL: Basic 8-beat Rhythm + Lofi Tones
+                    // 🎧 LOFI CHILL: Basic 8-beat Rhythm + Lofi Tones + Snare Layback
                     // ═══════════════════════════════════════════════════════════════
-                    // 요청: "박자/리듬을 Basic 8-beat와 동일하게 설정하되 톤은 유지"
+                    // 요청: "Basic 8-beat와 동일한 박자이되, 스네어에 60ms 레이백 적용 (Dilla Feel)"
 
-                    // Kick: 1박, 3박 (step 0, 8)
+                    const humanize = () => (Math.random() - 0.5) * 0.015;
+                    const snareLayback = 0.035; // 35ms delay for subtle lazy snare
+
+                    // Kick: 1박, 3박 (step 0, 8) - NO delay (tight)
                     if (step === 0 || step === 8) {
                         lofiKickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.8);
                     }
 
-                    // Snare: 2박, 4박 (step 4, 12)
+                    // Snare: 2박, 4박 (step 4, 12) - WITH layback (lazy)
                     if (step === 4 || step === 12) {
-                        lofiSnareSynthRef.current?.triggerAttackRelease("8n", time, 0.5);
+                        lofiSnareSynthRef.current?.triggerAttackRelease("8n", time + snareLayback + humanize(), 0.5);
                     }
 
                     // Hat: 8th notes (정박마다)
@@ -965,9 +968,30 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
 
             // ★ 드럼 재생 여부에 따라 시작 방식 결정
             if (isDrumPlayingRef.current) {
-                // 드럼이 재생 중이면 즉시 시작 (현재 Transport 시간 기준)
-                console.log("[ChordDebug] Sync start (joining existing transport)");
-                chordPartRef.current.start("+0");
+                // 드럼이 재생 중이면 Part를 처음부터 시작하되, Transport 위치를 리셋하지 않음
+                // 대신, 현재 위치에 맞는 화음을 즉시 재생
+                const positionStr = Tone.Transport.position as string;
+                const bars = parseInt(positionStr.split(":")[0]);
+                const currentBar = bars % 16; // 16마디 루프 내 위치
+
+                // 현재 마디에 해당하는 화음 결정 (0-3, 4-7, 8-11, 12-15)
+                let currentChordIndex = 0;
+                if (currentBar >= 12) currentChordIndex = 3;
+                else if (currentBar >= 8) currentChordIndex = 2;
+                else if (currentBar >= 4) currentChordIndex = 1;
+                else currentChordIndex = 0;
+
+                console.log(`[ChordDebug] Sync start - Current bar: ${currentBar}, Playing chord #${currentChordIndex}`);
+
+                // 현재 화음을 즉시 재생 (Part 스케줄과 별개로)
+                const immediateChord = chordSets[currentChordIndex];
+                if (immediateChord && chordPadSynthRef.current) {
+                    chordPadSynthRef.current.triggerAttackRelease(immediateChord.notes, "4m", "+0.01");
+                }
+
+                // Part는 0부터 시작하되, Transport는 그대로 유지
+                // Part가 looping하면서 다음 이벤트부터 자연스럽게 이어짐
+                chordPartRef.current.start(0);
             } else {
                 // 드럼이 없으면 처음부터 시작
                 console.log("[ChordDebug] Fresh start (reset transport)");
@@ -1179,6 +1203,7 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
             externalTouchText: countdown ? countdown.toString() : null, // 3D 카운트다운 텍스트 주입
             recordingCropMode: layoutMode === 'square' ? 'square' as 'square' : 'full' as 'full',
             enableZoom: false, // 마우스 휠 줌인/줌아웃 비활성화
+            disableJamSession: true, // ★ 방해꾼 제거: 내부 오디오 엔진 비활성화
         };
 
         if (totalNotes === 18) return <Digipan18M {...commonProps} />;
@@ -1800,8 +1825,8 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                                                     onClick={() => !isDisabled && handleScaleSelect(currentScale)}
                                                     onKeyDown={(e) => { if (!isDisabled && (e.key === 'Enter' || e.key === ' ')) handleScaleSelect(currentScale); }}
                                                     className={`p-4 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border ${isDisabled
-                                                            ? 'cursor-default bg-slate-300/[0.02] backdrop-blur-md border-slate-300/10 opacity-50 pointer-events-none'
-                                                            : 'cursor-pointer bg-slate-300/[0.06] backdrop-blur-md border-slate-300/30 hover:bg-slate-300/10 hover:border-slate-200/50'
+                                                        ? 'cursor-default bg-slate-300/[0.02] backdrop-blur-md border-slate-300/10 opacity-50 pointer-events-none'
+                                                        : 'cursor-pointer bg-slate-300/[0.06] backdrop-blur-md border-slate-300/30 hover:bg-slate-300/10 hover:border-slate-200/50'
                                                         }`}
                                                 >
                                                     <div className="flex items-center z-10 flex-1 min-w-0 pr-4">
@@ -1845,8 +1870,8 @@ export default function ReelPanPage(props: { params: Promise<Record<string, neve
                                                 onClick={() => !isDisabled && handleScaleSelect(scale)}
                                                 onKeyDown={(e) => { if (!isDisabled && (e.key === 'Enter' || e.key === ' ')) handleScaleSelect(scale); }}
                                                 className={`p-4 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border ${isDisabled
-                                                        ? 'cursor-default bg-white/[0.01] border-white/[0.02] text-white/40 opacity-50 pointer-events-none'
-                                                        : 'cursor-pointer bg-white/[0.02] border-white/[0.05] text-white hover:bg-slate-300/[0.08] hover:border-slate-300/30'
+                                                    ? 'cursor-default bg-white/[0.01] border-white/[0.02] text-white/40 opacity-50 pointer-events-none'
+                                                    : 'cursor-pointer bg-white/[0.02] border-white/[0.05] text-white hover:bg-slate-300/[0.08] hover:border-slate-300/30'
                                                     }`}
                                             >
                                                 <div className="flex items-center z-10 flex-1 min-w-0 pr-4">

@@ -6,12 +6,14 @@ interface JamSessionProps {
     bpm?: number;
     rootNote: string;      // e.g., "D3" (스케일 Ding)
     scaleNotes: string[];  // 전체 스케일 노트
+    enabled?: boolean;     // NEW: If false, all audio logic is disabled
 }
 
 export const useJamSession = ({
     bpm = 100,
     rootNote,
-    scaleNotes
+    scaleNotes,
+    enabled = true  // Default: enabled
 }: JamSessionProps) => {
     const [isPlaying, setIsPlaying] = useState(false);
 
@@ -38,6 +40,8 @@ export const useJamSession = ({
 
     // === [1] 악기 초기화 (한 번만 실행) ===
     useEffect(() => {
+        // ★ If disabled, do NOT initialize any audio resources
+        if (!enabled) return;
         // Master Bus
         const limiter = new Tone.Limiter(-1).toDestination();
         const masterGain = new Tone.Gain(0.225).connect(limiter); // Drum master (lowered 10%)
@@ -151,6 +155,8 @@ export const useJamSession = ({
 
     // === [2] 스케일 변경 시 데이터 업데이트 + 자동 중지 ===
     useEffect(() => {
+        // ★ If disabled, do NOT interfere with Transport
+        if (!enabled) return;
         if (!rootNote || scaleNotes.length < 5) return;
 
         // 스케일 변경 감지를 위한 키 생성
@@ -353,6 +359,8 @@ export const useJamSession = ({
 
     // === [4] 통합 재생 제어 ===
     const togglePlay = useCallback(async () => {
+        // ★ If disabled, do nothing
+        if (!enabled) return;
         await Tone.start();
 
         // React 상태 대신 Tone.Transport 실제 상태로 확인 (더 신뢰성 있음)

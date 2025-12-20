@@ -69,7 +69,7 @@ const translations = {
             free: "Free Forever"
         },
         footer: "Mindforge Labs • Crafted with 🧡",
-        footerCTAText: "Capture the small inspirations in your daily life, and don't let them slip away—record them with",
+        footerCTAText: "ReelPan is your music notebook that you can take out anytime, anywhere.\nTell us your story 😊",
         footerCTABrand: "ReelPan",
         footerCTAEnd: ".",
         sliderItems: [
@@ -134,9 +134,9 @@ const translations = {
             free: "평생 무료"
         },
         footer: "마인드포지 랩스 • 장인정신으로 🧡",
-        footerCTAText: "당신의 일상 속 작은 영감, 이제",
+        footerCTAText: "ReelPan은 언제 어디서나 꺼내 쓸 수 있는 당신의 음악 노트입니다.\n당신의 이야기를 들려주세요 😊",
         footerCTABrand: "ReelPan",
-        footerCTAEnd: "으로 놓치지 말고 기록하세요.",
+        footerCTAEnd: ".",
         sliderItems: [
             { title: "영감", subtitle: "ReelPan", image: "/images/digipan/12notes_mutant.png" },
             { title: "접속", subtitle: "ReelPan", image: "/images/digipan/10notes.png" },
@@ -458,9 +458,20 @@ export default function PlaygroundHome() {
 
                     {/* Section 6: Footer (CTA) */}
                     <div className="text-center py-12 border-t border-white/10">
-                        <p className="text-xl text-slate-300 font-medium tracking-wide">
-                            <span className="bg-clip-text text-transparent bg-gradient-to-b from-white/70 to-slate-400/70">{t.footerCTABrand}</span>
-                        </p>
+                        <div className="text-xl text-slate-300 font-medium tracking-wide flex flex-col gap-2">
+                            {t.footerCTAText.split('\n').map((line, lineIndex) => (
+                                <p key={lineIndex}>
+                                    {line.split('ReelPan').map((part, index, array) => (
+                                        <span key={index}>
+                                            {part}
+                                            {index < array.length - 1 && (
+                                                <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-400">ReelPan</span>
+                                            )}
+                                        </span>
+                                    ))}
+                                </p>
+                            ))}
+                        </div>
                     </div>
 
                 </div>

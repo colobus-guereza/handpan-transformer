@@ -133,6 +133,7 @@ interface Digipan3DProps {
     recordingCropMode?: 'full' | 'square'; // NEW: 녹화 시 크롭 모드
     externalTouchText?: string | null; // NEW: 외부에서 주입하는 터치 텍스트 (카운트다운용)
     showTouchText?: boolean; // New: Toggle for idle Ready/Set/Touch cycle
+    disableJamSession?: boolean; // NEW: Disable internal useJamSession audio engine
 }
 
 export interface Digipan3DHandle {
@@ -741,6 +742,7 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
     recordingCropMode = 'full', // Default to full (전체 캔버스 녹화)
     externalTouchText = null, // Default null
     showTouchText: showTouchTextProp,
+    disableJamSession = false, // Default: enabled (false = NOT disabled)
 }, ref) => {
     const pathname = usePathname();
     // ScaleInfoPanel은 /digipan-3d-test 경로에서만 표시
@@ -891,7 +893,8 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
     const { togglePlay: toggleJam, isPlaying: isJamPlaying, introCountdown, onInteraction } = useJamSession({
         bpm: 100,
         rootNote: dingNote,
-        scaleNotes: scaleNoteNames
+        scaleNotes: scaleNoteNames,
+        enabled: !disableJamSession // ★ Disable audio when controlled externally
     });
 
     // Legacy timer for visual countdown (optional)
