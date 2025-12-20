@@ -186,12 +186,12 @@ export default function PlaygroundHome() {
                     </div>
                 </div>
 
-                <div className="w-full max-w-4xl mx-auto px-6 pb-24 flex flex-col gap-20 md:gap-32">
+                <div className="w-full max-w-4xl mx-auto px-6 pb-24 -mt-8 md:-mt-12 flex flex-col gap-20 md:gap-32">
 
                     {/* Section 2: Features (Grid Cards) */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {/* Card 1 */}
-                        <div className="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-cyan-500/30 transition-colors group">
+                        <div className="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-cyan-500/30 hover:scale-[1.015] transition-all duration-500 group">
                             <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                                 <Music size={24} className="text-cyan-400" />
                             </div>
@@ -201,7 +201,7 @@ export default function PlaygroundHome() {
                             </p>
                         </div>
                         {/* Card 2 */}
-                        <div className="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-purple-500/30 transition-colors group">
+                        <div className="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-purple-500/30 hover:scale-[1.015] transition-all duration-500 group">
                             <div className="w-12 h-12 rounded-2xl bg-purple-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                                 <Smartphone size={24} className="text-purple-400" />
                             </div>
@@ -211,7 +211,7 @@ export default function PlaygroundHome() {
                             </p>
                         </div>
                         {/* Card 3 */}
-                        <div className="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-pink-500/30 transition-colors group">
+                        <div className="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-pink-500/30 hover:scale-[1.015] transition-all duration-500 group">
                             <div className="w-12 h-12 rounded-2xl bg-pink-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                                 <Box size={24} className="text-pink-400" />
                             </div>
@@ -266,22 +266,22 @@ export default function PlaygroundHome() {
                         <h3 className="text-3xl font-bold text-center mb-12 whitespace-nowrap">실용적인 도구</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Box 1 */}
-                            <div className="p-8 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex flex-col gap-4">
+                            <div className="p-8 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 hover:scale-[1.015] transition-all duration-500 flex flex-col gap-4">
                                 <h4 className="text-xl font-bold text-cyan-200">영감 아카이빙 & SNS 공유</h4>
                                 <p className="text-slate-400 text-[1.05rem]">일상에서 문득 떠오른 멜로디를 즉시 영상으로 포착하고, 릴스나 숏츠로 공유해 나의 고유한 감성을 기록하세요.</p>
                             </div>
                             {/* Box 2 */}
-                            <div className="p-8 rounded-3xl bg-gradient-to-bl from-white/10 to-white/5 border border-white/10 flex flex-col gap-4">
+                            <div className="p-8 rounded-3xl bg-gradient-to-bl from-white/10 to-white/5 border border-white/10 hover:scale-[1.015] transition-all duration-500 flex flex-col gap-4">
                                 <h4 className="text-xl font-bold text-purple-200">스케일 시뮬레이션</h4>
                                 <p className="text-slate-400 text-[1.05rem]">고가의 악기를 구매하기 전, 다양한 스케일을 미리 연주해보며 내 취향에 딱 맞는 음계를 실패 없이 찾아보세요.</p>
                             </div>
                             {/* Box 3 */}
-                            <div className="p-8 rounded-3xl bg-gradient-to-tr from-white/10 to-white/5 border border-white/10 flex flex-col gap-4">
+                            <div className="p-8 rounded-3xl bg-gradient-to-tr from-white/10 to-white/5 border border-white/10 hover:scale-[1.015] transition-all duration-500 flex flex-col gap-4">
                                 <h4 className="text-xl font-bold text-pink-200">교육자를 위한 레슨 자료 제작</h4>
                                 <p className="text-slate-400 text-[1.05rem]">멜로디, 연주패턴과 같은 아이디어를 교육용 영상자료로 제작해, 수강생들에게 더 직관적인 가이드를 편리하게 제공하세요.</p>
                             </div>
                             {/* Box 4 */}
-                            <div className="p-8 rounded-3xl bg-gradient-to-tl from-white/10 to-white/5 border border-white/10 flex flex-col gap-4">
+                            <div className="p-8 rounded-3xl bg-gradient-to-tl from-white/10 to-white/5 border border-white/10 hover:scale-[1.015] transition-all duration-500 flex flex-col gap-4">
                                 <h4 className="text-xl font-bold text-emerald-200">2차 창작을 위한 디지털 소스</h4>
                                 <p className="text-slate-400 text-[1.05rem]">제작된 릴스 영상은 끝이 아닌 시작입니다. 당신만의 창의적인 아이디어를 더하고 가공하여, 원본을 뛰어넘는 완전히 새로운 콘텐츠로 재창조해 보세요.</p>
                             </div>
@@ -293,7 +293,7 @@ export default function PlaygroundHome() {
                         <h3 className="text-3xl font-bold text-center mb-12 whitespace-nowrap">UI 기능 설명</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
                             {/* 1. Label Toggle */}
-                            <div className="p-6 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex flex-col items-center gap-4">
+                            <div className="p-6 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 hover:scale-[1.015] transition-all duration-500 flex flex-col items-center gap-4">
                                 <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center">
                                     <Type size={24} className="text-white/80" />
                                 </div>
@@ -302,7 +302,7 @@ export default function PlaygroundHome() {
                             </div>
 
                             {/* 2. Layout Mode */}
-                            <div className="p-6 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex flex-col items-center gap-4">
+                            <div className="p-6 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 hover:scale-[1.015] transition-all duration-500 flex flex-col items-center gap-4">
                                 <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center">
                                     <span className="text-sm font-bold text-white tracking-widest">9:16</span>
                                 </div>
@@ -311,7 +311,7 @@ export default function PlaygroundHome() {
                             </div>
 
                             {/* 3. Record Button */}
-                            <div className="p-6 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex flex-col items-center gap-4">
+                            <div className="p-6 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 hover:scale-[1.015] transition-all duration-500 flex flex-col items-center gap-4">
                                 <div className="w-16 h-16 rounded-full border-4 border-white flex items-center justify-center">
                                     <div className="w-10 h-10 rounded-full bg-red-500" />
                                 </div>
@@ -320,7 +320,7 @@ export default function PlaygroundHome() {
                             </div>
 
                             {/* 4. Drum Accompaniment */}
-                            <div className="p-6 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex flex-col items-center gap-4">
+                            <div className="p-6 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 hover:scale-[1.015] transition-all duration-500 flex flex-col items-center gap-4">
                                 <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center">
                                     <Drum size={24} className="text-white/80" />
                                 </div>
@@ -329,7 +329,7 @@ export default function PlaygroundHome() {
                             </div>
 
                             {/* 5. Chord Pad (화음 반주) */}
-                            <div className="p-6 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex flex-col items-center gap-4">
+                            <div className="p-6 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 hover:scale-[1.015] transition-all duration-500 flex flex-col items-center gap-4">
                                 <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center">
                                     <Music2 size={24} className="text-white/80" />
                                 </div>

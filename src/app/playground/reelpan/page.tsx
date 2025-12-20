@@ -327,42 +327,87 @@ export default function ReelPanPage() {
 
         Tone.Transport.bpm.value = drumBpm;
 
-        // Simple Pattern logic based on drumPattern & drumTimeSignature
+        // Pattern logic based on drumPattern & drumTimeSignature
+        // ★ 킥 피치는 drumPitchRef.current (딩 피치 - 1옥타브)와 연결됨
         drumLoopIdRef.current = Tone.Transport.scheduleRepeat((time) => {
+            // ★ 드럼 버튼이 활성화된 경우에만 소리 재생
+            if (!isDrumPlayingRef.current) return;
+
             // Derive step from Transport seconds to ensure reset on stop()
             // 4 steps per beat (16th notes)
             const secondsPerStep = 60 / drumBpm / 4;
             const absoluteStep = Math.round(Tone.Transport.seconds / secondsPerStep);
 
             const is68 = drumTimeSignature === '6/8';
-            const division = is68 ? 12 : 16;
+            const is34 = drumTimeSignature === '3/4';
+            const division = is68 ? 12 : (is34 ? 12 : 16); // 3/4도 12 step (3박 × 4)
             const step = absoluteStep % division;
 
+            // ===== 4/4 박자 =====
             if (drumTimeSignature === '4/4') {
-                // --- Simple 4/4 Basic 8-beat ---
-                // ★ isDrumPlayingRef 확인: 드럼 버튼이 활성화된 경우에만 소리 재생
-                if (!isDrumPlayingRef.current) return;
-                // Kick: 1, 3
-                if (step === 0 || step === 8) kickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.8);
-                // Snare: 2, 4
-                if (step === 4 || step === 12) snareSynthRef.current?.triggerAttackRelease("8n", time, 0.5);
-                // Hat: 8th notes (정박 위주)
-                if (step % 2 === 0) {
-                    const isAccent = step % 4 === 0;
-                    hatSynthRef.current?.triggerAttackRelease("32n", time, isAccent ? 0.3 : 0.15);
+                if (drumPattern === 'Basic 8-beat') {
+                    // ★ Basic 8-beat: 클래식한 팝/록 드럼 패턴
+                    // Kick: 1박, 3박 (step 0, 8)
+                    if (step === 0 || step === 8) {
+                        kickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.8);
+                    }
+                    // Snare: 2박, 4박 (step 4, 12)
+                    if (step === 4 || step === 12) {
+                        snareSynthRef.current?.triggerAttackRelease("8n", time, 0.5);
+                    }
+                    // Hat: 8th notes (정박마다)
+                    if (step % 2 === 0) {
+                        const isAccent = step % 4 === 0;
+                        hatSynthRef.current?.triggerAttackRelease("32n", time, isAccent ? 0.3 : 0.15);
+                    }
                 }
-            } else if (drumTimeSignature === '3/4') {
-                if (!isDrumPlayingRef.current) return;
-                // --- Simple 3/4 Waltz ---
-                if (step === 0) kickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.8);
-                if (step === 4 || step === 8) snareSynthRef.current?.triggerAttackRelease("8n", time, 0.4);
-                if (step % 2 === 0) hatSynthRef.current?.triggerAttackRelease("32n", time, 0.15);
-            } else if (is68) {
-                if (!isDrumPlayingRef.current) return;
-                // --- Simple 6/8 ---
-                if (step === 0) kickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.8);
-                if (step === 6) snareSynthRef.current?.triggerAttackRelease("8n", time, 0.5);
-                if (step % 2 === 0) hatSynthRef.current?.triggerAttackRelease("32n", time, 0.2);
+                else if (drumPattern === 'Acoustic Pop') {
+                    // TODO: Acoustic Pop 패턴 구현 예정
+                    // 임시로 Basic 8-beat와 동일
+                    if (step === 0 || step === 8) kickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.8);
+                    if (step === 4 || step === 12) snareSynthRef.current?.triggerAttackRelease("8n", time, 0.5);
+                    if (step % 2 === 0) hatSynthRef.current?.triggerAttackRelease("32n", time, step % 4 === 0 ? 0.3 : 0.15);
+                }
+                else if (drumPattern === 'Jazz Swing') {
+                    // TODO: Jazz Swing 패턴 구현 예정
+                    if (step === 0 || step === 8) kickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.8);
+                    if (step === 4 || step === 12) snareSynthRef.current?.triggerAttackRelease("8n", time, 0.5);
+                    if (step % 2 === 0) hatSynthRef.current?.triggerAttackRelease("32n", time, step % 4 === 0 ? 0.3 : 0.15);
+                }
+                else if (drumPattern === 'Bossa Nova') {
+                    // TODO: Bossa Nova 패턴 구현 예정
+                    if (step === 0 || step === 8) kickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.8);
+                    if (step === 4 || step === 12) snareSynthRef.current?.triggerAttackRelease("8n", time, 0.5);
+                    if (step % 2 === 0) hatSynthRef.current?.triggerAttackRelease("32n", time, step % 4 === 0 ? 0.3 : 0.15);
+                }
+            }
+            // ===== 3/4 박자 (Waltz) =====
+            else if (is34) {
+                if (drumPattern === 'Basic 8-beat') {
+                    // 3/4 Waltz 기본 패턴
+                    if (step === 0) kickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.8);
+                    if (step === 4 || step === 8) snareSynthRef.current?.triggerAttackRelease("8n", time, 0.4);
+                    if (step % 2 === 0) hatSynthRef.current?.triggerAttackRelease("32n", time, 0.15);
+                } else {
+                    // 다른 프리셋도 3/4에선 Waltz 기본 사용
+                    if (step === 0) kickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.8);
+                    if (step === 4 || step === 8) snareSynthRef.current?.triggerAttackRelease("8n", time, 0.4);
+                    if (step % 2 === 0) hatSynthRef.current?.triggerAttackRelease("32n", time, 0.15);
+                }
+            }
+            // ===== 6/8 박자 =====
+            else if (is68) {
+                if (drumPattern === 'Basic 8-beat') {
+                    // 6/8 기본 패턴
+                    if (step === 0) kickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.8);
+                    if (step === 6) snareSynthRef.current?.triggerAttackRelease("8n", time, 0.5);
+                    if (step % 2 === 0) hatSynthRef.current?.triggerAttackRelease("32n", time, 0.2);
+                } else {
+                    // 다른 프리셋도 6/8에선 기본 사용
+                    if (step === 0) kickSynthRef.current?.triggerAttackRelease(drumPitchRef.current, "8n", time, 0.8);
+                    if (step === 6) snareSynthRef.current?.triggerAttackRelease("8n", time, 0.5);
+                    if (step % 2 === 0) hatSynthRef.current?.triggerAttackRelease("32n", time, 0.2);
+                }
             }
         }, "16n");
 
