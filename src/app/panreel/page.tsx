@@ -34,6 +34,7 @@ export default function PanReelPage() {
     const [recordingBlob, setRecordingBlob] = useState<Blob | null>(null);
     const [recordedVideoUrl, setRecordedVideoUrl] = useState<string | null>(null);
     const [viewMode, setViewMode] = useState<0 | 1 | 2 | 3 | 4>(2); // 2 = Labels Visible, 3 = Labels Hidden
+    const [isScaleLoading, setIsScaleLoading] = useState(false); // 스케일 전환 로딩 상태
 
     // 녹화 타이머용
     const [recordTimer, setRecordTimer] = useState(0);
@@ -214,8 +215,21 @@ export default function PanReelPage() {
     };
 
     const handleScaleSelect = (scale: any) => {
-        setTargetScale(scale);
+        if (scale.id === targetScale.id) {
+            setShowScaleSelector(false);
+            return;
+        }
         setShowScaleSelector(false);
+        setIsScaleLoading(true);
+
+        // 짧은 딜레이 후 스케일 변경 (fade-out 애니메이션 시간)
+        setTimeout(() => {
+            setTargetScale(scale);
+            // 로딩 완료 시뮬레이션 (실제 3D 컴포넌트 마운트 시간 고려)
+            setTimeout(() => {
+                setIsScaleLoading(false);
+            }, 400);
+        }, 200);
     };
 
     // Recording Handlers
@@ -333,6 +347,7 @@ export default function PanReelPage() {
             onRecordingComplete: handleRecordingComplete,
             disableRecordingUI: true,
             hideTouchText: true,
+            recordingCropMode: layoutMode === 'square' ? 'square' as 'square' : 'full' as 'full', // NEW: 레이아웃에 따른 녹화 크롭
         };
 
         if (totalNotes === 18) return <Digipan18M {...commonProps} />;
@@ -358,12 +373,48 @@ export default function PanReelPage() {
                     className={`absolute inset-0 z-0 transition-all duration-500 ease-in-out ${recordState === 'reviewing' ? 'blur-sm scale-95 opacity-50' : ''
                         }`}
                 >
-                    <Suspense fallback={<div className="flex items-center justify-center h-full text-neutral-800">Initializing...</div>}>
-                        {renderActiveDigipan()}
-                    </Suspense>
+                    {/* 디지팬은 항상 렌더링 (로딩 중에도 뒤에서 마운트) */}
+                    <motion.div
+                        key={targetScale.id}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: isScaleLoading ? 0 : 1 }}
+                        transition={{ duration: 0.5, ease: 'easeOut' }}
+                        className="absolute inset-0"
+                    >
+                        <Suspense fallback={<div className="flex items-center justify-center h-full text-neutral-800">Initializing...</div>}>
+                            {renderActiveDigipan()}
+                        </Suspense>
+                    </motion.div>
+
+                    {/* 스케일 전환 시 로딩 스켈레톤 (오버레이) */}
+                    <AnimatePresence>
+                        {isScaleLoading && (
+                            <motion.div
+                                key="skeleton-overlay"
+                                initial={{ opacity: 1 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.5, ease: 'easeOut' }}
+                                className="absolute inset-0 flex items-center justify-center z-10 bg-black"
+                            >
+                                {/* Skeleton Circle */}
+                                <div className="relative">
+                                    <div className="w-64 h-64 rounded-full bg-gradient-to-br from-white/10 to-white/5 animate-pulse" />
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <div className="w-20 h-20 rounded-full bg-white/10 animate-pulse" />
+                                    </div>
+                                    {/* Orbiting dots */}
+                                    <div className="absolute inset-0 animate-spin" style={{ animationDuration: '3s' }}>
+                                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-white/20" />
+                                        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-white/20" />
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
                     {!isLoaded && (
-                        <div className="absolute top-2 left-2 px-2 py-1 bg-black/40 backdrop-blur-md rounded text-[10px] text-white/40 pointer-events-none">
+                        <div className="absolute top-2 left-2 px-2 py-1 bg-black/40 backdrop-blur-md rounded text-[10px] text-white/40 pointer-events-none z-20">
                             Preloading Sounds: {loadingProgress}%
                         </div>
                     )}
@@ -593,10 +644,13 @@ export default function PanReelPage() {
                                         const bottomNotes = scale.notes.bottom.length > 0 ? scale.notes.bottom.join(' ') : null;
 
                                         return (
-                                            <button
+                                            <div
                                                 key={scale.id}
+                                                role="button"
+                                                tabIndex={0}
                                                 onClick={() => handleScaleSelect(scale)}
-                                                className={`p-5 rounded-[24px] text-left transition-all flex items-center justify-between group relative overflow-hidden border border-white/5
+                                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleScaleSelect(scale); }}
+                                                className={`p-5 rounded-[24px] text-left transition-all flex items-center justify-between group relative overflow-hidden border border-white/5 cursor-pointer
                                                     ${targetScale.id === scale.id
                                                         ? 'bg-white text-black'
                                                         : 'bg-white/5 text-white hover:bg-white/10'}`}
@@ -644,7 +698,7 @@ export default function PanReelPage() {
                                                         )}
                                                     </button>
                                                 </div>
-                                            </button>
+                                            </div>
                                         );
                                     })}
                                 </div>
