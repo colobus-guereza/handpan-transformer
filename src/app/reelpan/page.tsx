@@ -328,7 +328,7 @@ export default function ReelPanPage() {
                     setCountdown(null);
                     clearInterval(interval);
                 }
-            }, 1000); // 사용자의 요청에 따라 1초(1000ms) 간격으로 조정
+            }, 650); // 사용자의 요청에 따라 0.65초(650ms) 간격으로 조정
         } else if (recordState === 'recording') {
             stopRecording();
         }

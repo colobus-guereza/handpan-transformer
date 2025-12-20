@@ -33,6 +33,8 @@ interface Digipan14MProps {
     onRecordingComplete?: (blob: Blob) => void;
     recordingCropMode?: 'full' | 'square';
     disableRecordingUI?: boolean;
+    externalTouchText?: string | null;
+    showTouchText?: boolean;
 }
 
 // Composite Background Component for Digipan 14M (Mutant image + 4 visual tonefields)
@@ -115,7 +117,9 @@ const Digipan14M = React.forwardRef<Digipan3DHandle, Digipan14MProps>(({
     hideTouchText = false,
     onRecordingComplete,
     disableRecordingUI,
-    recordingCropMode
+    recordingCropMode,
+    externalTouchText = null,
+    showTouchText,
 }, ref) => {
 
     // 10-Note Base Coordinates (from Digipan10.tsx) - Starting point for 14M as well
@@ -359,6 +363,8 @@ const Digipan14M = React.forwardRef<Digipan3DHandle, Digipan14MProps>(({
             sceneSize={forceCompactView ? { width: 66, height: 66 } : { width: 64, height: 66 }} // Tighter vertical bounds (60 + 10%)
             cameraZoom={DIGIPAN_VIEW_CONFIG['14M'].zoom}
             showAxes={showAxes}
+            externalTouchText={externalTouchText}
+            showTouchText={showTouchText}
         />
     );
 });

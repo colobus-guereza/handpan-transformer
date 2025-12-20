@@ -16,11 +16,21 @@ const SEQUENCE = [
     { text: 'Touch!', duration: 2000 }
 ];
 
-// Color Themes
-const THEMES: Record<string, { color: string; emissive: string }> = {
+// [Fine-tuning] Independent Themes for different modes
+// Idle Sequence Themes
+const IDLE_THEMES: Record<string, { color: string; emissive: string }> = {
     'Ready': { color: '#2ecc71', emissive: '#006400' }, // Green (Emerald)
-    'Set': { color: '#FFFF00', emissive: '#FFD700' },   // 채도 높은 노란색 (Yellow)
-    'Touch!': { color: '#FF0000', emissive: '#CC0000' } // 채도 높은 빨강색 (Red)
+    'Set': { color: '#FFFF00', emissive: '#FFD700' },   // Yellow
+    'Touch!': { color: '#FF0000', emissive: '#CC0000' } // Red
+};
+
+// Reel Recording Countdown Themes (4, 3, 2, 1, Touch!)
+const REEL_COUNTDOWN_THEMES: Record<string, { color: string; emissive: string }> = {
+    '4': { color: '#FFFF00', emissive: '#FFD700' },
+    '3': { color: '#FFFF00', emissive: '#FFD700' },
+    '2': { color: '#FFFF00', emissive: '#FFD700' },
+    '1': { color: '#FFFF00', emissive: '#FFD700' },
+    'Touch!': { color: '#FF0000', emissive: '#CC0000' }
 };
 
 // [Effect] Explosion Particles (Reused from CyberBoat)
@@ -130,15 +140,17 @@ const TouchText = ({ isIdle, suppressExplosion = false, overrideText, interactio
 
     // Sequential Text Cycling
     const [stepIndex, setStepIndex] = useState(0);
-    const [displayedText, setDisplayedText] = useState('Ready');
+    const [displayedText, setDisplayedText] = useState<string | null>('Ready');
 
     // Logic: Sync displayedText based on state
-    // If not Idle and not Overriding, we PRESERVE the last text to allow fading out smoothly.
+    // Separation: overrideText (Recording) takes absolute priority and silences the idle cycle.
     useEffect(() => {
         if (overrideText) {
             setDisplayedText(overrideText);
         } else if (isIdle) {
             setDisplayedText(SEQUENCE[stepIndex].text);
+        } else {
+            setDisplayedText(null);
         }
     }, [overrideText, isIdle, stepIndex]);
 
@@ -177,6 +189,7 @@ const TouchText = ({ isIdle, suppressExplosion = false, overrideText, interactio
     // Internal Explosion Logic (Safe to call from effects)
     const triggerExplosion = useCallback(() => {
         const text = currentTextRef.current;
+        if (!text) return; // guard null
         // Exception: Don't explode if showing Countdown Numbers
         if (['4', '3', '2', '1'].includes(text)) {
             return;
@@ -219,21 +232,24 @@ const TouchText = ({ isIdle, suppressExplosion = false, overrideText, interactio
     }, [interactionTrigger, triggerExplosion]);
 
     // Theme Resolution:
-    // If overrideText is present:
-    // - "4","3","2","1" -> Yellow (Same as 'Set')
-    // - "Touch!" -> Red
-    // Else -> Standard Mapping
-    let theme = THEMES[currentText];
+    // 1. Check Recording themes first if override is active
+    // 2. Check Idle themes if in idle cycle
+    // 3. Fallback
+    const lookupKey = currentText || 'Ready';
+    let theme = overrideText ? REEL_COUNTDOWN_THEMES[lookupKey] : IDLE_THEMES[lookupKey];
+
     if (!theme) {
-        if (['4', '3', '2', '1'].includes(currentText)) {
-            theme = THEMES['Set']; // Yellow
+        if (currentText && ['4', '3', '2', '1'].includes(currentText)) {
+            theme = REEL_COUNTDOWN_THEMES['1'];
+        } else if (currentText === 'Touch!') {
+            theme = REEL_COUNTDOWN_THEMES['Touch!'];
         } else {
-            theme = THEMES['Touch!']; // Fallback / Red
+            theme = IDLE_THEMES['Ready']; // Ultimate fallback
         }
     }
 
     useFrame((state, delta) => {
-        if (!groupRef.current) return;
+        if (!groupRef.current || !currentText) return;
 
         // Optimize Disappearance: Instant Hide on Explosion
         if (exploding) {

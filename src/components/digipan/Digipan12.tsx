@@ -33,6 +33,8 @@ interface Digipan12Props {
     onRecordingComplete?: (blob: Blob) => void;
     recordingCropMode?: 'full' | 'square';
     disableRecordingUI?: boolean;
+    externalTouchText?: string | null;
+    showTouchText?: boolean;
 }
 
 // Composite Background Component for Digipan 12 (10 notes image + 2 visual tonefields)
@@ -118,7 +120,9 @@ const Digipan12 = React.forwardRef<Digipan3DHandle, Digipan12Props>(({
     hideTouchText = false,
     onRecordingComplete,
     disableRecordingUI,
-    recordingCropMode
+    recordingCropMode,
+    externalTouchText = null,
+    showTouchText,
 }, ref) => {
 
     // 10-Note Base Coordinates (from Digipan10.tsx)
@@ -266,6 +270,8 @@ const Digipan12 = React.forwardRef<Digipan3DHandle, Digipan12Props>(({
             onRecordingComplete={onRecordingComplete}
             disableRecordingUI={disableRecordingUI}
             recordingCropMode={recordingCropMode}
+            externalTouchText={externalTouchText}
+            showTouchText={showTouchText}
             sceneSize={forceCompactView ? { width: 66, height: 50 } : { width: 64, height: 60 }}
             cameraZoom={DIGIPAN_VIEW_CONFIG['12'].zoom}
             cameraTargetY={DIGIPAN_VIEW_CONFIG['12'].targetY}

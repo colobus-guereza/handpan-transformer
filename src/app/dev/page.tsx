@@ -3,6 +3,7 @@
 import React, { useState, Suspense, useMemo, use, useRef, useCallback, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { parseMidi, findBestMatchScale, getScaleNotes, mapMidiToDigipan } from '@/lib/midiUtils';
+import { parseMusicXml, ParsedScore } from '@/lib/musicXmlUtils';
 import { useMidiStore, TrackRole } from '@/store/useMidiStore';
 import { SCALES } from '@/data/handpanScales';
 import { Language } from '@/constants/translations';
@@ -13,6 +14,10 @@ const MiniDigiPan = dynamic(() => import('@/components/digipan/MiniDigiPan'), {
     loading: () => <div className="flex items-center justify-center w-full h-full text-neutral-500">Loading 3D Model...</div>
 });
 
+const ScrollingScore = dynamic(() => import('@/components/dev/ScrollingScore'), {
+    ssr: false
+});
+
 
 import ScaleSelection from '@/components/dev/ScaleSelection';
 export default function DevDashboard(props: { params: Promise<any> }) {
@@ -20,6 +25,15 @@ export default function DevDashboard(props: { params: Promise<any> }) {
     const [logs, setLogs] = useState<string[]>([]);
     const [manualScaleId, setManualScaleId] = useState<string | null>(null);
     const [isMidiPlaying, setIsMidiPlaying] = useState(false);
+    const [isPaused, setIsPaused] = useState(false);
+    const [playbackTime, setPlaybackTime] = useState(0);
+    const playbackStartTimeRef = useRef<number>(0);
+    const lastTickTimeRef = useRef<number>(0);
+    const pausedTimeRef = useRef<number>(0);
+    const playheadIndexRef = useRef<number>(0);
+    const requestRef = useRef<number>(0);
+
+    const [xmlScore, setXmlScore] = useState<ParsedScore | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
 
 
@@ -69,23 +83,24 @@ export default function DevDashboard(props: { params: Promise<any> }) {
 
     // --- MIDI Playback Functions ---
     const stopMidiPlay = useCallback(() => {
+        if (requestRef.current) {
+            cancelAnimationFrame(requestRef.current);
+            requestRef.current = 0;
+        }
         if (abortControllerRef.current) {
             abortControllerRef.current.abort();
             abortControllerRef.current = null;
         }
         setIsMidiPlaying(false);
+        setIsPaused(false);
+        setPlaybackTime(0);
+        playheadIndexRef.current = 0;
+        pausedTimeRef.current = 0;
     }, []);
 
     const handleMidiPlay = useCallback(async () => {
         if (!midiData || !targetScale || !digiPanRef.current) {
             addLog('[Play] No MIDI data or Digipan ref');
-            return;
-        }
-
-        // If already playing, stop
-        if (isMidiPlaying) {
-            stopMidiPlay();
-            addLog('[Play] Stopped');
             return;
         }
 
@@ -99,6 +114,51 @@ export default function DevDashboard(props: { params: Promise<any> }) {
         const transposition = midiData.matchResult?.transposition || 0;
         const mappedNotes = mapMidiToDigipan(melodyTrack.notes, transposition, targetScale);
 
+        const tick = () => {
+            const now = Date.now();
+            const currentSeconds = pausedTimeRef.current + (now - playbackStartTimeRef.current) / 1000;
+            setPlaybackTime(currentSeconds);
+
+            // Check for notes to trigger
+            while (playheadIndexRef.current < mappedNotes.length) {
+                const note = mappedNotes[playheadIndexRef.current];
+                if (note.time <= currentSeconds) {
+                    digiPanRef.current?.triggerNote(note.noteId);
+                    playheadIndexRef.current++;
+                } else {
+                    break;
+                }
+            }
+
+            // End check
+            if (playheadIndexRef.current >= mappedNotes.length && currentSeconds > mappedNotes[mappedNotes.length - 1].time + 1) {
+                stopMidiPlay();
+                addLog('[Play] Playback complete');
+                return;
+            }
+
+            requestRef.current = requestAnimationFrame(tick);
+        };
+
+        // --- PAUSE LOGIC ---
+        if (isMidiPlaying) {
+            if (!isPaused) {
+                // Pause
+                setIsPaused(true);
+                pausedTimeRef.current = playbackTime;
+                cancelAnimationFrame(requestRef.current);
+                addLog('[Play] Paused');
+            } else {
+                // Resume
+                setIsPaused(false);
+                playbackStartTimeRef.current = Date.now();
+                requestRef.current = requestAnimationFrame(tick);
+                addLog('[Play] Resumed');
+            }
+            return;
+        }
+
+        // --- START NEW PLAYBACK ---
         if (mappedNotes.length === 0) {
             addLog('[Play] No playable notes mapped');
             return;
@@ -110,46 +170,14 @@ export default function DevDashboard(props: { params: Promise<any> }) {
         resumeAudio();
 
         setIsMidiPlaying(true);
+        setIsPaused(false);
+        setPlaybackTime(0);
+        playheadIndexRef.current = 0;
+        pausedTimeRef.current = 0;
+        playbackStartTimeRef.current = Date.now();
 
-        const controller = new AbortController();
-        abortControllerRef.current = controller;
-
-        const wait = (ms: number) => new Promise<void>((resolve, reject) => {
-            if (controller.signal.aborted) return reject(new Error('Aborted'));
-            const id = setTimeout(() => {
-                if (controller.signal.aborted) reject(new Error('Aborted'));
-                else resolve();
-            }, ms);
-            controller.signal.addEventListener('abort', () => clearTimeout(id));
-        });
-
-        try {
-            const startTime = Date.now();
-            for (let i = 0; i < mappedNotes.length; i++) {
-                const note = mappedNotes[i];
-                const targetTime = note.time * 1000; // Convert to ms
-                const elapsed = Date.now() - startTime;
-                const waitTime = Math.max(0, targetTime - elapsed);
-
-                if (waitTime > 0) {
-                    await wait(waitTime);
-                }
-
-                // Trigger the note on Digipan
-                digiPanRef.current.triggerNote(note.noteId);
-            }
-
-            addLog('[Play] Playback complete');
-        } catch (err: any) {
-            if (err.message !== 'Aborted') {
-                console.error('[Play] Error:', err);
-                addLog(`[Play] Error: ${err.message}`);
-            }
-        } finally {
-            setIsMidiPlaying(false);
-            abortControllerRef.current = null;
-        }
-    }, [midiData, targetScale, isMidiPlaying, stopMidiPlay]);
+        requestRef.current = requestAnimationFrame(tick);
+    }, [midiData, targetScale, isMidiPlaying, isPaused, playbackTime, stopMidiPlay]);
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -158,7 +186,7 @@ export default function DevDashboard(props: { params: Promise<any> }) {
         // Stop any playing MIDI when uploading new file
         stopMidiPlay();
 
-        addLog(`File selected: ${file.name}`);
+        addLog(`MIDI File selected: ${file.name}`);
 
         try {
             const arrayBuffer = await file.arrayBuffer();
@@ -175,6 +203,23 @@ export default function DevDashboard(props: { params: Promise<any> }) {
 
         } catch (err) {
             addLog(`Error parsing MIDI: ${err}`);
+            console.error(err);
+        }
+    };
+
+    const handleXmlUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        addLog(`MusicXML File selected: ${file.name}`);
+
+        try {
+            const text = await file.text();
+            const score = parseMusicXml(text);
+            setXmlScore(score);
+            addLog(`MusicXML Parsed: ${score.title} (${score.measures.length} measures)`);
+        } catch (err) {
+            addLog(`Error parsing MusicXML: ${err}`);
             console.error(err);
         }
     };
@@ -233,6 +278,16 @@ export default function DevDashboard(props: { params: Promise<any> }) {
                                 accept=".mid"
                                 onChange={handleFileUpload}
                                 className="w-full text-sm text-neutral-300 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block mb-2 text-sm text-neutral-400">MusicXML 업로드 (.xml, .musicxml)</label>
+                            <input
+                                type="file"
+                                accept=".xml,.musicxml"
+                                onChange={handleXmlUpload}
+                                className="w-full text-sm text-neutral-300 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700"
                             />
                         </div>
 
@@ -328,9 +383,18 @@ export default function DevDashboard(props: { params: Promise<any> }) {
             </div>
 
             {/* CENTER: Visual Stage */}
-            <div className="flex-1 bg-black relative flex flex-col transition-all">
+            <div className="flex-1 bg-black relative flex flex-col transition-all overflow-hidden">
+                {/* MusicXML Score Display (Top Section) */}
+                {xmlScore && (
+                    <ScrollingScore
+                        score={xmlScore}
+                        currentTime={playbackTime}
+                        bpm={midiData?.bpm || 120}
+                        isPlaying={isMidiPlaying && !isPaused}
+                    />
+                )}
 
-                {/* BOTTOM: Visual Stage (DigiPan) */}
+                {/* Visual Stage (DigiPan) (Rest of the space) */}
                 <div className="flex-1 w-full bg-neutral-900 border-l border-r border-neutral-700 relative min-h-0 group">
                     {/* Render MiniDigiPan with the determined scale */}
                     <Suspense fallback={<div className="flex items-center justify-center h-full text-emerald-500">3D 환경 초기화 중...</div>}>

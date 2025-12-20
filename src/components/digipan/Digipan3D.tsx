@@ -131,6 +131,8 @@ interface Digipan3DProps {
     onRecordingComplete?: (blob: Blob) => void; // New: Callback when recording finishes
     disableRecordingUI?: boolean; // New: Disable internal recording finished overlay
     recordingCropMode?: 'full' | 'square'; // NEW: 녹화 시 크롭 모드
+    externalTouchText?: string | null; // NEW: 외부에서 주입하는 터치 텍스트 (카운트다운용)
+    showTouchText?: boolean; // New: Toggle for idle Ready/Set/Touch cycle
 }
 
 export interface Digipan3DHandle {
@@ -736,7 +738,9 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
     hideTouchText = false, // Default to false (Show text)
     onRecordingComplete, // Destructure new prop
     disableRecordingUI = false, // Default to false (Show UI)
-    recordingCropMode = 'full' // Default to full (전체 캔버스 녹화)
+    recordingCropMode = 'full', // Default to full (전체 캔버스 녹화)
+    externalTouchText = null, // Default null
+    showTouchText: showTouchTextProp,
 }, ref) => {
     const pathname = usePathname();
     // ScaleInfoPanel은 /digipan-3d-test 경로에서만 표시
@@ -932,7 +936,8 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
 
     const [isIdle, setIsIdle] = useState(true); // Default to True
     const [showIdleBoat, setShowIdleBoat] = useState(false); // Default to OFF for DigiBall
-    const [showTouchText, setShowTouchText] = useState(false); // New State for Touch Text - 현재 숨김 처리
+    // showTouchText is now a prop or calculated from prop
+    const showTouchText = showTouchTextProp !== undefined ? showTouchTextProp : false;
     const lastInteractionTime = useRef(Date.now() - 6000); // Allow immediate idle
     const IDLE_TIMEOUT = 5000; // 5 seconds
     const idleCheckInterval = useRef<NodeJS.Timeout | null>(null);
@@ -1306,7 +1311,7 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
             setViewMode(prev => (prev + 1) % 5 as 0 | 1 | 2 | 3 | 4);
         },
         toggleIdleBoat: () => setShowIdleBoat(prev => !prev),
-        toggleTouchText: () => setShowTouchText(prev => !prev),
+        toggleTouchText: () => { /* Now controlled via showTouchText prop in reelpan */ },
         triggerNote: (noteId: number) => {
             // Visual feedback - This sets demoActive=true for the matching ToneFieldMesh
             // ToneFieldMesh's useEffect will then automatically play the audio
@@ -1432,7 +1437,7 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
                         <TouchText
                             isIdle={isIdle && !isJamPlaying && showTouchText}
                             suppressExplosion={false}
-                            overrideText={introCountdown}
+                            overrideText={externalTouchText || introCountdown}
                             interactionTrigger={interactionCount}
                         />
                     )}

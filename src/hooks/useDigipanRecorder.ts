@@ -106,23 +106,26 @@ export const useDigipanRecorder = ({
             // Connect Master Gain to this destination
             masterGain.connect(dest);
 
-            // 3. Bridge Tone.js Audio (Castling/Accompaniment)
+            // 3. Bridge Tone.js Audio (Drum/Accompaniment)
             try {
-                if (Tone.context && Tone.Destination) {
-                    console.log('[Recorder] Bridging Tone.js audio...');
+                if (typeof window !== 'undefined' && Tone.context) {
+                    console.log('[Recorder] Bridging Tone.js destination...');
 
                     const toneRawCtx = Tone.context.rawContext as AudioContext;
                     const toneDest = toneRawCtx.createMediaStreamDestination();
                     toneDestRef.current = toneDest;
 
-                    Tone.Destination.connect(toneDest);
+                    // Tone.Destination is the master output for all Tone.js instruments
+                    Tone.getDestination().connect(toneDest);
 
                     const toneStream = toneDest.stream;
                     const toneSource = audioCtx.createMediaStreamSource(toneStream);
                     toneSourceRef.current = toneSource;
 
                     toneSource.connect(dest);
-                    console.log('[Recorder] Tone.js bridge established.');
+                    console.log('[Recorder] Tone.js bridge established successfully.');
+                } else {
+                    console.log('[Recorder] Tone.js context not found, skipping bridge for now.');
                 }
             } catch (err) {
                 console.warn('[Recorder] Failed to bridge Tone.js audio:', err);
