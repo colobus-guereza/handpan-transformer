@@ -20,6 +20,26 @@ const Digipan14M = dynamic(() => import('@/components/digipan/Digipan14M'), { ss
 const Digipan15M = dynamic(() => import('@/components/digipan/Digipan15M'), { ssr: false });
 const Digipan18M = dynamic(() => import('@/components/digipan/Digipan18M'), { ssr: false });
 
+// 피아노 건반 아이콘 컴포넌트 (도미솔: C-E-G)
+const PianoKeysIcon = ({ size = 18, className = '' }: { size?: number; className?: string }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+    >
+        {/* 흰건반 3개 (C, E, G) */}
+        <rect x="2" y="6" width="5" height="12" rx="1" fill="currentColor" opacity="0.9" />
+        <rect x="9" y="6" width="5" height="12" rx="1" fill="currentColor" opacity="0.9" />
+        <rect x="16" y="6" width="5" height="12" rx="1" fill="currentColor" opacity="0.9" />
+        {/* 검은 건반 2개 (C#, D#) */}
+        <rect x="6" y="6" width="2.5" height="8" rx="0.5" fill="currentColor" opacity="0.5" />
+        <rect x="13" y="6" width="2.5" height="8" rx="0.5" fill="currentColor" opacity="0.5" />
+    </svg>
+);
+
 // 상태 정의: 대기중 | 녹화중 | 검토중(완료후)
 type RecordState = 'idle' | 'recording' | 'reviewing';
 
@@ -46,6 +66,11 @@ export default function ReelPanPage() {
     const [drumPattern, setDrumPattern] = useState('Basic 8-beat');
     const [drumTimeSignature, setDrumTimeSignature] = useState('4/4');
 
+    // Chord Settings State
+    const [showChordSettings, setShowChordSettings] = useState(false);
+    const [chordProgressionType, setChordProgressionType] = useState('Cinematic 1-6-4-5');
+    const [chordPadPreset, setChordPadPreset] = useState('Dreamy Pad');
+
     // Chord Pad State (독립적 시스템 - Scale Recommender와 분리)
     const chordPadSynthRef = useRef<Tone.PolySynth | null>(null);
     const chordPartRef = useRef<Tone.Part | null>(null);
@@ -64,6 +89,8 @@ export default function ReelPanPage() {
     // 롱프레스 타이머용
     const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
     const isLongPressActive = useRef(false);
+    const chordLongPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const isChordLongPressActive = useRef(false);
 
     // Filter & Sort State
     const [filterNoteCount, setFilterNoteCount] = useState<string>('all');
@@ -347,12 +374,14 @@ export default function ReelPanPage() {
 
         if (isDrumPlaying) {
             Tone.start();
-            // 이미 Transport가 돌고 있으면 리셋하지 않음
+            // 드럼 시작 시 항상 처음부터
+            Tone.Transport.position = 0;
             if (Tone.Transport.state !== 'started') {
-                Tone.Transport.position = 0;
                 Tone.Transport.start();
             }
         } else {
+            // 드럼 OFF 시 위치 초기화
+            Tone.Transport.position = 0;
             // 드럼 끄려는데 화음도 꺼져있으면 Transport 중지
             if (!isChordPlayingRef.current) {
                 Tone.Transport.stop();
@@ -382,6 +411,31 @@ export default function ReelPanPage() {
             // 짧게 눌렀을 때만 토글
             setIsDrumPlaying(prev => !prev);
         }
+        isLongPressActive.current = false;
+    };
+
+    // Chord Long Press Handlers
+    const handleChordDown = (e: React.PointerEvent) => {
+        (e.target as HTMLElement).setPointerCapture(e.pointerId);
+
+        isChordLongPressActive.current = false;
+        chordLongPressTimerRef.current = setTimeout(() => {
+            isChordLongPressActive.current = true;
+            setShowChordSettings(true);
+        }, 600);
+    };
+
+    const handleChordUp = (e: React.PointerEvent) => {
+        if (chordLongPressTimerRef.current) {
+            clearTimeout(chordLongPressTimerRef.current);
+            chordLongPressTimerRef.current = null;
+        }
+
+        if (!isChordLongPressActive.current) {
+            // 짧게 눌렀을 때만 토글
+            handleChordToggle();
+        }
+        isChordLongPressActive.current = false;
     };
 
     useEffect(() => {
@@ -455,18 +509,21 @@ export default function ReelPanPage() {
         await Tone.start();
 
         if (isChordPlaying) {
-            // STOP - 화음 중지
+            // STOP - 화음 중지 및 초기화
             isChordPlayingRef.current = false;
             chordPartRef.current?.stop();
             chordPadSynthRef.current?.releaseAll();
             setIsChordPlaying(false);
+
+            // 화음 OFF 시 위치 초기화 (다음 재생 시 처음부터)
+            Tone.Transport.position = 0;
 
             // 화음 끄려는데 드럼도 꺼져있으면 Transport 중지
             if (!isDrumPlayingRef.current) {
                 Tone.Transport.stop();
             }
         } else {
-            // START - 화음 시작 (무한 루프)
+            // START - 화음 시작 (무한 루프, 처음부터)
             const chordSets = chordSetsRef.current;
             if (chordSets.length < 4 || !chordPadSynthRef.current) return;
 
@@ -494,6 +551,9 @@ export default function ReelPanPage() {
 
             isChordPlayingRef.current = true;
             setIsChordPlaying(true);
+
+            // 화음 시작 시 항상 처음부터
+            Tone.Transport.position = 0;
 
             // Transport가 멈춰있으면 시작
             if (Tone.Transport.state !== 'started') {
@@ -960,11 +1020,12 @@ export default function ReelPanPage() {
 
                                 {/* 5. Chord Pad (화음 반주) Toggle */}
                                 <button
-                                    onClick={handleChordToggle}
-                                    className={`w-12 h-12 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center transition-all active:scale-95 relative overflow-hidden ${isChordPlaying ? 'bg-purple-500/30 border-purple-500/50' : 'bg-white/10 hover:bg-white/20'}`}
-                                    title="화음 반주 토글"
+                                    onPointerDown={handleChordDown}
+                                    onPointerUp={handleChordUp}
+                                    className={`w-12 h-12 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center transition-all active:scale-95 relative overflow-hidden group ${isChordPlaying ? 'bg-purple-500/30 border-purple-500/50' : 'bg-white/10 hover:bg-white/20'}`}
+                                    title="화음 반주 토글 (길게 누르면 설정)"
                                 >
-                                    <Music2 size={18} className={isChordPlaying ? 'text-purple-300' : 'text-white/40'} />
+                                    <PianoKeysIcon size={18} className={isChordPlaying ? 'text-purple-300' : 'text-white/40'} />
                                     {isChordPlaying && (
                                         <motion.div
                                             animate={{ opacity: [0.3, 0.8, 0.3], scale: [1, 1.2, 1] }}
@@ -972,6 +1033,10 @@ export default function ReelPanPage() {
                                             className="absolute inset-0 rounded-full bg-purple-500/20"
                                         />
                                     )}
+                                    {/* Long press indicator hint */}
+                                    <div className="absolute -top-1 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <Settings2 size={8} className="text-white/40" />
+                                    </div>
                                 </button>
                             </div>
                         </footer>
@@ -1074,6 +1139,111 @@ export default function ReelPanPage() {
                                         Tone.start();
                                         setIsDrumPlaying(true);
                                         setShowDrumSettings(false);
+                                    }}
+                                    className="w-full mt-8 py-4 rounded-2xl bg-white text-black font-bold hover:bg-gray-100 transition-all active:scale-95"
+                                >
+                                    Apply & Play
+                                </button>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* === Layer 3.6: Chord Settings Popup === */}
+                <AnimatePresence>
+                    {showChordSettings && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 z-[150] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6"
+                            onClick={() => setShowChordSettings(false)}
+                        >
+                            <motion.div
+                                initial={{ scale: 0.9, y: 20 }}
+                                animate={{ scale: 1, y: 0 }}
+                                exit={{ scale: 0.9, y: 20 }}
+                                className="w-full max-w-xs bg-zinc-900 border border-white/10 rounded-[32px] p-6 shadow-2xl max-h-[80vh] overflow-y-auto"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <div className="flex items-center justify-between mb-6">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center">
+                                            <PianoKeysIcon size={16} className="text-purple-400" />
+                                        </div>
+                                        <h3 className="text-white font-bold tracking-tight">Chord Settings</h3>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowChordSettings(false)}
+                                        className="text-white/40 hover:text-white"
+                                    >
+                                        <X size={20} />
+                                    </button>
+                                </div>
+
+                                <div className="flex flex-col gap-6">
+                                    {/* Current Chord Progression Display */}
+                                    <div className="flex flex-col gap-3">
+                                        <span className="text-xs font-bold text-white/40 uppercase tracking-widest px-1">현재 화성 진행</span>
+                                        <div className="bg-white/5 rounded-2xl p-4">
+                                            <div className="flex justify-between items-center gap-2">
+                                                {chordSetsRef.current.slice(0, 4).map((chord, i) => (
+                                                    <div key={i} className="flex-1 text-center">
+                                                        <div className="text-purple-400 font-mono text-sm font-bold">
+                                                            {chord.notes[0]?.replace(/\d/g, '')}
+                                                        </div>
+                                                        <div className="text-[10px] text-white/30 mt-1">Bar {chord.barStart}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Chord Progression Type */}
+                                    <div className="flex flex-col gap-3">
+                                        <span className="text-xs font-bold text-white/40 uppercase tracking-widest px-1">화성 진행 타입</span>
+                                        <div className="grid grid-cols-1 gap-2">
+                                            {['Cinematic 1-6-4-5', 'Pop 1-5-6-4', 'Jazz 2-5-1', 'Ambient Drone'].map((prog) => (
+                                                <button
+                                                    key={prog}
+                                                    onClick={() => setChordProgressionType(prog)}
+                                                    className={`px-4 py-3 rounded-2xl text-sm font-medium transition-all text-left flex items-center justify-between
+                                                          ${chordProgressionType === prog
+                                                            ? 'bg-purple-500 text-white'
+                                                            : 'bg-white/5 text-white/60 hover:bg-white/10'}`}
+                                                >
+                                                    {prog}
+                                                    {chordProgressionType === prog && <Check size={16} />}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Pad Tone Preset */}
+                                    <div className="flex flex-col gap-3">
+                                        <span className="text-xs font-bold text-white/40 uppercase tracking-widest px-1">패드 톤 프리셋</span>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {['Dreamy Pad', 'Warm Strings', 'Crystal Bell', 'Airy Synth'].map((preset) => (
+                                                <button
+                                                    key={preset}
+                                                    onClick={() => setChordPadPreset(preset)}
+                                                    className={`px-3 py-3 rounded-2xl text-xs font-medium transition-all text-center
+                                                          ${chordPadPreset === preset
+                                                            ? 'bg-purple-500 text-white'
+                                                            : 'bg-white/5 text-white/60 hover:bg-white/10'}`}
+                                                >
+                                                    {preset}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={() => {
+                                        Tone.start();
+                                        handleChordToggle();
+                                        setShowChordSettings(false);
                                     }}
                                     className="w-full mt-8 py-4 rounded-2xl bg-white text-black font-bold hover:bg-gray-100 transition-all active:scale-95"
                                 >
