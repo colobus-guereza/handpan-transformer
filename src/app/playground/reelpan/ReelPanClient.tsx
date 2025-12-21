@@ -1601,8 +1601,6 @@ export default function ReelPanClient() {
                                 animate={{ y: 0, opacity: 1 }}
                                 className={`flex flex-col items-center justify-center transition-all ${isRecording || !!recordCountdown ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105 active:scale-95'}`}
                             >
-                                className="flex flex-col items-center group active:scale-95 transition-transform"
-                            >
                                 <div className="flex items-center gap-1.5">
                                     <h1 className="text-white font-normal text-xl tracking-normal drop-shadow-md group-hover:text-white/80 transition-colors">
                                         {targetScale.name}
