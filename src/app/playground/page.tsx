@@ -217,25 +217,25 @@ export default function PlaygroundHome() {
                         <div className="absolute inset-0 bg-gradient-to-r from-cyan-600/50 via-purple-600/50 to-cyan-600/50 bg-[length:200%_100%] opacity-0 group-hover:opacity-100 animate-shimmer transition-opacity duration-300" />
                     </Link>
 
-                    {/* 연습모드 버튼 - 연결 기능 추후 구현 */}
-                    <button
-                        disabled
-                        className="group relative px-8 py-3.5 bg-white/10 border border-white/20 text-white rounded-full font-bold !text-base lg:!text-lg tracking-wide shadow-[0_0_20px_rgba(6,182,212,0.15)] transition-all duration-300 overflow-hidden backdrop-blur-md w-[240px] whitespace-nowrap cursor-default pointer-events-none opacity-60"
+                    {/* 연습모드 버튼 - 독립적인 연습 페이지로 이동 */}
+                    <Link
+                        href="/playground/reelpan/practice"
+                        className="group relative px-8 py-3.5 bg-white/10 border border-white/20 text-white rounded-full font-bold !text-base lg:!text-lg tracking-wide shadow-[0_0_20px_rgba(6,182,212,0.15)] hover:shadow-[0_0_30px_rgba(168,85,247,0.3)] hover:-translate-y-1 transition-all duration-300 overflow-hidden backdrop-blur-md w-[240px] whitespace-nowrap"
                     >
                         <span className="relative z-10 flex items-center gap-2 justify-center">
                             {lang === 'ko' ? '연습모드' : 'Practice Room'} <Clock size={18} />
                         </span>
-                        <div className="absolute inset-0 bg-gradient-to-r from-cyan-600/50 via-purple-600/50 to-cyan-600/50 bg-[length:200%_100%] opacity-0" />
-                    </button>
+                        <div className="absolute inset-0 bg-gradient-to-r from-cyan-600/50 via-purple-600/50 to-cyan-600/50 bg-[length:200%_100%] opacity-0 group-hover:opacity-100 animate-shimmer transition-opacity duration-300" />
+                    </Link>
                 </div>
 
                 {/* Navigation Button: Go to Screen 2 */}
                 <button
                     onClick={() => scrollToSection(screen2Ref)}
-                    className="absolute bottom-10 right-10 p-4 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-cyan-300 border border-white/5 transition-all shadow-lg backdrop-blur-md animate-pulse-slow group"
+                    className="absolute bottom-4 right-4 p-3 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-cyan-300 border border-white/5 transition-all shadow-lg backdrop-blur-md animate-pulse-slow group"
                     aria-label="Next Page"
                 >
-                    <HelpCircle size={24} className="group-hover:scale-110 transition-transform" />
+                    <HelpCircle size={20} className="group-hover:scale-110 transition-transform" />
                 </button>
             </section>
 
