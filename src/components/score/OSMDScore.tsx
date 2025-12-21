@@ -9,6 +9,9 @@ interface OSMDScoreProps {
     drawTitle?: boolean;
     drawCredits?: boolean;
     autoResize?: boolean;
+    externalBpm?: number; // External BPM from MIDI file (takes priority)
+    loopStartTime?: number | null; // A point in seconds (for visual marker)
+    loopEndTime?: number | null;   // B point in seconds (for visual marker)
 }
 
 export interface OSMDScoreHandle {
@@ -16,6 +19,8 @@ export interface OSMDScoreHandle {
     resetCursor: () => void;
     showCursor: () => void;
     hideCursor: () => void;
+    getTimeAtScrollPosition: () => number; // Get time (seconds) at current scroll position
+    getXPositionForTime: (seconds: number) => number; // Get X pixel position for a given time
 }
 
 const OSMDScore = forwardRef<OSMDScoreHandle, OSMDScoreProps>(({
@@ -23,9 +28,13 @@ const OSMDScore = forwardRef<OSMDScoreHandle, OSMDScoreProps>(({
     zoom = 0.8,
     drawTitle = false,
     drawCredits = false,
-    autoResize = true
+    autoResize = true,
+    externalBpm,
+    loopStartTime,
+    loopEndTime
 }, ref) => {
-    const containerRef = useRef<HTMLDivElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null); // OSMD renders here
+    const scrollContainerRef = useRef<HTMLDivElement>(null); // Scrollable wrapper
     const osmdRef = useRef<OpenSheetMusicDisplay | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -36,7 +45,7 @@ const OSMDScore = forwardRef<OSMDScoreHandle, OSMDScoreProps>(({
     // Expose cursor methods
     useImperativeHandle(ref, () => ({
         updateTime: (seconds: number) => {
-            if (!containerRef.current || timeMap.length === 0) return;
+            if (!scrollContainerRef.current || timeMap.length === 0) return;
 
             // Find the segment [prev, next] for interpolation
             let prev = timeMap[0];
@@ -61,16 +70,16 @@ const OSMDScore = forwardRef<OSMDScoreHandle, OSMDScoreProps>(({
             }
 
             // The red playhead is at left 20%. So we want targetX to be at 20% of container width.
-            const playheadOffset = containerRef.current.clientWidth * 0.2;
+            const playheadOffset = scrollContainerRef.current.clientWidth * 0.2;
             const scrollX = targetX - playheadOffset;
 
             // Smoothly scroll the container
-            containerRef.current.scrollLeft = Math.max(0, scrollX);
+            scrollContainerRef.current.scrollLeft = Math.max(0, scrollX);
         },
         resetCursor: () => {
             if (osmdRef.current && osmdRef.current.cursor) {
                 osmdRef.current.cursor.reset();
-                if (containerRef.current) containerRef.current.scrollLeft = 0;
+                if (scrollContainerRef.current) scrollContainerRef.current.scrollLeft = 0;
             }
         },
         showCursor: () => {
@@ -82,6 +91,54 @@ const OSMDScore = forwardRef<OSMDScoreHandle, OSMDScoreProps>(({
             if (osmdRef.current && osmdRef.current.cursor) {
                 osmdRef.current.cursor.hide();
             }
+        },
+        getTimeAtScrollPosition: () => {
+            if (!scrollContainerRef.current || timeMap.length === 0) return 0;
+
+            // Calculate X position at the playhead (20% from left)
+            const playheadOffset = scrollContainerRef.current.clientWidth * 0.2;
+            const targetX = scrollContainerRef.current.scrollLeft + playheadOffset;
+
+            // Find the segment [prev, next] for reverse interpolation (x -> time)
+            let prev = timeMap[0];
+            let next = timeMap[timeMap.length - 1];
+
+            for (let i = 0; i < timeMap.length - 1; i++) {
+                if (targetX >= timeMap[i].x && targetX <= timeMap[i + 1].x) {
+                    prev = timeMap[i];
+                    next = timeMap[i + 1];
+                    break;
+                }
+            }
+
+            // Interpolate to get time
+            if (next.x > prev.x) {
+                const ratio = (targetX - prev.x) / (next.x - prev.x);
+                return prev.time + (next.time - prev.time) * ratio;
+            }
+
+            return prev.time;
+        },
+        getXPositionForTime: (seconds: number) => {
+            if (timeMap.length === 0) return 0;
+
+            let prev = timeMap[0];
+            let next = timeMap[timeMap.length - 1];
+
+            for (let i = 0; i < timeMap.length - 1; i++) {
+                if (seconds >= timeMap[i].time && seconds <= timeMap[i + 1].time) {
+                    prev = timeMap[i];
+                    next = timeMap[i + 1];
+                    break;
+                }
+            }
+
+            if (next.time > prev.time) {
+                const ratio = (seconds - prev.time) / (next.time - prev.time);
+                return prev.x + (next.x - prev.x) * ratio;
+            }
+
+            return prev.x;
         }
     }), [timeMap]);
 
@@ -136,9 +193,11 @@ const OSMDScore = forwardRef<OSMDScoreHandle, OSMDScoreProps>(({
                     const map: { time: number, x: number }[] = [];
                     const gSheet = osmd.GraphicSheet;
 
-                    // Access BPM more safely
-                    let bpm = 120;
-                    if ((osmd.Sheet as any).DefaultBpm) bpm = (osmd.Sheet as any).DefaultBpm;
+                    // Use external BPM if provided (from MIDI), otherwise fallback to OSMD detection
+                    let bpm = externalBpm || 120;
+                    if (!externalBpm && (osmd.Sheet as any).DefaultBpm) {
+                        bpm = (osmd.Sheet as any).DefaultBpm;
+                    }
                     const secondsPerWholeNote = (60 / bpm) * 4;
 
                     // Traverse pages/measures/staffentries
@@ -196,6 +255,32 @@ const OSMDScore = forwardRef<OSMDScoreHandle, OSMDScoreProps>(({
         };
     }, [musicXmlUrl, zoom, drawTitle, drawCredits, autoResize]);
 
+    // Calculate X positions for loop markers
+    const getMarkerXPosition = (seconds: number | null | undefined): number | null => {
+        if (seconds === null || seconds === undefined || timeMap.length === 0) return null;
+
+        let prev = timeMap[0];
+        let next = timeMap[timeMap.length - 1];
+
+        for (let i = 0; i < timeMap.length - 1; i++) {
+            if (seconds >= timeMap[i].time && seconds <= timeMap[i + 1].time) {
+                prev = timeMap[i];
+                next = timeMap[i + 1];
+                break;
+            }
+        }
+
+        if (next.time > prev.time) {
+            const ratio = (seconds - prev.time) / (next.time - prev.time);
+            return prev.x + (next.x - prev.x) * ratio;
+        }
+
+        return prev.x;
+    };
+
+    const loopStartX = getMarkerXPosition(loopStartTime);
+    const loopEndX = getMarkerXPosition(loopEndTime);
+
     return (
         <div className="w-full h-full relative overflow-hidden flex items-center justify-center">
             {isLoading && (
@@ -210,11 +295,41 @@ const OSMDScore = forwardRef<OSMDScoreHandle, OSMDScoreProps>(({
                 </div>
             )}
 
-            <div
-                ref={containerRef}
-                className={`w-full transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'} overflow-x-auto overflow-y-hidden scrollbar-hide`}
-                style={{ whiteSpace: 'nowrap' }}
-            />
+            {/* Scrollable container wrapper */}
+            <div ref={scrollContainerRef} className="w-full h-full relative overflow-x-auto overflow-y-hidden scrollbar-hide">
+                {/* OSMD renders into this div - must be empty of React children */}
+                <div
+                    ref={containerRef}
+                    className={`w-full h-full transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+                    style={{ whiteSpace: 'nowrap' }}
+                />
+
+                {/* A/B Markers - positioned absolutely, respecting scroll */}
+                {loopStartX !== null && (
+                    <div
+                        className="absolute top-0 bottom-0 z-30 pointer-events-none"
+                        style={{ left: `${loopStartX}px` }}
+                    >
+                        <div className="w-[2px] h-full bg-emerald-500/80 shadow-[0_0_6px_rgba(16,185,129,0.6)]" />
+                        <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-[10px] font-bold text-white shadow-md">
+                            A
+                        </div>
+                    </div>
+                )}
+
+                {loopEndX !== null && (
+                    <div
+                        className="absolute top-0 bottom-0 z-30 pointer-events-none"
+                        style={{ left: `${loopEndX}px` }}
+                    >
+                        <div className="w-[2px] h-full bg-blue-500/80 shadow-[0_0_6px_rgba(59,130,246,0.6)]" />
+                        <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-[10px] font-bold text-white shadow-md">
+                            B
+                        </div>
+                    </div>
+                )}
+            </div>
+
             <style jsx global>{`
                 .scrollbar-hide::-webkit-scrollbar { display: none; }
                 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }

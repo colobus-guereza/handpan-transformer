@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { motion, AnimatePresence } from "framer-motion";
 import { SCALES } from '@/data/handpanScales';
-import { Layout, Check, Square, Circle, Smartphone, Keyboard, Play, Pause, Volume2, Download, Trash2, X, Type, ChevronDown, Share2, RefreshCcw, Drum, SlidersHorizontal, Settings2, Sparkles, ArrowLeft } from 'lucide-react';
+import { Layout, Check, Square, Circle, Smartphone, Keyboard, Play, Pause, Volume2, Download, Trash2, X, Type, ChevronDown, Share2, RefreshCcw, Drum, SlidersHorizontal, Settings2, Sparkles, ArrowLeft, Repeat2 } from 'lucide-react';
 import { PracticeSkeleton } from "@/components/skeletons/PracticeSkeleton";
 import { Digipan3DHandle } from "@/components/digipan/Digipan3D";
 import { useHandpanAudio } from "@/hooks/useHandpanAudio";
@@ -70,6 +70,11 @@ export default function ReelPanPage() {
     const [isMidiPlaying, setIsMidiPlaying] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
     const [playbackTime, setPlaybackTime] = useState(0);
+
+    // Loop State
+    const [loopState, setLoopState] = useState<'none' | 'start_set' | 'loop_active'>('none');
+    const [loopStart, setLoopStart] = useState<number | null>(null);
+    const [loopEnd, setLoopEnd] = useState<number | null>(null);
 
     // Playback Refs
     const playbackStartTimeRef = useRef<number>(0);
@@ -154,6 +159,31 @@ export default function ReelPanPage() {
         }
     }, []);
 
+    // Loop Button Handler (3-state toggle: none → start_set → loop_active → none)
+    const handleLoopButton = useCallback(() => {
+        // Get the time at current playhead position (scroll position)
+        // This ensures the marker appears exactly where the red playhead line is
+        const currentTime = scoreRef.current?.getTimeAtScrollPosition() ?? playbackTime;
+
+        if (loopState === 'none') {
+            // State 1: Set A point at current playhead position
+            setLoopStart(currentTime);
+            setLoopState('start_set');
+            console.log('[Loop] A point set at playhead:', currentTime.toFixed(2));
+        } else if (loopState === 'start_set') {
+            // State 2: Set B point and immediately activate loop
+            setLoopEnd(currentTime);
+            setLoopState('loop_active');
+            console.log('[Loop] B point set and loop activated:', currentTime.toFixed(2));
+        } else {
+            // State 3: Clear loop (back to none)
+            setLoopStart(null);
+            setLoopEnd(null);
+            setLoopState('none');
+            console.log('[Loop] Loop cleared');
+        }
+    }, [loopState, playbackTime]);
+
     const handleTogglePlay = useCallback(async () => {
         console.log('[Practice] handleTogglePlay clicked', {
             hasMidi: !!midiData,
@@ -192,7 +222,7 @@ export default function ReelPanPage() {
             playbackStartTimeRef.current = Date.now() - (pausedTimeRef.current * 1000);
             setIsPaused(false);
         } else {
-            // START Logic (Initial)
+            // START Logic (Initial or from scrolled position)
             console.log('[Play] Starting new playback');
             const melodyTrack = midiData.tracks.find(t => t.role === 'melody');
             if (!melodyTrack) {
@@ -209,16 +239,35 @@ export default function ReelPanPage() {
                 return;
             }
 
+            // Check if user has scrolled to a specific position (Seek feature)
+            // BUT: If loop is active, always start from A point (loopStart)
+            let startTime = 0;
+            if (loopState === 'loop_active' && loopStart !== null) {
+                startTime = loopStart;
+                console.log('[Play] Loop active - starting from A point:', startTime.toFixed(2), 'seconds');
+            } else if (scoreRef.current) {
+                startTime = scoreRef.current.getTimeAtScrollPosition();
+                console.log('[Play] Starting from scroll position:', startTime.toFixed(2), 'seconds');
+            }
+
+            // Find the note index to start from
+            let startIndex = 0;
+            for (let i = 0; i < mappedNotes.length; i++) {
+                if (mappedNotes[i].time >= startTime) {
+                    startIndex = i;
+                    break;
+                }
+            }
+
             resumeAudio();
             setIsMidiPlaying(true);
             setIsPaused(false);
-            setPlaybackTime(0);
-            playheadIndexRef.current = 0;
+            setPlaybackTime(startTime);
+            playheadIndexRef.current = startIndex;
             pausedTimeRef.current = 0;
-            playbackStartTimeRef.current = Date.now();
+            playbackStartTimeRef.current = Date.now() - (startTime * 1000);
 
             if (scoreRef.current) {
-                scoreRef.current.resetCursor();
                 scoreRef.current.showCursor();
             }
         }
@@ -249,6 +298,22 @@ export default function ReelPanPage() {
                 scoreRef.current.updateTime(currentSeconds);
             }
 
+            // Loop Check: If we've reached loopEnd, jump back to loopStart
+            if (loopState === 'loop_active' && loopEnd !== null && loopStart !== null && currentSeconds >= loopEnd) {
+                // Find the note index at loopStart
+                let newIndex = 0;
+                for (let i = 0; i < mappedNotes.length; i++) {
+                    if (mappedNotes[i].time >= loopStart) {
+                        newIndex = i;
+                        break;
+                    }
+                }
+                playheadIndexRef.current = newIndex;
+                playbackStartTimeRef.current = Date.now() - (loopStart * 1000);
+                setPlaybackTime(loopStart);
+                console.log('[Loop] Jumping back to loopStart:', loopStart);
+            }
+
             // Check Completion
             if (playheadIndexRef.current >= mappedNotes.length && currentSeconds > mappedNotes[mappedNotes.length - 1].time + 1) {
                 stopMidiPlay();
@@ -259,7 +324,7 @@ export default function ReelPanPage() {
         };
 
         requestRef.current = requestAnimationFrame(tick);
-    }, [midiData, targetScale, isMidiPlaying, isPaused, stopMidiPlay, resumeAudio]);
+    }, [midiData, targetScale, isMidiPlaying, isPaused, stopMidiPlay, resumeAudio, loopState, loopStart]);
 
     // Stop playback if unmounting or song changing
     useEffect(() => {
@@ -1124,12 +1189,9 @@ export default function ReelPanPage() {
                     )}
                 </AnimatePresence>
 
-                {/* === Layer 1: 3D Scene (STABLE) === */}
-                {/* 리뷰 모드일 때는 살짝 어둡게(Blur) 처리해서 결과창에 집중하게 함 */}
-                {/* === Layer 1: 3D Scene (Instrument Area - Bottom 65%) === */}
-                {/* 리뷰 모드일 때는 살짝 어둡게(Blur) 처리해서 결과창에 집중하게 함 */}
+                {/* === Layer 1: 3D Scene (Instrument Area - below score area) === */}
                 <div
-                    className={`absolute bottom-0 left-0 w-full h-[65%] z-0 transition-all duration-500 ease-in-out border-t border-white/10 ${recordState === 'reviewing' ? 'blur-sm scale-95 opacity-50' : ''
+                    className={`absolute top-[calc(120px+15%)] left-0 w-full h-[50%] z-0 transition-all duration-500 ease-in-out pointer-events-none ${recordState === 'reviewing' ? 'blur-sm scale-95 opacity-50' : ''
                         }`}
                 >
                     {/* 디지팬은 항상 렌더링 (로딩 중에도 뒤에서 마운트) */}
@@ -1185,9 +1247,9 @@ export default function ReelPanPage() {
                     )}
                 </div>
 
-                {/* === Layer 1.2: Score Area (Reduced Height, Closer to Digipan) === */}
-                <div className="absolute bottom-[65%] left-0 w-full h-[15%] z-[1] flex items-end justify-center bg-white/95 overflow-hidden backdrop-blur-sm border-b border-black/5">
-                    {currentSong.xmlSrc ? (
+                {/* === Layer 1.2: Score Area (Top, right below header) === */}
+                <div className="absolute top-[120px] left-0 w-full h-[15%] z-[2] flex items-end justify-center bg-white overflow-hidden border-b border-black/5">
+                    {currentSong.xmlSrc && midiData ? (
                         <div className="w-full h-full relative flex items-center">
                             {/* Vertical Playhead Line (Fixed Position) */}
                             <div className="absolute left-[20%] top-0 bottom-0 w-[2px] bg-red-500/80 z-20 shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
@@ -1198,8 +1260,16 @@ export default function ReelPanPage() {
                                     musicXmlUrl={currentSong.xmlSrc}
                                     zoom={0.75}
                                     autoResize={true}
+                                    externalBpm={midiData.bpm}
+                                    loopStartTime={loopStart}
+                                    loopEndTime={loopEnd}
                                 />
                             </div>
+                        </div>
+                    ) : currentSong.xmlSrc ? (
+                        /* Loading state while MIDI loads */
+                        <div className="mb-4 text-black/30 font-medium text-xs tracking-widest">
+                            Loading...
                         </div>
                     ) : (
                         /* Placeholder for songs without score */
@@ -1247,10 +1317,10 @@ export default function ReelPanPage() {
                 {recordState !== 'reviewing' && (
                     <div className="absolute inset-0 z-20 pointer-events-none flex flex-col justify-between">
 
-                        <header className="relative flex items-center justify-center px-4 py-8 bg-gradient-to-b from-black/80 to-transparent pointer-events-auto">
+                        <header className="relative flex items-center justify-center px-4 py-8 bg-white pointer-events-auto">
                             <Link
                                 href="/playground"
-                                className="absolute left-4 w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all border border-white/5 backdrop-blur-md"
+                                className="absolute left-4 w-10 h-10 rounded-full bg-black/5 flex items-center justify-center text-black/60 hover:text-black hover:bg-black/10 transition-all border border-black/5"
                             >
                                 <ArrowLeft size={20} />
                             </Link>
@@ -1262,38 +1332,62 @@ export default function ReelPanPage() {
                                 className="flex flex-col items-center group active:scale-95 transition-transform max-w-[200px]"
                             >
                                 <div className="flex items-center gap-1.5 w-full justify-center">
-                                    <h1 className="text-white font-normal text-sm tracking-normal drop-shadow-md group-hover:text-white/80 transition-colors truncate">
+                                    <h1 className="text-black font-normal text-sm tracking-normal truncate">
                                         {currentSong.title}
                                     </h1>
-                                    <ChevronDown size={18} className="text-white/60 group-hover:text-white/80 transition-colors mt-0.5 flex-shrink-0" />
+                                    <ChevronDown size={18} className="text-black/60 group-hover:text-black/80 transition-colors mt-0.5 flex-shrink-0" />
                                 </div>
                             </motion.button>
                         </header>
 
                         <div className="flex-1 min-h-[100px]" />
 
-                        <footer className="w-full px-6 py-8 pb-10 bg-gradient-to-t from-black/95 to-transparent pointer-events-auto min-h-[180px] flex flex-col items-center justify-center gap-6">
-                            {/* Play Button (Center) - ▶️ Main Play Button */}
-                            <div className="relative group z-10 flex justify-center">
-                                <div className={`absolute inset-0 bg-white/20 rounded-full blur-2xl transition-opacity duration-500 ${(isMidiPlaying && !isPaused) ? 'opacity-40 animate-pulse' : 'opacity-0 group-hover:opacity-30'}`} />
-                                <button
-                                    onClick={handleTogglePlay}
-                                    className={`
-                                        w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300
-                                        ${(isMidiPlaying && !isPaused)
-                                            ? 'bg-rose-500 shadow-[0_0_25px_rgba(244,63,94,0.4)] scale-110'
-                                            : 'bg-emerald-500 shadow-[0_0_25px_rgba(16,185,129,0.4)] hover:scale-105 active:scale-95'}
-                                        text-white
-                                    `}
-                                    aria-label={(isMidiPlaying && !isPaused) ? "일시정지" : "재생"}
-                                >
-                                    {(isMidiPlaying && !isPaused) ? (
-                                        <Pause size={32} fill="white" />
-                                    ) : (
-                                        <Play size={32} fill="white" className="ml-1" />
-                                    )}
-                                </button>
-                            </div>
+                        <footer className="w-full px-6 py-4 pb-6 bg-gradient-to-t from-black/95 to-transparent pointer-events-auto min-h-[126px] flex items-center justify-center relative">
+                            {/* Stop/Reset Button (Left of Play, same height) */}
+                            <button
+                                className={`absolute right-1/2 mr-10 w-11 h-11 rounded-full border backdrop-blur-xl flex items-center justify-center transition-all active:scale-95 bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:text-white/60 ${!midiData ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                onClick={stopMidiPlay}
+                                disabled={!midiData}
+                            >
+                                <Square size={16} fill="currentColor" />
+                            </button>
+
+                            {/* Play/Pause Button (Centered) */}
+                            <button
+                                className={`w-14 h-14 rounded-full border backdrop-blur-xl flex items-center justify-center transition-all active:scale-95 shadow-lg ${isMidiPlaying && !isPaused
+                                    ? 'bg-white/20 border-white/40 text-white'
+                                    : 'bg-white/10 border-white/20 text-white hover:bg-white/20'
+                                    } ${!midiData ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                onClick={handleTogglePlay}
+                                disabled={!midiData}
+                            >
+                                {isMidiPlaying && !isPaused ? (
+                                    <Pause size={24} fill="white" />
+                                ) : (
+                                    <Play size={24} fill="white" />
+                                )}
+                            </button>
+
+                            {/* Loop Button (Right of Play, same height) */}
+                            <button
+                                className={`absolute left-1/2 ml-10 w-11 h-11 rounded-full border backdrop-blur-xl flex items-center justify-center transition-all active:scale-95 ${loopState === 'none'
+                                    ? 'bg-white/5 border-white/10 text-white/40'
+                                    : loopState === 'start_set'
+                                        ? 'bg-emerald-500/20 border-emerald-400/40 text-emerald-400'
+                                        : 'bg-blue-500/30 border-blue-400/60 text-blue-300 animate-pulse'
+                                    } ${!midiData ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                onClick={handleLoopButton}
+                                disabled={!midiData}
+                            >
+                                <Repeat2 size={18} />
+                                {/* State indicator */}
+                                {loopState === 'start_set' && (
+                                    <span className="absolute -top-1 -right-1 text-[8px] font-bold bg-emerald-500 text-black rounded-full w-4 h-4 flex items-center justify-center">A</span>
+                                )}
+                                {loopState === 'loop_active' && (
+                                    <span className="absolute -top-1 -right-1 text-[8px] font-bold bg-blue-500 text-white rounded-full px-1 h-4 flex items-center justify-center">A-B</span>
+                                )}
+                            </button>
                         </footer>
                     </div>
                 )}
