@@ -228,11 +228,16 @@ export const useDigipanRecorder = ({
                 console.warn('[Recorder] No supported mimeType found, trying default constructor.');
             }
 
+            // 모바일 기기 감지 (메모리 제약 대응)
+            const isMobile = typeof navigator !== 'undefined' &&
+                /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
             const options: MediaRecorderOptions = {
                 mimeType: selectedMimeType || undefined,
-                videoBitsPerSecond: 50000000 // 50 Mbps (High Performance / Low CPU overhead)
+                // 모바일: 5 Mbps (메모리 효율), 데스크톱: 50 Mbps (고품질)
+                videoBitsPerSecond: isMobile ? 5000000 : 50000000
             };
-            console.log(`[Recorder] Using MIME Type: ${selectedMimeType || 'default'} @ 50Mbps`);
+            console.log(`[Recorder] Using MIME Type: ${selectedMimeType || 'default'} @ ${isMobile ? '5' : '50'}Mbps (${isMobile ? 'Mobile' : 'Desktop'})`);
 
             const recorder = new MediaRecorder(combinedStream, options);
             mediaRecorderRef.current = recorder;
@@ -296,10 +301,10 @@ export const useDigipanRecorder = ({
                 }
             };
 
-            // Start
-            recorder.start();
+            // Start (1초마다 메모리 버퍼를 비워 모바일 메모리 한계 방지)
+            recorder.start(1000);
             setIsRecording(true);
-            console.log('[Recorder] Started.');
+            console.log('[Recorder] Started with 1s timeslice (memory-safe mode).');
 
             // Safety Timeout (Max 60 seconds)
             setTimeout(() => {
