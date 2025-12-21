@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { motion, AnimatePresence } from "framer-motion";
 import { SCALES } from '@/data/handpanScales';
-import { Layout, Check, Square, Circle, Smartphone, Keyboard, Play, Pause, Volume2, Download, Trash2, X, Type, ChevronDown, Share2, RefreshCcw, Drum, SlidersHorizontal, Settings2, Sparkles, ArrowLeft, Music2 } from 'lucide-react';
+import { Layout, Check, Square, Circle, Smartphone, Keyboard, Play, Pause, Volume2, Download, Trash2, X, Type, ChevronDown, Share2, RefreshCcw, Drum, SlidersHorizontal, Settings2, Sparkles, ArrowLeft } from 'lucide-react';
 import { PracticeSkeleton } from "@/components/skeletons/PracticeSkeleton";
 import { Digipan3DHandle } from "@/components/digipan/Digipan3D";
 import { useHandpanAudio } from "@/hooks/useHandpanAudio";
@@ -45,31 +45,6 @@ const OSMDScore = dynamic(() => import('@/components/score/OSMDScore'), {
     loading: () => <div className="w-full h-full flex items-center justify-center text-black/30 text-xs">Loading Score...</div>
 });
 
-// 화음반주 아이콘 컴포넌트 (겹쳐진 음표들로 화음 표현)
-const PianoKeysIcon = ({ size = 18, className = '' }: { size?: number; className?: string }) => (
-    <svg
-        width={size}
-        height={size}
-        viewBox="0 0 24 24"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className={className}
-    >
-        {/* 화음반주: 여러 음표가 겹쳐진 모양 */}
-        {/* 첫 번째 음표 (왼쪽, 위) */}
-        <ellipse cx="8" cy="7" rx="3" ry="2.5" fill="currentColor" opacity="0.9" />
-        <line x1="10.5" y1="7" x2="10.5" y2="16" stroke="currentColor" strokeWidth="1.5" opacity="0.9" />
-
-        {/* 두 번째 음표 (중앙, 중간) */}
-        <ellipse cx="12" cy="10" rx="3" ry="2.5" fill="currentColor" opacity="0.8" />
-        <line x1="14.5" y1="10" x2="14.5" y2="18" stroke="currentColor" strokeWidth="1.5" opacity="0.8" />
-
-        {/* 세 번째 음표 (오른쪽, 아래) */}
-        <ellipse cx="16" cy="13" rx="3" ry="2.5" fill="currentColor" opacity="0.7" />
-        <line x1="18.5" y1="13" x2="18.5" y2="20" stroke="currentColor" strokeWidth="1.5" opacity="0.7" />
-    </svg>
-);
-
 // 상태 정의: 대기중 | 녹화중 | 검토중(완료후)
 type RecordState = 'idle' | 'recording' | 'reviewing';
 
@@ -84,7 +59,6 @@ export default function ReelPanPage() {
     const [targetScale, setTargetScale] = useState(SCALES.find(s => s.id === 'd_kurd_9') || SCALES[0]);
     const [currentSong, setCurrentSong] = useState(PRACTICE_SONGS.find(s => s.id === '4') || PRACTICE_SONGS[0]);
     const [previewingScaleId, setPreviewingScaleId] = useState<string | null>(null);
-    const [isChordPlaying, setIsChordPlaying] = useState(false); // Chord Pad 반주 토글
     const [recordingBlob, setRecordingBlob] = useState<Blob | null>(null);
     const [recordedVideoUrl, setRecordedVideoUrl] = useState<string | null>(null);
     const [viewMode, setViewMode] = useState<0 | 1 | 2 | 3 | 4>(2); // 2 = Labels Visible, 3 = Labels Hidden
@@ -110,21 +84,10 @@ export default function ReelPanPage() {
     const [drumPattern, setDrumPattern] = useState('Basic 8-beat');
     const [drumTimeSignature, setDrumTimeSignature] = useState('4/4');
 
-    // Chord Settings State
-    const [showChordSettings, setShowChordSettings] = useState(false);
-    const [chordProgressionType, setChordProgressionType] = useState('Cinematic');
-    const [chordPadPreset, setChordPadPreset] = useState('Dreamy Pad');
+    // -- Drum State --
 
-    // Chord Pad State (독립적 시스템 - Scale Recommender와 분리)
-    const chordPadSynthRef = useRef<Tone.PolySynth | null>(null);
-    const chordPartRef = useRef<Tone.Part | null>(null);
-    const chordMasterGainRef = useRef<Tone.Gain | null>(null);
-    const chordEffectsRef = useRef<Tone.ToneAudioNode[]>([]);
-    const chordSetsRef = useRef<{ barStart: number; notes: string[]; role: string }[]>([]);
-
-    // Ref for independent drum/chord control
+    // Ref for independent drum control
     const isDrumPlayingRef = useRef(false);
-    const isChordPlayingRef = useRef(false);
 
     // 녹화 타이머용
     const [recordTimer, setRecordTimer] = useState(0);
@@ -133,8 +96,6 @@ export default function ReelPanPage() {
     // 롱프레스 타이머용
     const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
     const isLongPressActive = useRef(false);
-    const chordLongPressTimerRef = useRef<NodeJS.Timeout | null>(null);
-    const isChordLongPressActive = useRef(false);
 
     // 2. Audio Preloading (Moved Up for Scope)
     const { isLoaded, loadingProgress, playNote, resumeAudio, preloadScaleNotes } = useHandpanAudio();
@@ -626,35 +587,6 @@ export default function ReelPanPage() {
     }, []);
 
     // [Chord Pad Engine] 독립적 초기화 (Scale Recommender와 완전 분리)
-    useEffect(() => {
-        if (typeof window === 'undefined') return;
-
-        // Chord Pad Master Bus (독립적)
-        const chordMasterGain = new Tone.Gain(0.35).toDestination();
-        chordMasterGainRef.current = chordMasterGain;
-
-        // Reverb + Delay Effect Chain
-        const reverb = new Tone.Reverb({ decay: 8, wet: 0.4, preDelay: 0.1 }).connect(chordMasterGain);
-        const delay = new Tone.PingPongDelay({ delayTime: "4n.", feedback: 0.3, wet: 0.2 }).connect(reverb);
-        const chorus = new Tone.Chorus({ frequency: 0.3, delayTime: 4, depth: 0.6, spread: 180 }).connect(delay).start();
-
-        // PAD Synth (dreamy triangle waves)
-        chordPadSynthRef.current = new Tone.PolySynth(Tone.Synth, {
-            oscillator: { type: "fattriangle", count: 3, spread: 30 },
-            envelope: { attack: 2.0, decay: 1.5, sustain: 0.9, release: 3.0, attackCurve: "exponential" },
-            volume: -12
-        });
-        chordPadSynthRef.current.maxPolyphony = 6;
-        chordPadSynthRef.current.connect(chorus);
-
-        chordEffectsRef.current = [chordMasterGain, reverb, delay, chorus];
-
-        return () => {
-            chordPadSynthRef.current?.dispose();
-            chordPartRef.current?.dispose();
-            chordEffectsRef.current.forEach(e => e.dispose());
-        };
-    }, []);
 
     // [Drum Engine] Dynamic Pitch Update (딩 피치 기반)
     // ═══════════════════════════════════════════════════════════════════════════
@@ -949,14 +881,10 @@ export default function ReelPanPage() {
             // ═══════════════════════════════════════════════════════════════
             // 스케줄된 루프 클리어는 Pattern useEffect의 cleanup에서 처리됨
 
-            // ★ 마지막 생존자 체크: 화음도 꺼져있다면 Transport 완전 정지
-            if (!isChordPlayingRef.current) {
-                console.log("[DrumDebug] Last Survivor: Stopping Transport");
-                Tone.Transport.stop();
-                Tone.Transport.position = 0;
-            } else {
-                console.log("[DrumDebug] Chord still playing, keeping Transport alive");
-            }
+            // Transport 정지 (화음 제거됨 - 드럼만 제어)
+            console.log("[DrumDebug] Stopping Transport");
+            Tone.Transport.stop();
+            Tone.Transport.position = 0;
         }
     }, [isDrumPlaying]);
 
@@ -987,233 +915,6 @@ export default function ReelPanPage() {
         isLongPressActive.current = false;
     };
 
-    // Chord Long Press Handlers
-    const handleChordDown = (e: React.PointerEvent) => {
-        (e.target as HTMLElement).setPointerCapture(e.pointerId);
-
-        isChordLongPressActive.current = false;
-        chordLongPressTimerRef.current = setTimeout(() => {
-            isChordLongPressActive.current = true;
-            setShowChordSettings(true);
-        }, 600);
-    };
-
-    const handleChordUp = (e: React.PointerEvent) => {
-        if (chordLongPressTimerRef.current) {
-            clearTimeout(chordLongPressTimerRef.current);
-            chordLongPressTimerRef.current = null;
-        }
-
-        if (!isChordLongPressActive.current) {
-            // 짧게 눌렀을 때만 토글
-            handleChordToggle();
-        }
-        isChordLongPressActive.current = false;
-    };
-
-    useEffect(() => {
-        if (!showScaleSelector) stopPreview();
-    }, [showScaleSelector]);
-
-    // [Chord Pad] 스케일 변경 시 화음 진행 계산 (독립 로직)
-    useEffect(() => {
-        if (!targetScale?.notes) {
-            console.log("[ChordDebug] No targetScale notes found");
-            return;
-        }
-
-        const allNotes = [targetScale.notes.ding, ...targetScale.notes.top, ...targetScale.notes.bottom];
-        console.log(`[ChordDebug] Analyzing scale: ${targetScale.name}, Notes count: ${allNotes.length}`);
-
-        if (allNotes.length < 5) {
-            console.warn("[ChordDebug] Not enough notes to generate chords (< 5)");
-            return;
-        }
-
-        // 인라인 calculateChordProgression (Scale Recommender 의존 없이)
-        const noteToMidi = new Map<string, number>();
-        const midiToNote = new Map<number, string>();
-
-        allNotes.forEach(note => {
-            const midi = Tone.Frequency(note).toMidi();
-            noteToMidi.set(note, midi);
-            midiToNote.set(midi, note);
-        });
-
-        const sortedMidis = Array.from(noteToMidi.values()).sort((a, b) => a - b);
-
-        const findHarmonicNotes = (rootNote: string): string[] => {
-            const rootMidi = noteToMidi.get(rootNote);
-            if (rootMidi === undefined) return [rootNote];
-
-            const chordNotes = [rootNote];
-            const perfectFifth = sortedMidis.find(m => Math.abs(m - (rootMidi + 7)) <= 1);
-            const minor3rd = sortedMidis.find(m => m === rootMidi + 3);
-            const major3rd = sortedMidis.find(m => m === rootMidi + 4);
-
-            if (minor3rd) chordNotes.push(midiToNote.get(minor3rd)!);
-            else if (major3rd) chordNotes.push(midiToNote.get(major3rd)!);
-
-            if (perfectFifth) {
-                chordNotes.push(midiToNote.get(perfectFifth)!);
-            } else {
-                const octave = sortedMidis.find(m => m === rootMidi + 12);
-                if (octave) chordNotes.push(midiToNote.get(octave)!);
-            }
-            return chordNotes;
-        };
-
-        const len = allNotes.length;
-        let progressionDegrees = [];
-
-        switch (chordProgressionType) {
-            case 'Hopeful Pop':
-                progressionDegrees = [1, 5, 6, 4];
-                break;
-            case 'Emotional Sad':
-                progressionDegrees = [6, 4, 1, 5];
-                break;
-            case 'Nostalgic Story':
-                progressionDegrees = [2, 5, 1, 1];
-                break;
-            case 'Cinematic':
-            default:
-                progressionDegrees = [1, 6, 4, 5];
-                break;
-        }
-
-        const progressionIndices = [
-            { idx: (progressionDegrees[0] - 1) % len, bar: 1, role: `Chord ${progressionDegrees[0]}` },
-            { idx: (progressionDegrees[1] - 1) % len, bar: 5, role: `Chord ${progressionDegrees[1]}` },
-            { idx: (progressionDegrees[2] - 1) % len, bar: 9, role: `Chord ${progressionDegrees[2]}` },
-            { idx: (progressionDegrees[3] - 1) % len, bar: 13, role: `Chord ${progressionDegrees[3]}` }
-        ];
-
-        chordSetsRef.current = progressionIndices.map(prog => ({
-            barStart: prog.bar,
-            notes: findHarmonicNotes(allNotes[prog.idx]),
-            role: prog.role
-        }));
-
-        console.log("[ChordDebug] Generated Chord Sets:", chordSetsRef.current);
-
-        // 재생 중이면 스케일 변경 시 중지
-        if (isChordPlaying && chordPartRef.current) {
-            console.log("[ChordDebug] Stopping chord due to scale change");
-            chordPartRef.current.stop();
-            chordPadSynthRef.current?.releaseAll();
-            setIsChordPlaying(false);
-        }
-    }, [targetScale, chordProgressionType]);
-
-    // [Chord Pad] 화음 반주 토글 핸들러 (Bus Stop 모델 적용)
-    const handleChordToggle = async () => {
-        console.log("[ChordDebug] Toggle clicked. Current state:", isChordPlaying);
-        await Tone.start();
-
-        if (isChordPlaying) {
-            // ═══════════════════════════════════════════════════════════════
-            // [OFF 로직] 화음 중지
-            // ═══════════════════════════════════════════════════════════════
-            console.log("[ChordDebug] Stopping chord...");
-            isChordPlayingRef.current = false;
-            setIsChordPlaying(false);
-
-            // 1. 화음 파트 정리 (dispose로 완전 해제)
-            if (chordPartRef.current) {
-                chordPartRef.current.dispose();
-                chordPartRef.current = null;
-            }
-            chordPadSynthRef.current?.releaseAll();
-
-            // 2. ★ 마지막 생존자 체크: 드럼도 꺼져있다면 Transport 완전 정지
-            if (!isDrumPlayingRef.current) {
-                console.log("[ChordDebug] Last Survivor: Stopping Transport");
-                Tone.Transport.stop();
-                Tone.Transport.position = 0;
-            } else {
-                console.log("[ChordDebug] Drum still playing, keeping Transport alive");
-            }
-
-        } else {
-            // ═══════════════════════════════════════════════════════════════
-            // [ON 로직] 화음 시작
-            // ═══════════════════════════════════════════════════════════════
-            const chordSets = chordSetsRef.current;
-            console.log("[ChordDebug] Starting chord. Sets available:", chordSets.length);
-
-            if (chordSets.length < 4 || !chordPadSynthRef.current) {
-                console.error("[ChordDebug] Failed to start. Sets:", chordSets.length, "Synth:", !!chordPadSynthRef.current);
-                alert(`화음 생성 실패! (Chords: ${chordSets.length})\n스케일 음이 너무 적거나 초기화 오류입니다.`);
-                return;
-            }
-
-            // 기존 Part 정리
-            if (chordPartRef.current) {
-                chordPartRef.current.dispose();
-                chordPartRef.current = null;
-            }
-
-            // BPM 동기화 (드럼 BPM 사용)
-            Tone.Transport.bpm.value = drumBpm;
-
-            // 화음 Part 생성 (16마디 무한 루프)
-            chordPartRef.current = new Tone.Part((time, value) => {
-                const chord = value as { notes: string[]; role: string };
-                chordPadSynthRef.current?.triggerAttackRelease(chord.notes, "4m", time);
-            }, [
-                ["0:0:0", chordSets[0]],
-                ["4:0:0", chordSets[1]],
-                ["8:0:0", chordSets[2]],
-                ["12:0:0", chordSets[3]]
-            ]);
-            chordPartRef.current.loop = true;
-            chordPartRef.current.loopEnd = "16:0:0";
-
-            // ★★★ 핵심: Bus Stop 모델 - Transport 상태에 따른 시작 방식 ★★★
-            if (Tone.Transport.state === 'started') {
-                // ─────────────────────────────────────────────────────────────
-                // [Case B: 합류] 드럼이 이미 돌고 있음 → 흐름에 탑승
-                // ─────────────────────────────────────────────────────────────
-                const now = Tone.Transport.seconds;
-                console.log(`[ChordDebug] Joining running Transport at ${now.toFixed(2)}s`);
-
-                // start(startTime, offset): Transport 시간 기준으로 Part를 시작
-                // offset을 현재 시간과 맞춰 싱크를 유지
-                chordPartRef.current.start(0, now % Tone.Time("16:0:0").toSeconds());
-
-                // 즉시 소리가 나도록 현재 위치의 화음 재생
-                const positionStr = Tone.Transport.position as string;
-                const bars = parseInt(positionStr.split(":")[0]);
-                const currentBar = bars % 16;
-
-                let currentChordIndex = 0;
-                if (currentBar >= 12) currentChordIndex = 3;
-                else if (currentBar >= 8) currentChordIndex = 2;
-                else if (currentBar >= 4) currentChordIndex = 1;
-
-                const immediateChord = chordSets[currentChordIndex];
-                if (immediateChord && chordPadSynthRef.current) {
-                    console.log(`[ChordDebug] Playing immediate chord #${currentChordIndex}`);
-                    chordPadSynthRef.current.triggerAttackRelease(immediateChord.notes, "4m", "+0.01");
-                }
-
-            } else {
-                // ─────────────────────────────────────────────────────────────
-                // [Case A: 첫 시작] 아무도 재생 중이 아님 → Transport 리셋 후 시작
-                // ─────────────────────────────────────────────────────────────
-                console.log("[ChordDebug] Fresh start (Case A)");
-                Tone.Transport.position = 0;
-                chordPartRef.current.start(0);
-                Tone.Transport.start();
-            }
-
-            isChordPlayingRef.current = true;
-            setIsChordPlaying(true);
-        }
-    };
-
-    // 1. 녹화 시작
     const startRecording = () => {
         setRecordState('recording');
         setIsRecording(true);
@@ -1709,100 +1410,6 @@ export default function ReelPanPage() {
                     )}
                 </AnimatePresence>
 
-                {/* === Layer 3.6: Chord Settings Popup === */}
-                <AnimatePresence>
-                    {showChordSettings && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="absolute inset-0 z-[150] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6"
-                            onClick={() => setShowChordSettings(false)}
-                        >
-                            <motion.div
-                                initial={{ scale: 0.9, y: 20 }}
-                                animate={{ scale: 1, y: 0 }}
-                                exit={{ scale: 0.9, y: 20 }}
-                                className="w-full max-w-xs bg-zinc-900 border border-white/10 rounded-[32px] p-6 shadow-2xl max-h-[80vh] overflow-y-auto"
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                <div className="flex items-center justify-between mb-6">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center">
-                                            <PianoKeysIcon size={16} className="text-purple-400" />
-                                        </div>
-                                        <h3 className="text-white font-bold tracking-tight">Chord Settings</h3>
-                                    </div>
-                                    <button
-                                        onClick={() => setShowChordSettings(false)}
-                                        className="text-white/40 hover:text-white"
-                                    >
-                                        <X size={20} />
-                                    </button>
-                                </div>
-
-                                <div className="flex flex-col gap-6">
-                                    {/* Current Chord Progression Display */}
-                                    <div className="flex flex-col gap-3">
-                                        <span className="text-xs font-bold text-white/40 uppercase tracking-widest px-1">Current Chord Progression</span>
-                                        <div className="bg-white/5 rounded-2xl p-4">
-                                            <div className="flex justify-between items-center gap-2">
-                                                {chordSetsRef.current.slice(0, 4).map((chord, i) => (
-                                                    <div key={i} className="flex-1 text-center">
-                                                        <div className="text-purple-400 font-mono text-sm font-bold">
-                                                            {chord.notes[0]?.replace(/\d/g, '')}
-                                                        </div>
-                                                        <div className="text-[10px] text-white/30 mt-1">Bar {chord.barStart}</div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Chord Progression Type */}
-                                    <div className="flex flex-col gap-3">
-                                        <span className="text-xs font-bold text-white/40 uppercase tracking-widest px-1">Chord Progression Type</span>
-                                        <div className="grid grid-cols-1 gap-2">
-                                            {['Cinematic', 'Hopeful Pop', 'Emotional Sad', 'Nostalgic Story'].map((prog) => (
-                                                <button
-                                                    key={prog}
-                                                    onClick={() => setChordProgressionType(prog)}
-                                                    className={`px-4 py-3 rounded-2xl text-sm font-medium transition-all text-left flex items-center justify-between
-                                                          ${chordProgressionType === prog
-                                                            ? 'bg-purple-500 text-white'
-                                                            : 'bg-white/5 text-white/60 hover:bg-white/10'}`}
-                                                >
-                                                    {prog}
-                                                    {chordProgressionType === prog && <Check size={16} />}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* Pad Tone Preset */}
-                                    <div className="flex flex-col gap-3">
-                                        <span className="text-xs font-bold text-white/40 uppercase tracking-widest px-1">Pad Tone Preset</span>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            {['Dreamy Pad', 'Warm Strings', 'Crystal Bell', 'Airy Synth'].map((preset) => (
-                                                <button
-                                                    key={preset}
-                                                    onClick={() => setChordPadPreset(preset)}
-                                                    className={`px-3 py-3 rounded-2xl text-xs font-medium transition-all text-center
-                                                          ${chordPadPreset === preset
-                                                            ? 'bg-purple-500 text-white'
-                                                            : 'bg-white/5 text-white/60 hover:bg-white/10'}`}
-                                                >
-                                                    {preset}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-
-                            </motion.div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
 
                 <AnimatePresence>
                     {showScaleSelector && (
