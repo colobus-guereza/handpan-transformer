@@ -233,16 +233,16 @@ export default function PlaygroundHome() {
                         </span>
                         <div className="absolute inset-0 bg-gradient-to-r from-cyan-600/50 via-purple-600/50 to-cyan-600/50 bg-[length:200%_100%] opacity-0 group-hover:opacity-100 animate-shimmer transition-opacity duration-300" />
                     </Link>
-                </div>
 
-                {/* Navigation Button: Go to Screen 2 */}
-                <button
-                    onClick={() => scrollToSection(screen2Ref)}
-                    className="absolute bottom-[calc(1rem+10px)] right-4 text-slate-400 hover:text-cyan-300 transition-all animate-pulse-slow group"
-                    aria-label="Next Page"
-                >
-                    <HelpCircle size={29} className="group-hover:scale-110 transition-transform" />
-                </button>
+                    {/* Navigation Button: Go to Screen 2 */}
+                    <button
+                        onClick={() => scrollToSection(screen2Ref)}
+                        className="text-slate-400 hover:text-cyan-300 transition-all animate-pulse-slow group"
+                        aria-label="Next Page"
+                    >
+                        <HelpCircle size={29} className="group-hover:scale-110 transition-transform" />
+                    </button>
+                </div>
             </section>
 
             {/* Screen 2: Service Introduction (Dark Mode) */}
