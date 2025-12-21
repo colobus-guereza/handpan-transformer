@@ -1595,9 +1595,12 @@ export default function ReelPanClient() {
                             </Link>
                             <motion.button
                                 onClick={() => setShowScaleSelector(true)}
+                                disabled={isRecording || !!recordCountdown}
                                 key={targetScale.id}
                                 initial={{ y: -10, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
+                                className={`flex flex-col items-center justify-center transition-all ${isRecording || !!recordCountdown ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105 active:scale-95'}`}
+                            >
                                 className="flex flex-col items-center group active:scale-95 transition-transform"
                             >
                                 <div className="flex items-center gap-1.5">

@@ -291,8 +291,8 @@ export const useDigipanRecorder = ({
 
                 cleanup();
 
-                if (onRecordingComplete) {
-                    onRecordingComplete(blob);
+                if (savedCallback.current) {
+                    savedCallback.current(blob);
                 }
             };
 
@@ -313,7 +313,7 @@ export const useDigipanRecorder = ({
             console.error('[Recorder] Failed to start recording:', err);
             setIsRecording(false);
         }
-    }, [canvasRef, getAudioContext, getMasterGain, onRecordingComplete]);
+    }, [canvasRef, getAudioContext, getMasterGain]); // Removed onRecordingComplete dependency
 
     const stopRecording = useCallback(() => {
         if (!mediaRecorderRef.current || mediaRecorderRef.current.state !== 'recording') {
