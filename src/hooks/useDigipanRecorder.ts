@@ -30,6 +30,9 @@ export const useDigipanRecorder = ({
     const animationFrameRef = useRef<number | null>(null);
     const cropModeRef = useRef(cropMode); // Track current mode for animation loop
 
+    // ★ Lock to prevent double initialization (fixes first-recording flicker)
+    const isInitializingRef = useRef(false);
+
     // Update ref when prop changes
     useEffect(() => {
         cropModeRef.current = cropMode;
@@ -42,38 +45,43 @@ export const useDigipanRecorder = ({
         savedCallback.current = onRecordingComplete;
     }, [onRecordingComplete]);
 
-    const startRecording = useCallback(() => {
+    const startRecording = useCallback(async () => {
+        console.log(`[RecorderDebug] ${Date.now()} startRecording() hook called`);
+
+        // ★ Prevent double initialization (fixes first-recording flicker)
+        if (isInitializingRef.current || mediaRecorderRef.current?.state === 'recording') {
+            console.warn('[Recorder] Already initializing or recording. Ignored.');
+            return;
+        }
+        isInitializingRef.current = true;
+
         const canvas = canvasRef.current;
         const audioCtx = getAudioContext();
         const masterGain = getMasterGain();
 
+        console.log(`[RecorderDebug] ${Date.now()} Dependencies check - canvas: ${!!canvas}, audioCtx: ${!!audioCtx}, masterGain: ${!!masterGain}`);
+
         if (!canvas || !audioCtx || !masterGain) {
             console.error('[Recorder] Missing dependencies for recording (Canvas, AudioContext, or MasterGain)');
+            isInitializingRef.current = false;
             return;
         }
 
+        // ★ FIX: Wait for 2 animation frames to ensure React rendering is complete
+        // This prevents the black flash caused by captureStream() accessing the canvas
+        // before React has finished updating the UI
+        console.log(`[RecorderDebug] ${Date.now()} Waiting for render frames...`);
+        await new Promise<void>(resolve => {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    console.log(`[RecorderDebug] ${Date.now()} Render frames complete, proceeding with capture`);
+                    resolve();
+                });
+            });
+        });
+
         try {
-            console.log(`[Recorder] Initializing... (Mode: ${cropModeRef.current})`);
-            // ... (stream setup code is unchanged) ...
-
-            // ... (options setup code is unchanged) ...
-
-            // 5. Setup MediaRecorder logic (with Ref usage)
-            // Note: We need to re-implement the setup part here because we are replacing the startRecording body logic wrapper
-            // But since I cannot easily replace just the middle, I will provide the context.
-            // Wait, replace_file_content replaces a chunk. I need to be careful to match existing code.
-            // The previous 'startRecording' function is long.
-
-            // Let's rely on the fact that I'm replacing the `startRecording` DEPENDENCIES array logic or usage.
-            // Actually, I should use `savedCallback.current` inside `recorder.onstop`.
-
-            // Let's modify the `recorder.onstop` block specifically if possible, OR rewrite startRecording start.
-
-            // To be safe and clean, I will replace the whole startRecording function definition loop if I can match it, 
-            // OR I will just inject the Ref at the top and change onstop.
-
-            // Checking the file content again... 
-
+            console.log(`[RecorderDebug] ${Date.now()} Starting initialization (Mode: ${cropModeRef.current})`);
             console.log(`[Recorder] Initializing... (Mode: ${cropModeRef.current})`);
 
             let videoStream: MediaStream;
@@ -87,10 +95,14 @@ export const useDigipanRecorder = ({
             // FPS 설정: 모바일/데스크톱 모두 30fps (애니메이션 부드러움)
             const targetFPS = 30;
 
+            console.log(`[RecorderDebug] ${Date.now()} Canvas dimensions: ${canvas.width}x${canvas.height}`);
+            console.log(`[RecorderDebug] ${Date.now()} cropMode: ${cropModeRef.current}, isMobile: ${isMobileDevice}`);
+
             if (cropModeRef.current === 'square') {
                 // ============================================
                 // SQUARE MODE: 오프스크린 캔버스로 중앙 크롭 (Max 1080p)
                 // ============================================
+                console.log(`[RecorderDebug] ${Date.now()} Entering SQUARE mode branch`);
                 const srcWidth = canvas.width;
                 const srcHeight = canvas.height;
                 let squareSize = Math.min(srcWidth, srcHeight);
@@ -109,16 +121,26 @@ export const useDigipanRecorder = ({
                 console.log(`[Recorder] Creating square crop: ${squareSize}x${squareSize}`);
 
                 // 오프스크린 캔버스 생성
+                console.log(`[RecorderDebug] ${Date.now()} Creating offscreen canvas...`);
                 const offscreen = document.createElement('canvas');
                 offscreen.width = squareSize;
                 offscreen.height = squareSize;
                 offscreenCanvasRef.current = offscreen;
+                console.log(`[RecorderDebug] ${Date.now()} Offscreen canvas created`);
 
                 const offCtx = offscreen.getContext('2d');
                 if (!offCtx) {
                     console.error('[Recorder] Failed to get offscreen context');
+                    isInitializingRef.current = false;
                     return;
                 }
+
+                // ★ Pre-draw: 캡처 전 첫 프레임 강제 그리기 (검정 깜빡임 방지)
+                offCtx.drawImage(
+                    canvas,
+                    cropX, cropY, originalSquareSize, originalSquareSize,
+                    0, 0, squareSize, squareSize
+                );
 
                 // 애니메이션 루프
                 const copyFrame = () => {
@@ -132,11 +154,14 @@ export const useDigipanRecorder = ({
                 };
                 copyFrame();
 
+                console.log(`[RecorderDebug] ${Date.now()} Calling captureStream(${targetFPS})...`);
                 videoStream = offscreen.captureStream(targetFPS);
+                console.log(`[RecorderDebug] ${Date.now()} captureStream completed`);
             } else {
                 // ============================================
                 // FULL MODE: Max 1080p Downscaling
                 // ============================================
+                console.log(`[RecorderDebug] ${Date.now()} Entering FULL mode branch`);
                 const srcWidth = canvas.width;
                 const srcHeight = canvas.height;
                 const maxDim = Math.max(srcWidth, srcHeight);
@@ -149,10 +174,12 @@ export const useDigipanRecorder = ({
 
                     console.log(`[Recorder] Downscaling Full Mode: ${srcWidth}x${srcHeight} -> ${destWidth}x${destHeight}`);
 
+                    console.log(`[RecorderDebug] ${Date.now()} Creating offscreen canvas for downscaling...`);
                     const offscreen = document.createElement('canvas');
                     offscreen.width = destWidth;
                     offscreen.height = destHeight;
                     offscreenCanvasRef.current = offscreen;
+                    console.log(`[RecorderDebug] ${Date.now()} Offscreen canvas created`);
 
                     const offCtx = offscreen.getContext('2d');
                     if (!offCtx) {
@@ -160,17 +187,47 @@ export const useDigipanRecorder = ({
                         console.error('[Recorder] Failed to get context for resize, using original');
                         videoStream = canvas.captureStream(targetFPS);
                     } else {
+                        // ★ Pre-draw: 캡처 전 첫 프레임 강제 그리기 (검정 깜빡임 방지)
+                        offCtx.drawImage(canvas, 0, 0, srcWidth, srcHeight, 0, 0, destWidth, destHeight);
+
                         const copyFrame = () => {
                             if (!offscreenCanvasRef.current) return;
                             offCtx.drawImage(canvas, 0, 0, srcWidth, srcHeight, 0, 0, destWidth, destHeight);
                             animationFrameRef.current = requestAnimationFrame(copyFrame);
                         };
                         copyFrame();
+                        console.log(`[RecorderDebug] ${Date.now()} Calling captureStream(${targetFPS}) for downscaled...`);
                         videoStream = offscreen.captureStream(targetFPS);
+                        console.log(`[RecorderDebug] ${Date.now()} captureStream completed`);
                     }
                 } else {
-                    // Original is small enough
-                    videoStream = canvas.captureStream(targetFPS);
+                    // ★ FIX: Original is small enough, but still use offscreen canvas to prevent WebGL context interruption
+                    console.log(`[RecorderDebug] ${Date.now()} Using offscreen canvas (same size, no downscale)`);
+
+                    const offscreen = document.createElement('canvas');
+                    offscreen.width = srcWidth;
+                    offscreen.height = srcHeight;
+                    offscreenCanvasRef.current = offscreen;
+
+                    const offCtx = offscreen.getContext('2d');
+                    if (!offCtx) {
+                        console.error('[Recorder] Failed to get context, using original canvas as fallback');
+                        videoStream = canvas.captureStream(targetFPS);
+                    } else {
+                        // ★ Pre-draw: 캡처 전 첫 프레임 강제 그리기 (검정 깜빡임 방지)
+                        offCtx.drawImage(canvas, 0, 0);
+
+                        const copyFrame = () => {
+                            if (!offscreenCanvasRef.current) return;
+                            offCtx.drawImage(canvas, 0, 0);
+                            animationFrameRef.current = requestAnimationFrame(copyFrame);
+                        };
+                        copyFrame();
+
+                        console.log(`[RecorderDebug] ${Date.now()} Calling captureStream(${targetFPS})...`);
+                        videoStream = offscreen.captureStream(targetFPS);
+                        console.log(`[RecorderDebug] ${Date.now()} captureStream completed`);
+                    }
                 }
             }
 
@@ -310,6 +367,9 @@ export const useDigipanRecorder = ({
                 toneSourceRef.current = null;
                 toneDestRef.current = null;
 
+                // ★ Release initialization lock
+                isInitializingRef.current = false;
+
                 setIsRecording(false);
                 console.log('[Recorder] Finished and cleaned up.');
             };
@@ -340,6 +400,7 @@ export const useDigipanRecorder = ({
 
         } catch (err) {
             console.error('[Recorder] Failed to start recording:', err);
+            isInitializingRef.current = false;
             setIsRecording(false);
         }
     }, [canvasRef, getAudioContext, getMasterGain]); // Removed onRecordingComplete dependency

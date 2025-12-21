@@ -1196,15 +1196,37 @@ export default function ReelPanClient() {
     };
 
     // 1. 녹화 시작
-    const startRecording = () => {
+    const startRecording = async () => {
+        console.log(`[RecordDebug] ${Date.now()} startRecording() called`);
+        console.log(`[RecordDebug] Current states - recordState: ${recordState}, isRecording: ${isRecording}, recordCountdown: ${recordCountdown}`);
+
         if (timerRef.current) clearInterval(timerRef.current);
+
+        console.log(`[RecordDebug] ${Date.now()} Setting recordState to 'recording'`);
         setRecordState('recording');
         setIsRecording(true);
         setRecordTimer(0);
         timerRef.current = setInterval(() => setRecordTimer(t => t + 1), 1000);
+
+        // ★ FIX: Wait for React to complete re-rendering after state updates
+        // This prevents the black flash caused by capturing canvas during React reconciliation
+        console.log(`[RecordDebug] ${Date.now()} Waiting for React render to complete...`);
+        await new Promise<void>(resolve => {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    console.log(`[RecordDebug] ${Date.now()} React render complete, starting recording`);
+                    resolve();
+                });
+            });
+        });
+
         // 실제 녹화 시작 (기존 Digipan 컴포넌트의 녹화 기능 호출)
         if (digipanRef.current) {
-            digipanRef.current.handleRecordToggle();
+            console.log(`[RecordDebug] ${Date.now()} Calling digipanRef.handleRecordToggle()`);
+            await digipanRef.current.handleRecordToggle();
+            console.log(`[RecordDebug] ${Date.now()} digipanRef.handleRecordToggle() completed`);
+        } else {
+            console.warn(`[RecordDebug] digipanRef.current is null!`);
         }
     };
 
@@ -1220,34 +1242,46 @@ export default function ReelPanClient() {
     };
 
     const initiateRecordingProcess = () => {
+        console.log(`[RecordDebug] ${Date.now()} initiateRecordingProcess() called`);
+        console.log(`[RecordDebug] recordCountdown: ${recordCountdown}, recordState: ${recordState}`);
+
         // 카운트다운 중이면 중복 실행 방지
-        if (recordCountdown) return;
+        if (recordCountdown) {
+            console.log(`[RecordDebug] Blocked - countdown already in progress`);
+            return;
+        }
 
         if (recordState === 'idle') {
+            console.log(`[RecordDebug] ${Date.now()} Starting countdown sequence`);
             // 카운트다운 시작
             let count = 3;
             setRecordCountdown(count);
 
             const interval = setInterval(() => {
                 count -= 1;
+                console.log(`[RecordDebug] ${Date.now()} Countdown tick: count=${count}`);
                 if (count > 0) {
                     setRecordCountdown(count);
                 } else if (count === 0) {
                     setRecordCountdown('Touch!');
                     clearInterval(interval);
+                    console.log(`[RecordDebug] ${Date.now()} Countdown complete, showing Touch!`);
 
                     // Touch! 표시 시간을 650ms로 복구
                     setTimeout(() => {
+                        console.log(`[RecordDebug] ${Date.now()} Setting recordCountdown to null (Touch fade out)`);
                         setRecordCountdown(null);
 
                         // Fade Out 시간을 고려하여 100ms 후 녹화 시작 (더 빠르게 반응)
                         setTimeout(() => {
+                            console.log(`[RecordDebug] ${Date.now()} 100ms delay complete, calling startRecording()`);
                             startRecording();
                         }, 100);
                     }, 650);
                 }
             }, 650); // 사용자의 요청에 따라 0.65초(650ms) 간격으로 조정
         } else if (recordState === 'recording') {
+            console.log(`[RecordDebug] ${Date.now()} Stopping recording`);
             stopRecording();
         }
     };

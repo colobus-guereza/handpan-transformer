@@ -21,12 +21,21 @@ const THEMES: Record<string, { color: string; emissive: string }> = {
 const CountdownText = ({ text }: CountdownTextProps) => {
     const groupRef = useRef<THREE.Group>(null);
     const materialRef = useRef<THREE.MeshPhysicalMaterial>(null);
+    const prevTextRef = useRef<string | null>(null);
 
     // Position (Center, Floating above)
     const initialPos = new THREE.Vector3(0, 0, 30);
 
     // Get theme for current text
     const theme = text ? (THEMES[text] || THEMES['Touch!']) : THEMES['Touch!'];
+
+    // Debug: Log text changes
+    useEffect(() => {
+        if (prevTextRef.current !== text) {
+            console.log(`[CountdownTextDebug] ${Date.now()} text changed: "${prevTextRef.current}" -> "${text}"`);
+            prevTextRef.current = text;
+        }
+    }, [text]);
 
     // Animation: Breathing + Color Pulse
     useFrame((state) => {
@@ -36,6 +45,9 @@ const CountdownText = ({ text }: CountdownTextProps) => {
 
         // Visibility
         if (text) {
+            if (!groupRef.current.visible) {
+                console.log(`[CountdownTextDebug] ${Date.now()} Setting visible=true`);
+            }
             groupRef.current.visible = true;
             // Scale up smoothly
             const targetScale = 1;
@@ -49,6 +61,9 @@ const CountdownText = ({ text }: CountdownTextProps) => {
             const nextScale = THREE.MathUtils.lerp(currentScale, 0, 0.2);
             groupRef.current.scale.setScalar(nextScale);
             if (nextScale < 0.01) {
+                if (groupRef.current.visible) {
+                    console.log(`[CountdownTextDebug] ${Date.now()} Setting visible=false (scale: ${nextScale.toFixed(4)})`);
+                }
                 groupRef.current.visible = false;
             }
         }
