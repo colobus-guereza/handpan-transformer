@@ -1205,6 +1205,7 @@ export default function ReelPanPage() {
             externalTouchText: countdown ? countdown.toString() : null, // 3D 카운트다운 텍스트 주입
             recordingCropMode: layoutMode === 'square' ? 'square' as 'square' : 'full' as 'full',
             enableZoom: false, // 마우스 휠 줌인/줌아웃 비활성화
+            enablePan: false, // 모바일 터치로 카메라 이동 비활성화
             disableJamSession: true, // ★ 방해꾼 제거: 내부 오디오 엔진 비활성화
         };
 

@@ -90,6 +90,10 @@ const CameraHandler = ({
             enablePan={enablePan}
             minZoom={2} // Allow zooming out more for large vertical stacks
             maxZoom={50}
+            touches={{
+                ONE: isLocked ? 0 : undefined, // 회전 비활성화 (카메라 잠금 시)
+                TWO: enablePan ? undefined : 0 // 팬 비활성화 (enablePan이 false일 때)
+            }}
         />
     );
 };
