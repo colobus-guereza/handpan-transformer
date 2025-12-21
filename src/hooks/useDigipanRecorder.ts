@@ -230,9 +230,9 @@ export const useDigipanRecorder = ({
 
             const options: MediaRecorderOptions = {
                 mimeType: selectedMimeType || undefined,
-                videoBitsPerSecond: 15000000 // 15 Mbps (High Quality, Safe)
+                videoBitsPerSecond: 50000000 // 50 Mbps (High Performance / Low CPU overhead)
             };
-            console.log(`[Recorder] Using MIME Type: ${selectedMimeType || 'default'} @ 15Mbps`);
+            console.log(`[Recorder] Using MIME Type: ${selectedMimeType || 'default'} @ 50Mbps`);
 
             const recorder = new MediaRecorder(combinedStream, options);
             mediaRecorderRef.current = recorder;
