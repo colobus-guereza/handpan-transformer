@@ -1,4 +1,3 @@
-
 import { motion } from "framer-motion";
 
 export function PracticeSkeleton() {
@@ -10,13 +9,28 @@ export function PracticeSkeleton() {
             transition={{ duration: 0.5, ease: 'easeOut' }}
             className="absolute inset-0 z-[999] bg-slate-950 pointer-events-none"
         >
-            {/* 1. Center: Digipan Skeleton (Background Layer) */}
-            <div className="absolute inset-0 flex items-center justify-center">
-                <div className="relative w-[85vw] max-w-[360px] aspect-square">
+            {/* 1. Header Skeleton - matches real header */}
+            <header className="relative flex items-center justify-center px-4 py-8 pointer-events-none">
+                {/* Back button placeholder (Circle, absolute left-4) */}
+                <div className="absolute left-4 w-10 h-10 rounded-full bg-white/5 animate-pulse border border-white/5" />
+                {/* Song title placeholder (Centered) */}
+                <div className="w-28 h-5 bg-white/10 rounded-md animate-pulse" />
+            </header>
+
+            {/* 2. Score Area Skeleton - top-[120px] h-[15%] */}
+            {/* border-b removed per user request */}
+            <div className="absolute top-[120px] left-0 w-full h-[15%] flex items-center justify-center">
+                <div className="w-[80%] h-8 bg-white/5 rounded-full animate-pulse" />
+            </div>
+
+            {/* 3. Instrument Area Skeleton - Shifted to bottom position: top-[calc(120px+15%)] */}
+            <div className="absolute top-[calc(120px+15%)] left-0 w-full h-[50%] flex items-center justify-center">
+                <div className="relative w-[85vw] max-w-[310px] aspect-square">
                     <div className="w-full h-full rounded-full bg-gradient-to-br from-white/10 to-white/5 animate-pulse" />
                     <div className="absolute inset-0 flex items-center justify-center">
                         <div className="w-[30%] h-[30%] rounded-full bg-white/10 animate-pulse" />
                     </div>
+                    {/* Orbiting dots */}
                     <div className="absolute inset-0 animate-spin" style={{ animationDuration: '3s' }}>
                         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-white/20" />
                         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-white/20" />
@@ -24,40 +38,18 @@ export function PracticeSkeleton() {
                 </div>
             </div>
 
-            {/* 2. UI Overlay: Header & Footer (Foreground Layer) */}
-            <div className="absolute inset-0 flex flex-col justify-between">
-                {/* Header Skeleton - matches real header (px-4 py-8, centered scale name) */}
-                <header className="relative flex items-center justify-center px-4 py-8 bg-gradient-to-b from-black/80 to-transparent">
-                    {/* Back button placeholder */}
-                    <div className="absolute left-4 w-10 h-10 rounded-full bg-white/5 animate-pulse" />
-                    {/* Scale name placeholder */}
-                    <div className="flex flex-col items-center gap-1">
-                        <div className="flex items-center gap-1.5">
-                            <div className="w-28 h-6 bg-white/10 rounded-md animate-pulse" />
-                            <div className="w-4 h-4 bg-white/10 rounded animate-pulse" />
-                        </div>
-                    </div>
-                </header>
+            {/* 4. Footer Skeleton - Precisely matched to actual footer (absolute mr/ml positioning) */}
+            {/* Removed redundant 'relative' which interfered with 'absolute bottom-0' */}
+            <footer className="absolute bottom-0 w-full px-6 py-4 pb-6 min-h-[126px] flex items-center justify-center">
+                {/* Stop button (absolute right-1/2 mr-[40px]) */}
+                <div className="absolute right-1/2 mr-[40px] w-11 h-11 rounded-full bg-white/5 border border-white/5 animate-pulse" />
 
-                {/* Spacer equivalent to keep flex layout consistent if needed, but justify-between handles it */}
+                {/* Play button (Centered) */}
+                <div className="w-14 h-14 rounded-full bg-white/10 border border-white/10 animate-pulse shadow-lg" />
 
-                {/* Footer Skeleton - matches real footer (px-6 py-8 pb-10, min-h-[180px], max-w-[380px] justify-between) */}
-                <footer className="w-full px-6 py-8 pb-10 bg-gradient-to-t from-black/95 to-transparent min-h-[180px] flex flex-col items-center gap-6">
-                    {/* Timer badge placeholder (invisible in idle state, keeps spacing) */}
-                    <div className="h-8 opacity-0" />
-                    {/* Button group placeholder */}
-                    <div className="w-full flex items-center justify-between max-w-[380px]">
-                        <div className="w-12 h-12 rounded-full bg-white/10 animate-pulse" />
-                        <div className="w-12 h-12 rounded-full bg-white/10 animate-pulse" />
-                        {/* Center record button - larger */}
-                        <div className="w-16 h-16 rounded-full border-4 border-white/20 flex items-center justify-center">
-                            <div className="w-[85%] h-[85%] rounded-full bg-white/10 animate-pulse" />
-                        </div>
-                        <div className="w-12 h-12 rounded-full bg-white/10 animate-pulse" />
-                        <div className="w-12 h-12 rounded-full bg-white/10 animate-pulse" />
-                    </div>
-                </footer>
-            </div>
+                {/* Loop button (absolute left-1/2 ml-[40px]) */}
+                <div className="absolute left-1/2 ml-[40px] w-11 h-11 rounded-full bg-white/5 border border-white/5 animate-pulse" />
+            </footer>
         </motion.div>
     );
 }

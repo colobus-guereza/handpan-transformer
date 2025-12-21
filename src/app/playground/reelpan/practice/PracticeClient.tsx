@@ -82,6 +82,10 @@ export default function ReelPanPage() {
     const playheadIndexRef = useRef<number>(0);
     const requestRef = useRef<number>(0);
 
+    // Sync Refs
+    const scoreFirstNoteTimeRef = useRef<number>(0);
+    const midiFirstNoteTimeRef = useRef<number>(0);
+
     // Drum State
     const [isDrumPlaying, setIsDrumPlaying] = useState(false);
     const [showDrumSettings, setShowDrumSettings] = useState(false);
@@ -161,9 +165,16 @@ export default function ReelPanPage() {
 
     // Loop Button Handler (3-state toggle: none → start_set → loop_active → none)
     const handleLoopButton = useCallback(() => {
-        // Get the time at current playhead position (scroll position)
-        // This ensures the marker appears exactly where the red playhead line is
-        const currentTime = scoreRef.current?.getTimeAtScrollPosition() ?? playbackTime;
+        // Get the time at current playhead position (scroll position) from SCORE perspective
+        let currentTime = playbackTime;
+
+        if (scoreRef.current) {
+            const scoreTime = scoreRef.current.getTimeAtScrollPosition();
+            // Adjust score time back to audio time: AudioTime = ScoreTime + Offset
+            // Offset = MidiFirst - ScoreFirst
+            const offset = Math.max(0, midiFirstNoteTimeRef.current - scoreFirstNoteTimeRef.current);
+            currentTime = scoreTime + offset;
+        }
 
         if (loopState === 'none') {
             // State 1: Set A point at current playhead position
@@ -245,9 +256,19 @@ export default function ReelPanPage() {
             if (loopState === 'loop_active' && loopStart !== null) {
                 startTime = loopStart;
                 console.log('[Play] Loop active - starting from A point:', startTime.toFixed(2), 'seconds');
-            } else if (scoreRef.current) {
-                startTime = scoreRef.current.getTimeAtScrollPosition();
-                console.log('[Play] Starting from scroll position:', startTime.toFixed(2), 'seconds');
+            } else if (scoreRef.current && scoreRef.current.getTimeAtScrollPosition() > 0.1) {
+                // Seek from Score Position
+                // AudioTime = ScoreTime + Offset
+                const scoreTime = scoreRef.current.getTimeAtScrollPosition();
+                const offset = Math.max(0, midiFirstNoteTimeRef.current - scoreFirstNoteTimeRef.current);
+                startTime = scoreTime + offset;
+
+                console.log('[Play] Starting from scroll position (adj):', startTime.toFixed(2), 'ScoreTime:', scoreTime.toFixed(2));
+            } else {
+                // Initial Start: Always start from 0 as user confirmed MIDI starts at 0
+                const firstNoteTime = mappedNotes[0]?.time || 0;
+                midiFirstNoteTimeRef.current = firstNoteTime;
+                startTime = 0;
             }
 
             // Find the note index to start from
@@ -266,6 +287,31 @@ export default function ReelPanPage() {
             playheadIndexRef.current = startIndex;
             pausedTimeRef.current = 0;
             playbackStartTimeRef.current = Date.now() - (startTime * 1000);
+
+            // Immediate Playback for Initial Notes (Fixing 0.1s delay)
+            // If we are starting from 0, immediately trigger notes at t=0
+            if (startTime < 0.2) {
+                let playedCount = 0;
+                for (let i = 0; i < mappedNotes.length; i++) {
+                    // Trigger notes within first 200ms immediately
+                    // User reported first note at 0.1s was skipped or delayed.
+                    // Extending this window ensures it plays instantly.
+                    if (mappedNotes[i].time <= 0.2) {
+                        digipanRef.current?.triggerNote(mappedNotes[i].noteId);
+                        console.log('[Play] Immediate trigger:', mappedNotes[i].noteName);
+                        playedCount++;
+                    } else {
+                        break;
+                    }
+                }
+                // Update playhead so tick loop doesn't play them again (or double trigger)
+                // Note: Tick loop checks (note.time <= currentSeconds). 
+                // If we set playheadIndexRef = playedCount, tick loop starts from next note.
+                // CurrentSeconds will start from ~0.0.
+                playheadIndexRef.current = Math.max(startIndex, playedCount);
+            } else {
+                playheadIndexRef.current = startIndex;
+            }
 
             if (scoreRef.current) {
                 scoreRef.current.showCursor();
@@ -293,9 +339,12 @@ export default function ReelPanPage() {
                 }
             }
 
-            // Update Score Position (Smooth)
+            // Update Score Position (Smooth) with Sync Offset
             if (scoreRef.current) {
-                scoreRef.current.updateTime(currentSeconds);
+                // Calculate Offset: MidiFirst - ScoreFirst
+                const offset = Math.max(0, midiFirstNoteTimeRef.current - scoreFirstNoteTimeRef.current);
+                const scoreTime = currentSeconds - offset;
+                scoreRef.current.updateTime(scoreTime);
             }
 
             // Loop Check: If we've reached loopEnd, jump back to loopStart
@@ -325,6 +374,8 @@ export default function ReelPanPage() {
 
         requestRef.current = requestAnimationFrame(tick);
     }, [midiData, targetScale, isMidiPlaying, isPaused, stopMidiPlay, resumeAudio, loopState, loopStart]);
+
+
 
     // Stop playback if unmounting or song changing
     useEffect(() => {
@@ -1180,7 +1231,7 @@ export default function ReelPanPage() {
     return (
         <div className="flex items-center justify-center min-h-dvh bg-black overflow-hidden touch-none overscroll-none">
 
-            <main className="relative w-full max-w-[480px] h-dvh bg-black shadow-2xl overflow-hidden flex flex-col items-center justify-center" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+            <main className="relative w-full max-w-[480px] h-dvh bg-white shadow-2xl overflow-hidden flex flex-col items-center justify-center" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
 
                 {/* === Layer 0: Initial Page Loading Skeleton === */}
                 <AnimatePresence>
@@ -1216,7 +1267,7 @@ export default function ReelPanPage() {
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
                                 transition={{ duration: 0.5, ease: 'easeOut' }}
-                                className="absolute inset-0 flex items-center justify-center z-10 bg-slate-950"
+                                className="absolute inset-0 flex items-center justify-center z-10 bg-white"
                             >
                                 {/* Skeleton Circle - matches actual digipan size and position */}
                                 <div className="relative w-full h-full">
@@ -1253,16 +1304,19 @@ export default function ReelPanPage() {
                         <div className="w-full h-full relative flex items-center">
                             {/* Vertical Playhead Line (Fixed Position) */}
                             <div className="absolute left-[20%] top-0 bottom-0 w-[2px] bg-red-500/80 z-20 shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
-
                             <div className="w-full h-[120px]">
                                 <OSMDScore
                                     ref={scoreRef}
                                     musicXmlUrl={currentSong.xmlSrc}
-                                    zoom={0.75}
+                                    drawCredits={false}
                                     autoResize={true}
                                     externalBpm={midiData.bpm}
-                                    loopStartTime={loopStart}
-                                    loopEndTime={loopEnd}
+                                    loopStartTime={loopStart !== null ? loopStart - Math.max(0, midiFirstNoteTimeRef.current - scoreFirstNoteTimeRef.current) : null}
+                                    loopEndTime={loopEnd !== null ? loopEnd - Math.max(0, midiFirstNoteTimeRef.current - scoreFirstNoteTimeRef.current) : null}
+                                    onScoreLoaded={(time) => {
+                                        scoreFirstNoteTimeRef.current = time;
+                                        console.log('[Practice] Score loaded. First note time:', time);
+                                    }}
                                 />
                             </div>
                         </div>
@@ -1314,83 +1368,88 @@ export default function ReelPanPage() {
                 </AnimatePresence>
 
                 {/* === Layer 3: System UI (Controls) - 리뷰 모드가 아닐 때만 표시 === */}
-                {recordState !== 'reviewing' && (
-                    <div className="absolute inset-0 z-20 pointer-events-none flex flex-col justify-between">
+                {
+                    recordState !== 'reviewing' && (
+                        <div className="absolute inset-0 z-20 pointer-events-none flex flex-col justify-between">
 
-                        <header className="relative flex items-center justify-center px-4 py-8 bg-white pointer-events-auto">
-                            <Link
-                                href="/playground"
-                                className="absolute left-4 w-10 h-10 rounded-full bg-black/5 flex items-center justify-center text-black/60 hover:text-black hover:bg-black/10 transition-all border border-black/5"
-                            >
-                                <ArrowLeft size={20} />
-                            </Link>
-                            <motion.button
-                                onClick={() => setShowScaleSelector(true)}
-                                key={targetScale.id}
-                                initial={{ y: -10, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                className="flex flex-col items-center group active:scale-95 transition-transform max-w-[200px]"
-                            >
-                                <div className="flex items-center gap-1.5 w-full justify-center">
-                                    <h1 className="text-black font-normal text-sm tracking-normal truncate">
-                                        {currentSong.title}
-                                    </h1>
-                                    <ChevronDown size={18} className="text-black/60 group-hover:text-black/80 transition-colors mt-0.5 flex-shrink-0" />
-                                </div>
-                            </motion.button>
-                        </header>
+                            <header className="relative flex items-center justify-center px-4 py-8 bg-white pointer-events-auto">
+                                <Link
+                                    href="/playground"
+                                    className="absolute left-4 w-10 h-10 rounded-full bg-black/5 flex items-center justify-center text-black/60 hover:text-black hover:bg-black/10 transition-all border border-black/5"
+                                >
+                                    <ArrowLeft size={20} />
+                                </Link>
+                                <motion.button
+                                    onClick={() => setShowScaleSelector(true)}
+                                    key={targetScale.id}
+                                    initial={{ y: -10, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    className="flex flex-col items-center group active:scale-95 transition-transform max-w-[200px]"
+                                >
+                                    <div className="flex items-center gap-1.5 w-full justify-center">
+                                        <h1 className="text-black font-normal text-sm tracking-normal truncate">
+                                            {currentSong.title}
+                                        </h1>
+                                        <ChevronDown size={18} className="text-black/60 group-hover:text-black/80 transition-colors mt-0.5 flex-shrink-0" />
+                                    </div>
+                                </motion.button>
+                            </header>
 
-                        <div className="flex-1 min-h-[100px]" />
 
-                        <footer className="w-full px-6 py-4 pb-6 bg-gradient-to-t from-black/95 to-transparent pointer-events-auto min-h-[126px] flex items-center justify-center relative">
-                            {/* Stop/Reset Button (Left of Play, same height) */}
-                            <button
-                                className={`absolute right-1/2 mr-10 w-11 h-11 rounded-full border backdrop-blur-xl flex items-center justify-center transition-all active:scale-95 bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:text-white/60 ${!midiData ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                onClick={stopMidiPlay}
-                                disabled={!midiData}
-                            >
-                                <Square size={16} fill="currentColor" />
-                            </button>
 
-                            {/* Play/Pause Button (Centered) */}
-                            <button
-                                className={`w-14 h-14 rounded-full border backdrop-blur-xl flex items-center justify-center transition-all active:scale-95 shadow-lg ${isMidiPlaying && !isPaused
-                                    ? 'bg-white/20 border-white/40 text-white'
-                                    : 'bg-white/10 border-white/20 text-white hover:bg-white/20'
-                                    } ${!midiData ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                onClick={handleTogglePlay}
-                                disabled={!midiData}
-                            >
-                                {isMidiPlaying && !isPaused ? (
-                                    <Pause size={24} fill="white" />
-                                ) : (
-                                    <Play size={24} fill="white" />
-                                )}
-                            </button>
 
-                            {/* Loop Button (Right of Play, same height) */}
-                            <button
-                                className={`absolute left-1/2 ml-10 w-11 h-11 rounded-full border backdrop-blur-xl flex items-center justify-center transition-all active:scale-95 ${loopState === 'none'
-                                    ? 'bg-white/5 border-white/10 text-white/40'
-                                    : loopState === 'start_set'
-                                        ? 'bg-emerald-500/20 border-emerald-400/40 text-emerald-400'
-                                        : 'bg-blue-500/30 border-blue-400/60 text-blue-300 animate-pulse'
-                                    } ${!midiData ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                onClick={handleLoopButton}
-                                disabled={!midiData}
-                            >
-                                <Repeat2 size={18} />
-                                {/* State indicator */}
-                                {loopState === 'start_set' && (
-                                    <span className="absolute -top-1 -right-1 text-[8px] font-bold bg-emerald-500 text-black rounded-full w-4 h-4 flex items-center justify-center">A</span>
-                                )}
-                                {loopState === 'loop_active' && (
-                                    <span className="absolute -top-1 -right-1 text-[8px] font-bold bg-blue-500 text-white rounded-full px-1 h-4 flex items-center justify-center">A-B</span>
-                                )}
-                            </button>
-                        </footer>
-                    </div>
-                )}
+                            <div className="flex-1 min-h-[100px]" />
+
+                            <footer className="w-full px-6 py-4 pb-6 bg-white pointer-events-auto min-h-[126px] flex items-center justify-center relative z-30">
+                                {/* Stop/Reset Button (Left of Play, same height) */}
+                                <button
+                                    className={`absolute right-1/2 mr-10 w-11 h-11 rounded-full border backdrop-blur-xl flex items-center justify-center transition-all active:scale-95 bg-slate-900/80 border-slate-700/50 text-white/80 hover:bg-slate-800 hover:text-white z-40 ${!midiData ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    onClick={stopMidiPlay}
+                                    disabled={!midiData}
+                                >
+                                    <Square size={16} fill="currentColor" />
+                                </button>
+
+                                {/* Play/Pause Button (Centered) */}
+                                <button
+                                    className={`w-14 h-14 rounded-full border backdrop-blur-xl flex items-center justify-center transition-all active:scale-95 shadow-lg z-40 ${isMidiPlaying && !isPaused
+                                        ? 'bg-slate-900/90 border-slate-700/60 text-white'
+                                        : 'bg-slate-900/80 border-slate-700/50 text-white hover:bg-slate-800'
+                                        } ${!midiData ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    onClick={handleTogglePlay}
+                                    disabled={!midiData}
+                                >
+                                    {isMidiPlaying && !isPaused ? (
+                                        <Pause size={24} fill="currentColor" />
+                                    ) : (
+                                        <Play size={24} fill="currentColor" />
+                                    )}
+                                </button>
+
+                                {/* Loop Button (Right of Play, same height) */}
+                                <button
+                                    className={`absolute left-1/2 ml-10 w-11 h-11 rounded-full border backdrop-blur-xl flex items-center justify-center transition-all active:scale-95 z-40 ${loopState === 'none'
+                                        ? 'bg-slate-900/80 border-slate-700/50 text-white/80'
+                                        : loopState === 'start_set'
+                                            ? 'bg-emerald-500/90 border-emerald-400/70 text-white'
+                                            : 'bg-blue-500/90 border-blue-400/70 text-white animate-pulse'
+                                        } ${!midiData ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    onClick={handleLoopButton}
+                                    disabled={!midiData}
+                                >
+                                    <Repeat2 size={18} />
+                                    {/* State indicator */}
+                                    {loopState === 'start_set' && (
+                                        <span className="absolute -top-1 -right-1 text-[8px] font-bold bg-emerald-500 text-black rounded-full w-4 h-4 flex items-center justify-center">A</span>
+                                    )}
+                                    {loopState === 'loop_active' && (
+                                        <span className="absolute -top-1 -right-1 text-[8px] font-bold bg-blue-500 text-white rounded-full px-1 h-4 flex items-center justify-center">A-B</span>
+                                    )}
+                                </button>
+                            </footer>
+                        </div>
+                    )
+                }
 
                 {/* === Layer 3.5: Drum Settings Popup === */}
                 <AnimatePresence>
@@ -1563,82 +1622,84 @@ export default function ReelPanPage() {
 
                 {/* === Layer 6: Countdown Overlay REMOVED (Now using 3D externalTouchText) === */}
 
-            </main>
+            </main >
 
             {/* ============================================================
                 LAYER 5: Review Overlay (녹화 완료 시에만 등장)
                 - 여기가 '3가지 선택지'가 나오는 핵심 UI입니다.
             ============================================================= */}
             <AnimatePresence>
-                {recordState === 'reviewing' && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="fixed inset-0 z-[200] flex flex-col items-center justify-end bg-black/70 backdrop-blur-md"
-                    >
-                        {/* Preview Area (Video) */}
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                            {recordedVideoUrl ? (
-                                <video
-                                    src={recordedVideoUrl || undefined}
-                                    loop
-                                    autoPlay
-                                    playsInline
-                                    className="w-full h-full object-contain max-w-[480px]"
-                                />
-                            ) : (
-                                <div className="text-white/50 text-center">
-                                    <p className="text-2xl font-bold text-white mb-2">Done! 🎉</p>
-                                    <p>Loading preview...</p>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Action Bar (Compact Bottom Bar) */}
+                {
+                    recordState === 'reviewing' && (
                         <motion.div
-                            initial={{ y: 60, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            exit={{ y: 60, opacity: 0 }}
-                            transition={{ duration: 0.25, delay: 0.1 }}
-                            className="w-full max-w-md bg-zinc-900/95 border-t border-white/10 rounded-t-2xl px-5 py-3 flex items-center justify-center gap-4 shadow-2xl backdrop-blur-xl"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="fixed inset-0 z-[200] flex flex-col items-center justify-end bg-black/70 backdrop-blur-md"
                         >
-                            {/* Retake (Red) */}
-                            <button
-                                onClick={handleDiscardRecording}
-                                className="w-11 h-11 rounded-full bg-red-500/20 flex items-center justify-center text-red-400 hover:bg-red-500/30 transition active:scale-95"
-                                aria-label="Retake"
-                            >
-                                <RefreshCcw size={20} />
-                            </button>
+                            {/* Preview Area (Video) */}
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                {recordedVideoUrl ? (
+                                    <video
+                                        src={recordedVideoUrl || undefined}
+                                        loop
+                                        autoPlay
+                                        playsInline
+                                        className="w-full h-full object-contain max-w-[480px]"
+                                    />
+                                ) : (
+                                    <div className="text-white/50 text-center">
+                                        <p className="text-2xl font-bold text-white mb-2">Done! 🎉</p>
+                                        <p>Loading preview...</p>
+                                    </div>
+                                )}
+                            </div>
 
-                            {/* Time Badge */}
-                            <span className="px-3 py-1.5 rounded-full bg-white/10 text-white/80 text-sm font-mono tracking-wider">
-                                {formatTime(recordTimer)}
-                            </span>
-
-                            {/* Save */}
-                            <button
-                                onClick={handleSaveRecording}
-                                className="w-11 h-11 rounded-full bg-zinc-800 flex items-center justify-center text-white hover:bg-zinc-700 transition active:scale-95"
-                                aria-label="Save"
+                            {/* Action Bar (Compact Bottom Bar) */}
+                            <motion.div
+                                initial={{ y: 60, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ y: 60, opacity: 0 }}
+                                transition={{ duration: 0.25, delay: 0.1 }}
+                                className="w-full max-w-md bg-zinc-900/95 border-t border-white/10 rounded-t-2xl px-5 py-3 flex items-center justify-center gap-4 shadow-2xl backdrop-blur-xl"
                             >
-                                <Download size={20} />
-                            </button>
+                                {/* Retake (Red) */}
+                                <button
+                                    onClick={handleDiscardRecording}
+                                    className="w-11 h-11 rounded-full bg-red-500/20 flex items-center justify-center text-red-400 hover:bg-red-500/30 transition active:scale-95"
+                                    aria-label="Retake"
+                                >
+                                    <RefreshCcw size={20} />
+                                </button>
 
-                            {/* Share */}
-                            <button
-                                onClick={handleShareRecording}
-                                className="w-11 h-11 rounded-full bg-white flex items-center justify-center text-black hover:bg-gray-100 shadow-md transition active:scale-95"
-                                aria-label="Share"
-                            >
-                                <Share2 size={20} />
-                            </button>
+                                {/* Time Badge */}
+                                <span className="px-3 py-1.5 rounded-full bg-white/10 text-white/80 text-sm font-mono tracking-wider">
+                                    {formatTime(recordTimer)}
+                                </span>
+
+                                {/* Save */}
+                                <button
+                                    onClick={handleSaveRecording}
+                                    className="w-11 h-11 rounded-full bg-zinc-800 flex items-center justify-center text-white hover:bg-zinc-700 transition active:scale-95"
+                                    aria-label="Save"
+                                >
+                                    <Download size={20} />
+                                </button>
+
+                                {/* Share */}
+                                <button
+                                    onClick={handleShareRecording}
+                                    className="w-11 h-11 rounded-full bg-white flex items-center justify-center text-black hover:bg-gray-100 shadow-md transition active:scale-95"
+                                    aria-label="Share"
+                                >
+                                    <Share2 size={20} />
+                                </button>
+                            </motion.div>
                         </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                    )
+                }
+            </AnimatePresence >
 
             <style jsx global>{`
                 body {

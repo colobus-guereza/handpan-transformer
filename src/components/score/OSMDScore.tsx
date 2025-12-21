@@ -12,6 +12,7 @@ interface OSMDScoreProps {
     externalBpm?: number; // External BPM from MIDI file (takes priority)
     loopStartTime?: number | null; // A point in seconds (for visual marker)
     loopEndTime?: number | null;   // B point in seconds (for visual marker)
+    onScoreLoaded?: (firstNoteTime: number) => void; // Callback with the time of the first note
 }
 
 export interface OSMDScoreHandle {
@@ -31,7 +32,8 @@ const OSMDScore = forwardRef<OSMDScoreHandle, OSMDScoreProps>(({
     autoResize = true,
     externalBpm,
     loopStartTime,
-    loopEndTime
+    loopEndTime,
+    onScoreLoaded
 }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null); // OSMD renders here
     const scrollContainerRef = useRef<HTMLDivElement>(null); // Scrollable wrapper
@@ -41,6 +43,13 @@ const OSMDScore = forwardRef<OSMDScoreHandle, OSMDScoreProps>(({
 
     // Map of musical time (seconds) to horizontal X pixel position
     const [timeMap, setTimeMap] = useState<{ time: number, x: number }[]>([]);
+
+    // Debug info state for on-screen overlay
+
+
+    // VISUAL CORRECTION: Shift the score slightly Left (Scroll Right) to Center the Note Head on the Red Line.
+    // OSMD X Usually points to the left edge of the note bbox.
+    const X_SHIFT_CORRECTION = 18;
 
     // Expose cursor methods
     useImperativeHandle(ref, () => ({
@@ -65,21 +74,30 @@ const OSMDScore = forwardRef<OSMDScoreHandle, OSMDScoreProps>(({
                 targetX = prev.x + (next.x - prev.x) * ratio;
             } else if (seconds > next.time) {
                 // Beyond the last mapped note, continue at a constant rate if necessary
-                // For now, just stick to the last point
                 targetX = next.x;
             }
 
-            // The red playhead is at left 20%. So we want targetX to be at 20% of container width.
-            const playheadOffset = scrollContainerRef.current.clientWidth * 0.2;
-            const scrollX = targetX - playheadOffset;
+            // CLEAN LOGIC:
+            // Since we added 20% Padding-Left (Spacer) to the container, the content (x=0) naturally starts at the Playhead (20%).
+            // To align a note at 'targetX' with the Playhead, we simply scroll by 'targetX'.
+            // Formula: (Padding + targetX) - Scroll = Playhead
+            // Since Padding == Playhead (both 20%), this simplifies to: targetX = Scroll
+            // targetX already includes X_SHIFT_CORRECTION from timeMap creation.
 
-            // Smoothly scroll the container
-            scrollContainerRef.current.scrollLeft = Math.max(0, scrollX);
+            // Debug Log (Throttled)
+            if (Math.floor(seconds * 10) % 20 === 0) {
+                console.log(`[OSMD Sync] t=${seconds.toFixed(2)} targetX=${targetX.toFixed(1)} scrollLeft=${targetX.toFixed(1)}`);
+            }
+
+            scrollContainerRef.current.scrollLeft = targetX;
         },
         resetCursor: () => {
             if (osmdRef.current && osmdRef.current.cursor) {
                 osmdRef.current.cursor.reset();
-                if (scrollContainerRef.current) scrollContainerRef.current.scrollLeft = 0;
+                // Scroll back to the first note's position, not 0
+                if (scrollContainerRef.current && timeMap.length > 0) {
+                    scrollContainerRef.current.scrollLeft = timeMap[0].x;
+                }
             }
         },
         showCursor: () => {
@@ -95,9 +113,9 @@ const OSMDScore = forwardRef<OSMDScoreHandle, OSMDScoreProps>(({
         getTimeAtScrollPosition: () => {
             if (!scrollContainerRef.current || timeMap.length === 0) return 0;
 
-            // Calculate X position at the playhead (20% from left)
-            const playheadOffset = scrollContainerRef.current.clientWidth * 0.2;
-            const targetX = scrollContainerRef.current.scrollLeft + playheadOffset;
+            // CLEAN LOGIC: Inverse of updateTime.
+            // Scroll = targetX.
+            const targetX = scrollContainerRef.current.scrollLeft;
 
             // Find the segment [prev, next] for reverse interpolation (x -> time)
             let prev = timeMap[0];
@@ -142,6 +160,12 @@ const OSMDScore = forwardRef<OSMDScoreHandle, OSMDScoreProps>(({
         }
     }), [timeMap]);
 
+    // Use ref for callback to avoid effect re-execution
+    const onScoreLoadedRef = useRef(onScoreLoaded);
+    useEffect(() => {
+        onScoreLoadedRef.current = onScoreLoaded;
+    }, [onScoreLoaded]);
+
     useEffect(() => {
         const container = containerRef.current;
         if (!container || !musicXmlUrl) return;
@@ -181,11 +205,6 @@ const OSMDScore = forwardRef<OSMDScoreHandle, OSMDScoreProps>(({
                 // Apply Zoom
                 osmd.Zoom = zoom;
 
-                // Custom styling for dark mode adaptation (manual SVG manipulation might be needed for full dark mode support)
-                // However, let's start with basic rendering.
-                // OSMD renders black on transparent by default.
-                // We might need to invert colors via CSS or OSMD options if available.
-
                 if (isMounted) {
                     osmd.render();
 
@@ -204,13 +223,42 @@ const OSMDScore = forwardRef<OSMDScoreHandle, OSMDScoreProps>(({
                     // GraphicSheet.MeasureList is a 2D array: MeasureList[staffIndex][measureIndex]
                     // For single staff, staffIndex is 0.
                     if (gSheet.MeasureList && gSheet.MeasureList[0]) {
+                        // Smart Scaling Logic
+                        const defaultUnit = (osmd.EngravingRules as any).UnitInPixels || 10.0;
+                        // TODO: [Service Deployment Requirement] Improve logic to ensure the Digipan playhead matches individual notes at the exact moment.
+                        const SPEED_CORRECTION = 0.82; // Final Adjusted Speed: 0.82
+
+                        let conversionFactor = defaultUnit * zoom * SPEED_CORRECTION;
+
+
+                        // Auto-Resize Correction
+                        try {
+                            if (containerRef.current) {
+                                const containerWidth = containerRef.current.clientWidth;
+                                const page = (osmd.GraphicSheet as any).MusicPages?.[0];
+                                if (page) {
+                                    const pageWidthInUnits = page.PositionAndShape.Size.width;
+                                    if (pageWidthInUnits > 0) {
+                                        conversionFactor = (containerWidth / pageWidthInUnits) * SPEED_CORRECTION;
+
+                                        console.log(`[OSMD] Smart Scale. Container: ${containerWidth}px, UnitWidth: ${pageWidthInUnits.toFixed(2)}. Factor: ${conversionFactor.toFixed(3)} (Adj: ${SPEED_CORRECTION})`);
+                                    }
+                                }
+                            }
+                        } catch (e) {
+                            console.warn("[OSMD] Smart scale warning:", e);
+                        }
+
+
+
                         for (const measure of gSheet.MeasureList[0]) {
                             for (const staffEntry of measure.staffEntries) {
                                 const sourceEntry = (staffEntry as any).sourceStaffEntry;
                                 if (sourceEntry && sourceEntry.Timestamp) {
                                     const timestamp = sourceEntry.Timestamp.RealValue;
                                     const timeInSeconds = timestamp * secondsPerWholeNote;
-                                    const xPos = staffEntry.PositionAndShape.AbsolutePosition.x * 10;
+                                    // BAKE IN the X_SHIFT_CORRECTION here to unify the coordinate system.
+                                    const xPos = (staffEntry.PositionAndShape.AbsolutePosition.x * conversionFactor) + X_SHIFT_CORRECTION;
                                     map.push({ time: timeInSeconds, x: xPos });
                                 }
                             }
@@ -220,7 +268,6 @@ const OSMDScore = forwardRef<OSMDScoreHandle, OSMDScoreProps>(({
                     // Sort and deduplicate
                     const sortedMap = map.sort((a, b) => a.time - b.time);
 
-                    // Deduplicate by time (keep the furthest X for chords or multiple entries at same time)
                     const filteredMap: { time: number, x: number }[] = [];
                     for (const entry of sortedMap) {
                         if (filteredMap.length > 0 && Math.abs(entry.time - filteredMap[filteredMap.length - 1].time) < 0.001) {
@@ -232,6 +279,19 @@ const OSMDScore = forwardRef<OSMDScoreHandle, OSMDScoreProps>(({
 
                     setTimeMap(filteredMap);
                     console.log(`[OSMD] Coordinate map built. BPM: ${bpm}. Entries: ${filteredMap.length}`);
+
+                    if (filteredMap.length > 0 && onScoreLoadedRef.current) {
+                        onScoreLoadedRef.current(filteredMap[0].time);
+                        console.log(`[OSMD] First note time: ${filteredMap[0].time.toFixed(3)}s`);
+
+                        // INITIAL SYNC: Scroll to the first note immediately so it aligns with Playhead
+                        const initialX = filteredMap[0].x;
+                        if (scrollContainerRef.current) {
+                            // initialX already includes X_SHIFT_CORRECTION from timeMap creation.
+                            scrollContainerRef.current.scrollLeft = initialX;
+                            console.log(`[OSMD] Initial Scroll set to ${initialX} (to match Playhead)`);
+                        }
+                    }
 
                     osmd.cursor.reset();
                     osmd.cursor.hide();
@@ -247,13 +307,19 @@ const OSMDScore = forwardRef<OSMDScoreHandle, OSMDScoreProps>(({
             }
         };
 
-        initOSMD();
+        const timer = setTimeout(() => {
+            initOSMD();
+        }, 100);
 
         return () => {
             isMounted = false;
-            osmdRef.current = null;
+            clearTimeout(timer);
+            if (osmdRef.current) {
+                // osmdRef.current.clear(); // Removing clear might prevent blanking issues on slight re-renders, but careful with memory.
+                osmdRef.current = null;
+            }
         };
-    }, [musicXmlUrl, zoom, drawTitle, drawCredits, autoResize]);
+    }, [musicXmlUrl, zoom, drawTitle, drawCredits, autoResize, externalBpm]); // Removed onScoreLoaded
 
     // Calculate X positions for loop markers
     const getMarkerXPosition = (seconds: number | null | undefined): number | null => {
@@ -283,6 +349,8 @@ const OSMDScore = forwardRef<OSMDScoreHandle, OSMDScoreProps>(({
 
     return (
         <div className="w-full h-full relative overflow-hidden flex items-center justify-center">
+
+
             {isLoading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-white/50 z-10">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
@@ -296,36 +364,54 @@ const OSMDScore = forwardRef<OSMDScoreHandle, OSMDScoreProps>(({
             )}
 
             {/* Scrollable container wrapper */}
-            <div ref={scrollContainerRef} className="w-full h-full relative overflow-x-auto overflow-y-hidden scrollbar-hide">
+            {/* ENABLE FLEX to use Spacer Divs for precise alignment */}
+            <div
+                ref={scrollContainerRef}
+                className="w-full h-full relative overflow-x-auto overflow-y-hidden scrollbar-hide flex"
+            >
+                {/* SPACER: Explicitly pushes the score start to the 20% mark (Playhead position) */}
+                {/* This is more robust than padding in ensuring the content starts exactly where we want */}
+                <div style={{ minWidth: '20%', flexShrink: 0 }} />
+
                 {/* OSMD renders into this div - must be empty of React children */}
+                {/* Added min-w-fit to ensure it doesn't shrink */}
                 <div
                     ref={containerRef}
-                    className={`w-full h-full transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
-                    style={{ whiteSpace: 'nowrap' }}
+                    id="osmd-container"
+                    className="h-full min-w-fit flex-shrink-0"
                 />
 
-                {/* A/B Markers - positioned absolutely, respecting scroll */}
+                {/* End Spacer to allow scrolling the last note to the playhead */}
+                <div style={{ minWidth: '60%', flexShrink: 0 }} />
+
+                {/* A/B Markers - positioned absolutely relative to the SCROLL CONTAINER (so they scroll) */}
+                {/* Note: Left 0 of this container = Left Edge of Spacer. */}
+                {/* So Note 0 is at 20% (Spacer Width). */}
                 {loopStartX !== null && (
                     <div
-                        className="absolute top-0 bottom-0 z-30 pointer-events-none"
-                        style={{ left: `${loopStartX}px` }}
+                        className="absolute top-0 bottom-0 z-40 pointer-events-none flex flex-col items-center -translate-x-1/2"
+                        style={{ left: `calc(20% + ${loopStartX}px)` }}
                     >
-                        <div className="w-[2px] h-full bg-emerald-500/80 shadow-[0_0_6px_rgba(16,185,129,0.6)]" />
-                        <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-[10px] font-bold text-white shadow-md">
+                        {/* Text Bubble */}
+                        <div className="mt-[25px] mb-1 w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center text-xs font-bold text-black shadow-md border border-yellow-600 z-50">
                             A
                         </div>
+                        {/* Line */}
+                        <div className="w-[2px] flex-1 bg-yellow-400/80 shadow-[0_0_6px_rgba(250,204,21,0.6)]" />
                     </div>
                 )}
 
                 {loopEndX !== null && (
                     <div
-                        className="absolute top-0 bottom-0 z-30 pointer-events-none"
-                        style={{ left: `${loopEndX}px` }}
+                        className="absolute top-0 bottom-0 z-40 pointer-events-none flex flex-col items-center -translate-x-1/2"
+                        style={{ left: `calc(20% + ${loopEndX}px)` }}
                     >
-                        <div className="w-[2px] h-full bg-blue-500/80 shadow-[0_0_6px_rgba(59,130,246,0.6)]" />
-                        <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-[10px] font-bold text-white shadow-md">
+                        {/* Text Bubble */}
+                        <div className="mt-[25px] mb-1 w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center text-xs font-bold text-black shadow-md border border-yellow-600 z-50">
                             B
                         </div>
+                        {/* Line */}
+                        <div className="w-[2px] flex-1 bg-yellow-400/80 shadow-[0_0_6px_rgba(250,204,21,0.6)]" />
                     </div>
                 )}
             </div>
