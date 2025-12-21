@@ -60,6 +60,9 @@ const translations = {
         uiFeature3Description: "Press the red button in the center to start or stop recording your performance.",
         uiFeature4Title: "Drum & Chord Accompaniment",
         uiFeature4Description: "Enrich your performance by adding simple drum or chord backing tracks. Long press the button for more options.",
+        audioGuide1: "If the handpan doesn't make a sound when you touch it, please turn off silent mode on your phone first.",
+        audioGuide2: "If there's still no sound or the sound is strange after turning off silent mode, please refresh the page.",
+        audioGuide3: "Most issues are resolved by turning off silent mode or refreshing the page.",
         description: "ReelPan is a creative tool designed to instantly transform digital handpan performances into high-quality vertical reels ready for sharing.",
         cta: "Create Reel",
         chips: {
@@ -125,6 +128,9 @@ const translations = {
         uiFeature3Description: "중앙의 빨간 버튼을 눌러 연주를 녹화하거나 정지할 수 있습니다.",
         uiFeature4Title: "드럼 & 화음 반주",
         uiFeature4Description: "심플한 드럼/화음 반주를 더하여 연주를 더욱 풍부하게 만들 수 있습니다. 버튼을 길게 눌러보세요.",
+        audioGuide1: "핸드팬을 터치해도 소리가 안 나면, 휴대폰 무음 모드를 먼저 꺼주세요.",
+        audioGuide2: "무음 모드를 껐는데도 소리가 없거나 소리가 이상하면, 페이지를 새로고침해 주세요.",
+        audioGuide3: "대부분은 무음 모드 해제 또는 새로고침으로 해결됩니다.",
         description: "릴팬 ReelPan은 디지털 핸드팬 연주를 즉시 공유 가능한 고품질 세로형 릴스 영상으로 변환해주는 창작 도구입니다.",
         cta: "새로 만들기",
         chips: {
@@ -186,14 +192,14 @@ export default function PlaygroundHome() {
                 </button>
 
                 {/* Main Title - Exact Vertical Center */}
-                <h1 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 !text-5xl lg:!text-7xl font-black tracking-tight text-center leading-tight whitespace-nowrap">
+                <h1 className="absolute top-[calc(50%-30px)] left-1/2 -translate-x-1/2 -translate-y-1/2 !text-5xl lg:!text-7xl font-black tracking-tight text-center leading-tight whitespace-nowrap">
                     <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-400">
                         ReelPan
                     </span>
                 </h1>
 
                 {/* Subtitle & CTA - Below Center */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 mt-12 flex flex-col items-center gap-6">
+                <div className="absolute top-[calc(50%+10px)] left-1/2 -translate-x-1/2 mt-12 flex flex-col items-center gap-6">
                     <p className="!text-[0.975rem] sm:!text-[1.1375rem] lg:!text-[1.625rem] text-slate-400 font-medium tracking-wide flex items-center gap-2 whitespace-nowrap justify-center">
                         {lang === 'en' ? (
                             <>
@@ -232,10 +238,10 @@ export default function PlaygroundHome() {
                 {/* Navigation Button: Go to Screen 2 */}
                 <button
                     onClick={() => scrollToSection(screen2Ref)}
-                    className="absolute bottom-4 right-4 p-3 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-cyan-300 border border-white/5 transition-all shadow-lg backdrop-blur-md animate-pulse-slow group"
+                    className="absolute bottom-[calc(1rem+10px)] right-4 text-slate-400 hover:text-cyan-300 transition-all animate-pulse-slow group"
                     aria-label="Next Page"
                 >
-                    <HelpCircle size={20} className="group-hover:scale-110 transition-transform" />
+                    <HelpCircle size={29} className="group-hover:scale-110 transition-transform" />
                 </button>
             </section>
 
@@ -463,6 +469,21 @@ export default function PlaygroundHome() {
                                 </div>
                                 <h4 className="text-lg font-bold text-white">{t.uiFeature4Title}</h4>
                                 <p className="text-slate-400 text-[1.05rem] text-center">{t.uiFeature4Description}</p>
+                            </div>
+                        </div>
+
+                        {/* 안내문구 섹션 */}
+                        <div className="w-full max-w-5xl mx-auto mt-8 p-6 rounded-3xl bg-transparent border-transparent">
+                            <div className="flex flex-col gap-3 items-center text-center">
+                                <p className="text-[1.05rem] leading-relaxed text-slate-300">
+                                    {t.audioGuide1}
+                                </p>
+                                <p className="text-[1.05rem] leading-relaxed text-slate-300">
+                                    {t.audioGuide2}
+                                </p>
+                                <p className="text-[1.05rem] leading-relaxed text-slate-300">
+                                    {t.audioGuide3}
+                                </p>
                             </div>
                         </div>
                     </div>

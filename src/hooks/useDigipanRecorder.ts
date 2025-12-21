@@ -50,19 +50,28 @@ export const useDigipanRecorder = ({
 
             let videoStream: MediaStream;
 
+            const MAX_RESOLUTION = 1080;
+
             if (cropModeRef.current === 'square') {
                 // ============================================
-                // SQUARE MODE: 오프스크린 캔버스로 중앙 크롭
+                // SQUARE MODE: 오프스크린 캔버스로 중앙 크롭 (Max 1080p)
                 // ============================================
                 const srcWidth = canvas.width;
                 const srcHeight = canvas.height;
-                const squareSize = Math.min(srcWidth, srcHeight);
+                let squareSize = Math.min(srcWidth, srcHeight);
 
-                // 중앙 영역 계산
-                const cropX = (srcWidth - squareSize) / 2;
-                const cropY = (srcHeight - squareSize) / 2;
+                // Resolution Cap
+                if (squareSize > MAX_RESOLUTION) {
+                    console.log(`[Recorder] Cap square resolution: ${squareSize} -> ${MAX_RESOLUTION}`);
+                    squareSize = MAX_RESOLUTION;
+                }
 
-                console.log(`[Recorder] Creating square crop: ${squareSize}x${squareSize} from ${srcWidth}x${srcHeight}`);
+                // 중앙 영역 계산 (원본 기준)
+                const originalSquareSize = Math.min(srcWidth, srcHeight);
+                const cropX = (srcWidth - originalSquareSize) / 2;
+                const cropY = (srcHeight - originalSquareSize) / 2;
+
+                console.log(`[Recorder] Creating square crop: ${squareSize}x${squareSize}`);
 
                 // 오프스크린 캔버스 생성
                 const offscreen = document.createElement('canvas');
@@ -76,27 +85,58 @@ export const useDigipanRecorder = ({
                     return;
                 }
 
-                // 애니메이션 루프: 원본 → 오프스크린 복사
+                // 애니메이션 루프
                 const copyFrame = () => {
                     if (!offscreenCanvasRef.current) return;
-
                     offCtx.drawImage(
                         canvas,
-                        cropX, cropY, squareSize, squareSize, // 소스 영역 (중앙 정사각형)
-                        0, 0, squareSize, squareSize            // 대상 영역 (전체)
+                        cropX, cropY, originalSquareSize, originalSquareSize, // Source (Center Crop)
+                        0, 0, squareSize, squareSize            // Destination (Scaled)
                     );
-
                     animationFrameRef.current = requestAnimationFrame(copyFrame);
                 };
                 copyFrame();
 
-                // 오프스크린 캔버스에서 스트림 캡처
-                videoStream = offscreen.captureStream(60);
+                videoStream = offscreen.captureStream(30); // 30 FPS
             } else {
                 // ============================================
-                // FULL MODE: 기존 방식 (캔버스 전체)
+                // FULL MODE: Max 1080p Downscaling
                 // ============================================
-                videoStream = canvas.captureStream(60);
+                const srcWidth = canvas.width;
+                const srcHeight = canvas.height;
+                const maxDim = Math.max(srcWidth, srcHeight);
+
+                if (maxDim > MAX_RESOLUTION) {
+                    // Downscale needed
+                    const scale = MAX_RESOLUTION / maxDim;
+                    const destWidth = Math.round(srcWidth * scale);
+                    const destHeight = Math.round(srcHeight * scale);
+
+                    console.log(`[Recorder] Downscaling Full Mode: ${srcWidth}x${srcHeight} -> ${destWidth}x${destHeight}`);
+
+                    const offscreen = document.createElement('canvas');
+                    offscreen.width = destWidth;
+                    offscreen.height = destHeight;
+                    offscreenCanvasRef.current = offscreen;
+
+                    const offCtx = offscreen.getContext('2d');
+                    if (!offCtx) {
+                        // Fallback
+                        console.error('[Recorder] Failed to get context for resize, using original');
+                        videoStream = canvas.captureStream(30);
+                    } else {
+                        const copyFrame = () => {
+                            if (!offscreenCanvasRef.current) return;
+                            offCtx.drawImage(canvas, 0, 0, srcWidth, srcHeight, 0, 0, destWidth, destHeight);
+                            animationFrameRef.current = requestAnimationFrame(copyFrame);
+                        };
+                        copyFrame();
+                        videoStream = offscreen.captureStream(30);
+                    }
+                } else {
+                    // Original is small enough
+                    videoStream = canvas.captureStream(30);
+                }
             }
 
             // 2. Capture Audio Stream from Howler
@@ -162,9 +202,9 @@ export const useDigipanRecorder = ({
 
             const options: MediaRecorderOptions = {
                 mimeType: selectedMimeType || undefined,
-                videoBitsPerSecond: 50000000 // 50 Mbps
+                videoBitsPerSecond: 15000000 // 15 Mbps (High Quality, Safe)
             };
-            console.log(`[Recorder] Using MIME Type: ${selectedMimeType || 'default'} @ 50Mbps`);
+            console.log(`[Recorder] Using MIME Type: ${selectedMimeType || 'default'} @ 15Mbps`);
 
             const recorder = new MediaRecorder(combinedStream, options);
             mediaRecorderRef.current = recorder;

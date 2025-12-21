@@ -39,14 +39,13 @@ export function ReelPanSkeleton() {
                     </div>
                 </header>
 
-                {/* Spacer equivalent to keep flex layout consistent if needed, but justify-between handles it */}
+                {/* Spacer to match client structure exactly */}
+                <div className="flex-1 min-h-[100px]" />
 
-                {/* Footer Skeleton - matches real footer (px-6 py-8 pb-10, min-h-[180px], max-w-[380px] justify-between) */}
-                <footer className="w-full px-6 py-8 pb-10 bg-gradient-to-t from-black/95 to-transparent min-h-[180px] flex flex-col items-center gap-6">
-                    {/* Timer badge placeholder (invisible in idle state, keeps spacing) */}
-                    <div className="h-8 opacity-0" />
+                {/* Footer Skeleton - matches real footer (px-6 py-8 pb-6, min-h-[180px], justify-end) */}
+                <footer className="w-full px-6 py-8 pb-6 bg-gradient-to-t from-black/95 to-transparent min-h-[180px] flex flex-col justify-end items-center gap-6">
                     {/* Button group placeholder */}
-                    <div className="w-full flex items-center justify-between max-w-[380px]">
+                    <div className="w-full flex items-center justify-between max-w-[380px] relative">
                         <div className="w-12 h-12 rounded-full bg-white/10 animate-pulse" />
                         <div className="w-12 h-12 rounded-full bg-white/10 animate-pulse" />
                         {/* Center record button - larger */}

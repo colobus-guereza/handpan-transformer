@@ -1188,6 +1188,7 @@ export default function ReelPanClient() {
 
     // 1. 녹화 시작
     const startRecording = () => {
+        if (timerRef.current) clearInterval(timerRef.current);
         setRecordState('recording');
         setIsRecording(true);
         setRecordTimer(0);
@@ -1210,9 +1211,12 @@ export default function ReelPanClient() {
     };
 
     const initiateRecordingProcess = () => {
+        // 카운트다운 중이면 중복 실행 방지
+        if (recordCountdown) return;
+
         if (recordState === 'idle') {
             // 카운트다운 시작
-            let count = 4;
+            let count = 3;
             setRecordCountdown(count);
 
             const interval = setInterval(() => {
@@ -1221,10 +1225,17 @@ export default function ReelPanClient() {
                     setRecordCountdown(count);
                 } else if (count === 0) {
                     setRecordCountdown('Touch!');
-                    startRecording(); // 실제 녹화 시작
-                } else {
-                    setRecordCountdown(null);
                     clearInterval(interval);
+
+                    // Touch! 표시 시간을 650ms로 복구
+                    setTimeout(() => {
+                        setRecordCountdown(null);
+
+                        // Fade Out 시간을 고려하여 100ms 후 녹화 시작 (더 빠르게 반응)
+                        setTimeout(() => {
+                            startRecording();
+                        }, 100);
+                    }, 650);
                 }
             }, 650); // 사용자의 요청에 따라 0.65초(650ms) 간격으로 조정
         } else if (recordState === 'recording') {
@@ -1263,6 +1274,13 @@ export default function ReelPanClient() {
 
     // Recording Handlers
     const handleRecordingComplete = (blob: Blob) => {
+        // 1. Stop all live audio immediately
+        setIsDrumPlaying(false);
+        setIsChordPlaying(false);
+        Tone.Transport.stop();
+        Tone.Transport.position = 0;
+
+        // 2. Process Recording
         setRecordingBlob(blob);
         // 비디오 URL 생성 및 리뷰 모드 전환
         const url = URL.createObjectURL(blob);
@@ -1592,28 +1610,10 @@ export default function ReelPanClient() {
 
                         <div className="flex-1 min-h-[100px]" />
 
-                        <footer className="w-full px-6 py-8 pb-10 bg-gradient-to-t from-black/95 to-transparent pointer-events-auto min-h-[180px] flex flex-col items-center gap-6">
-
-                            {/* 녹화 타이머 뱃지 */}
-                            <motion.div
-                                initial={false}
-                                animate={{
-                                    opacity: recordState === 'recording' ? 1 : 0,
-                                    y: recordState === 'recording' ? 0 : 10,
-                                }}
-                                transition={{ duration: 0.3 }}
-                                className={`flex items-center gap-2 px-4 py-1.5 rounded-full backdrop-blur-md border transition-all duration-300
-                                ${recordState === 'recording'
-                                        ? 'bg-red-500/20 border-red-500/50'
-                                        : 'bg-black/20 border-white/10 pointer-events-none'}
-                            `}
-                            >
-                                <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
-                                <span className="text-red-100 font-mono text-sm font-medium tracking-wider">{formatTime(recordTimer)}</span>
-                            </motion.div>
+                        <footer className="w-full px-6 py-8 pb-6 bg-gradient-to-t from-black/95 to-transparent pointer-events-auto min-h-[180px] flex flex-col justify-end items-center gap-6">
 
                             {/* 하단 버튼 그룹 */}
-                            <div className="w-full flex items-center justify-between max-w-[380px]">
+                            <div className="w-full flex items-center justify-between max-w-[380px] relative">
                                 {/* 1. Label Toggle */}
                                 <button
                                     onClick={() => setViewMode(prev => prev === 2 ? 3 : 2)}
@@ -1630,12 +1630,31 @@ export default function ReelPanClient() {
                                     <span className="text-[10px] font-bold text-white tracking-widest">{layoutMode === 'reel' ? "9:16" : "1:1"}</span>
                                 </button>
 
+                                {/* Recording Timer Badge (Centered above Record Button - Screen Center) */}
+                                <motion.div
+                                    initial={false}
+                                    animate={{
+                                        opacity: recordState === 'recording' ? 1 : 0,
+                                        y: recordState === 'recording' ? 0 : -10,
+                                    }}
+                                    transition={{ duration: 0.3 }}
+                                    className={`absolute -top-12 left-0 right-0 mx-auto w-fit flex items-center justify-center gap-2 px-4 py-1.5 rounded-full backdrop-blur-md border transition-all duration-300 pointer-events-none z-50
+                                    ${recordState === 'recording'
+                                            ? 'bg-red-500/20 border-red-500/50'
+                                            : 'bg-black/20 border-white/10 opacity-0'}
+                                `}
+                                >
+                                    <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+                                    <span className="text-black font-mono text-sm font-medium tracking-wider">{formatTime(recordTimer)}</span>
+                                </motion.div>
+
                                 {/* 3. Record Button (Center) - 🔴 Main Record Toggle Button */}
                                 <div className="relative group z-10 flex justify-center mx-2">
                                     <div className={`absolute inset-0 bg-red-500 rounded-full blur-2xl transition-opacity duration-500 ${recordState === 'recording' ? 'opacity-60 animate-pulse' : 'opacity-0 group-hover:opacity-30'}`} />
                                     <button
                                         onClick={initiateRecordingProcess}
-                                        className="relative transition-all duration-300 hover:scale-105 active:scale-95"
+                                        disabled={!!recordCountdown}
+                                        className={`relative transition-all duration-300 hover:scale-105 active:scale-95 ${recordCountdown ? 'opacity-50 cursor-not-allowed' : ''}`}
                                         aria-label={recordState === 'recording' ? "녹화 정지" : "녹화 시작"}
                                     >
                                         {/* Outer Ring */}
@@ -1658,13 +1677,12 @@ export default function ReelPanClient() {
                                     onPointerUp={handleDrumUp}
                                     disabled={!isDrumSynthReady}
                                     className={`w-12 h-12 rounded-full backdrop-blur-md border border-white/10 flex flex-col items-center justify-center transition-all active:scale-90 relative overflow-hidden group
-                                         ${
-                                             !isDrumSynthReady
-                                                 ? 'bg-white/5 opacity-50 cursor-not-allowed'
-                                                 : isDrumPlaying
-                                                     ? 'bg-orange-500/40 border-orange-500/50'
-                                                     : 'bg-white/10 hover:bg-white/20'
-                                         }
+                                         ${!isDrumSynthReady
+                                            ? 'bg-white/5 opacity-50 cursor-not-allowed'
+                                            : isDrumPlaying
+                                                ? 'bg-orange-500/40 border-orange-500/50'
+                                                : 'bg-white/10 hover:bg-white/20'
+                                        }
                                      `}
                                     title={!isDrumSynthReady ? '초기화 중...' : '드럼 반주 토글 (길게 누르면 설정)'}
                                 >
@@ -1687,13 +1705,12 @@ export default function ReelPanClient() {
                                     onPointerDown={handleChordDown}
                                     onPointerUp={handleChordUp}
                                     disabled={!isChordSynthReady}
-                                    className={`w-12 h-12 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center transition-all active:scale-95 relative overflow-hidden group ${
-                                        !isChordSynthReady
-                                            ? 'bg-white/5 opacity-50 cursor-not-allowed'
-                                            : isChordPlaying
-                                                ? 'bg-purple-500/30 border-purple-500/50'
-                                                : 'bg-white/10 hover:bg-white/20'
-                                    }`}
+                                    className={`w-12 h-12 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center transition-all active:scale-95 relative overflow-hidden group ${!isChordSynthReady
+                                        ? 'bg-white/5 opacity-50 cursor-not-allowed'
+                                        : isChordPlaying
+                                            ? 'bg-purple-500/30 border-purple-500/50'
+                                            : 'bg-white/10 hover:bg-white/20'
+                                        }`}
                                     title={!isChordSynthReady ? '초기화 중...' : '화음 반주 토글 (길게 누르면 설정)'}
                                 >
                                     <Music2 size={18} className={!isChordSynthReady ? 'text-white/20' : isChordPlaying ? 'text-purple-300' : 'text-white/40'} />
@@ -1710,6 +1727,7 @@ export default function ReelPanClient() {
                                     </div>
                                 </button>
                             </div>
+
                         </footer>
                     </div>
                 )}
