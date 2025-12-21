@@ -235,7 +235,13 @@ const OSMDScore = forwardRef<OSMDScoreHandle, OSMDScoreProps>(({
                         onScoreLoadedRef.current(filteredMap[0].time);
                         const initialX = filteredMap[0].x;
                         if (scrollContainerRef.current) {
-                            scrollContainerRef.current.scrollLeft = initialX;
+                            // STABLE INITIAL SYNC: Use a small delay to ensure layout is ready and smooth scroll is ignored.
+                            setTimeout(() => {
+                                if (scrollContainerRef.current) {
+                                    scrollContainerRef.current.scrollLeft = initialX;
+                                    console.log(`[OSMD] Initial Scroll set to ${initialX}`);
+                                }
+                            }, 50);
                         }
                     }
 
@@ -340,7 +346,11 @@ const OSMDScore = forwardRef<OSMDScoreHandle, OSMDScoreProps>(({
 
             <style jsx global>{`
                 .scrollbar-hide::-webkit-scrollbar { display: none; }
-                .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+                .scrollbar-hide { 
+                    -ms-overflow-style: none; 
+                    scrollbar-width: none; 
+                    scroll-behavior: auto !important; /* Force instant sync, bypass global smooth scroll */
+                }
                 .osmd-cursor { opacity: 0; }
              `}</style>
         </div>
