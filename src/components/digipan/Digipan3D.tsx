@@ -1332,7 +1332,7 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
         <div
             ref={containerRef}
             className="w-full h-full relative"
-            style={{ background: '#FFFFFF', touchAction: 'pan-y' }}
+            style={{ background: '#FFFFFF', touchAction: isCameraLockedState ? 'none' : 'pan-y' }}
         > {/* White Background, Allow vertical scroll */}
 
             {/* Mobile Layout: Bottom Corner Buttons */}
