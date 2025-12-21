@@ -140,7 +140,12 @@ const TouchText = ({ isIdle, suppressExplosion = false, overrideText, interactio
 
     // Sequential Text Cycling
     const [stepIndex, setStepIndex] = useState(0);
-    const [displayedText, setDisplayedText] = useState<string | null>('Ready');
+    // ★ Fix: Compute initial state based on props to prevent 'Ready' flash
+    const [displayedText, setDisplayedText] = useState<string | null>(() => {
+        if (overrideText) return overrideText;
+        if (isIdle) return 'Ready';
+        return null;
+    });
 
     // Logic: Sync displayedText based on state
     // Separation: overrideText (Recording) takes absolute priority and silences the idle cycle.

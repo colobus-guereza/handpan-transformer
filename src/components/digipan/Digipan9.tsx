@@ -31,6 +31,7 @@ export interface Digipan9Props {
     disableRecordingUI?: boolean;
     externalTouchText?: string | null;
     showTouchText?: boolean;
+    disableJamSession?: boolean; // ★ Mobile Optimization: Disable JamSession audio
 }
 
 const Digipan9 = React.forwardRef<Digipan3DHandle, Digipan9Props>(({
@@ -57,6 +58,7 @@ const Digipan9 = React.forwardRef<Digipan3DHandle, Digipan9Props>(({
     recordingCropMode,
     externalTouchText = null,
     showTouchText,
+    disableJamSession = false, // ★ Default: enabled
 }, ref) => {
 
     // Internal Note Generation (Standard 9-Note D Kurd Layout)
@@ -156,6 +158,7 @@ const Digipan9 = React.forwardRef<Digipan3DHandle, Digipan9Props>(({
             cameraTargetY={DIGIPAN_VIEW_CONFIG['9'].targetY}
             externalTouchText={externalTouchText}
             showTouchText={showTouchText}
+            disableJamSession={disableJamSession}
         />
     );
 });

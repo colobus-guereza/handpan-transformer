@@ -80,6 +80,13 @@ export const useDigipanRecorder = ({
 
             const MAX_RESOLUTION = 1080;
 
+            // 모바일 기기 감지 (이미 Line 232에서 정의되어 있지만, 이 시점에서 필요)
+            const isMobileDevice = typeof navigator !== 'undefined' &&
+                /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+            // FPS 설정: 모바일/데스크톱 모두 30fps (애니메이션 부드러움)
+            const targetFPS = 30;
+
             if (cropModeRef.current === 'square') {
                 // ============================================
                 // SQUARE MODE: 오프스크린 캔버스로 중앙 크롭 (Max 1080p)
@@ -125,7 +132,7 @@ export const useDigipanRecorder = ({
                 };
                 copyFrame();
 
-                videoStream = offscreen.captureStream(30); // 30 FPS
+                videoStream = offscreen.captureStream(targetFPS);
             } else {
                 // ============================================
                 // FULL MODE: Max 1080p Downscaling
@@ -151,7 +158,7 @@ export const useDigipanRecorder = ({
                     if (!offCtx) {
                         // Fallback
                         console.error('[Recorder] Failed to get context for resize, using original');
-                        videoStream = canvas.captureStream(30);
+                        videoStream = canvas.captureStream(targetFPS);
                     } else {
                         const copyFrame = () => {
                             if (!offscreenCanvasRef.current) return;
@@ -159,11 +166,11 @@ export const useDigipanRecorder = ({
                             animationFrameRef.current = requestAnimationFrame(copyFrame);
                         };
                         copyFrame();
-                        videoStream = offscreen.captureStream(30);
+                        videoStream = offscreen.captureStream(targetFPS);
                     }
                 } else {
                     // Original is small enough
-                    videoStream = canvas.captureStream(30);
+                    videoStream = canvas.captureStream(targetFPS);
                 }
             }
 
@@ -234,18 +241,35 @@ export const useDigipanRecorder = ({
 
             const options: MediaRecorderOptions = {
                 mimeType: selectedMimeType || undefined,
-                // 모바일: 5 Mbps (메모리 효율), 데스크톱: 50 Mbps (고품질)
-                videoBitsPerSecond: isMobile ? 5000000 : 50000000
+                // 모바일: 30 Mbps (iOS 무시 대응), 데스크톱: 50 Mbps (고품질)
+                videoBitsPerSecond: isMobile ? 30000000 : 50000000
             };
-            console.log(`[Recorder] Using MIME Type: ${selectedMimeType || 'default'} @ ${isMobile ? '5' : '50'}Mbps (${isMobile ? 'Mobile' : 'Desktop'})`);
+            console.log(`[Recorder] 📹 Configuration:`);
+            console.log(`  - Device: ${isMobile ? 'Mobile' : 'Desktop'}`);
+            console.log(`  - MIME Type: ${selectedMimeType || 'default'}`);
+            console.log(`  - Target Bitrate: ${isMobile ? '30' : '50'} Mbps`);
+            console.log(`  - Target FPS: ${targetFPS} fps`);
 
             const recorder = new MediaRecorder(combinedStream, options);
             mediaRecorderRef.current = recorder;
             chunksRef.current = [];
 
+            // 디버그용 변수
+            let recordStartTime = 0;
+            let totalDataSize = 0;
+            let chunkCount = 0;
+
             recorder.ondataavailable = (e) => {
                 if (e.data.size > 0) {
                     chunksRef.current.push(e.data);
+                    chunkCount++;
+                    totalDataSize += e.data.size;
+
+                    const elapsedSec = ((Date.now() - recordStartTime) / 1000).toFixed(1);
+                    const chunkSizeMB = (e.data.size / 1024 / 1024).toFixed(2);
+                    const totalSizeMB = (totalDataSize / 1024 / 1024).toFixed(2);
+
+                    console.log(`[Recorder] 📦 Chunk #${chunkCount}: ${chunkSizeMB} MB (Total: ${totalSizeMB} MB, Time: ${elapsedSec}s)`);
                 }
             };
 

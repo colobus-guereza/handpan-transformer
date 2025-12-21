@@ -77,6 +77,9 @@ let IS_GLOBAL_LOADED = false;
 let GLOBAL_HOWLER: any = null;
 const OBSERVERS: ((progress: number, isLoaded: boolean) => void)[] = [];
 
+// ★ First Touch Performance Debugging
+let IS_FIRST_TOUCH = true;
+
 // Helper to notify all hooks of progress
 const notifyObservers = () => {
     OBSERVERS.forEach(cb => cb(GLOBAL_LOADING_PROGRESS, IS_GLOBAL_LOADED));
@@ -184,8 +187,25 @@ export const useHandpanAudio = (): UseHandpanAudioReturn => {
     }, []);
 
     const playNote = useCallback((noteName: string, volume: number = 0.6) => {
+        // ★ Performance Timing Start
+        const t0 = performance.now();
+        const isFirstTouch = IS_FIRST_TOUCH;
+        if (IS_FIRST_TOUCH) {
+            console.log('[Perf] ===== FIRST TOUCH DETECTED =====');
+            IS_FIRST_TOUCH = false;
+        }
+
         // Optimistic resume (fire and forget)
-        if (GLOBAL_HOWLER?.ctx?.state === 'suspended') GLOBAL_HOWLER.ctx.resume();
+        const ctxStateBefore = GLOBAL_HOWLER?.ctx?.state;
+        const t1 = performance.now();
+        if (GLOBAL_HOWLER?.ctx?.state === 'suspended') {
+            GLOBAL_HOWLER.ctx.resume();
+            console.log(`[Perf] AudioContext.resume() called (was: ${ctxStateBefore})`);
+        }
+        const t2 = performance.now();
+        if (isFirstTouch) {
+            console.log(`[Perf] AudioContext check: ${(t2 - t1).toFixed(1)}ms (state: ${ctxStateBefore})`);
+        }
 
         // Normalize Note Name (e.g. A# -> Bb)
         const normalized = normalizeNote(noteName);
@@ -194,21 +214,29 @@ export const useHandpanAudio = (): UseHandpanAudioReturn => {
         if (sound) {
             try {
                 // Simple direct playback (no fade - testing if fade causes issues)
+                const t3 = performance.now();
                 sound.volume(volume);
                 sound.play();
+                const t4 = performance.now();
+                if (isFirstTouch) {
+                    console.log(`[Perf] sound.play(): ${(t4 - t3).toFixed(1)}ms`);
+                    console.log(`[Perf] TOTAL playNote: ${(t4 - t0).toFixed(1)}ms`);
+                    console.log('[Perf] ===== END FIRST TOUCH =====');
+                }
                 return;
             } catch (e) {
                 // Fallback
             }
-        } else {
-            console.warn(`[useHandpanAudio] Cache miss for ${noteName} -> ${normalized}. Fallback to Audio tag.`);
         }
+        else {
+            console.warn(`[useHandpanAudio] Cache miss for ${noteName} -> ${normalized}. Fallback to Audio tag.`);
 
-        // Fallback Logic (Only if cache missing)
-        const filename = normalized.replace('#', '%23');
-        const audio = new Audio(`/sounds/${filename}.mp3`);
-        audio.volume = volume;
-        audio.play().catch(e => console.error(e));
+            // Fallback Logic (Only if cache missing)
+            const filename = normalized.replace('#', '%23');
+            const audio = new Audio(`/sounds/${filename}.mp3`);
+            audio.volume = volume;
+            audio.play().catch(e => console.error(e));
+        }
     }, []);
 
     const getAudioContext = useCallback(() => {

@@ -35,6 +35,7 @@ interface Digipan18MProps {
     disableRecordingUI?: boolean;
     externalTouchText?: string | null;
     showTouchText?: boolean;
+    disableJamSession?: boolean; // ★ Mobile Optimization
 }
 
 // Composite Background Component for Digipan 18M (Currently same as 15M: Mutant image)
@@ -120,6 +121,7 @@ const Digipan18M = React.forwardRef<Digipan3DHandle, Digipan18MProps>(({
     recordingCropMode,
     externalTouchText = null,
     showTouchText,
+    disableJamSession = false,
 }, ref) => {
 
     // 15-Note Base Coordinates (COPIED FROM 15M AS STARTING POINT)
@@ -405,6 +407,7 @@ const Digipan18M = React.forwardRef<Digipan3DHandle, Digipan18MProps>(({
             showAxes={showAxes}
             externalTouchText={externalTouchText}
             showTouchText={showTouchText}
+            disableJamSession={disableJamSession}
         />
     );
 });

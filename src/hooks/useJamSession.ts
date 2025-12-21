@@ -155,8 +155,11 @@ export const useJamSession = ({
 
     // === [2] 스케일 변경 시 데이터 업데이트 + 자동 중지 ===
     useEffect(() => {
-        // ★ If disabled, do NOT interfere with Transport
-        if (!enabled) return;
+        // ★ If disabled, skip ALL logic (Mobile Optimization for /practice)
+        if (!enabled) {
+            return;
+        }
+
         if (!rootNote || scaleNotes.length < 5) return;
 
         // 스케일 변경 감지를 위한 키 생성
@@ -191,7 +194,7 @@ export const useJamSession = ({
         console.log(`[JamSession] Scale Updated: Root=${rootNote}, KickHz=${kickPitchRef.current.toFixed(1)}`);
         console.log(`[JamSession] Chords:`, chordSetsRef.current);
 
-    }, [rootNote, scaleNotes]); // ← isPlaying 제거! 무한 루프 방지
+    }, [enabled, rootNote, scaleNotes]); // ★ enabled 추가 - disabled 시 재실행 방지
 
 
     const [introCountdown, setIntroCountdown] = useState<string | null>(null);

@@ -145,8 +145,17 @@ export default function ReelPanClient() {
     const previewTimersRef = useRef<NodeJS.Timeout[]>([]);
     const abortControllerRef = useRef<AbortController | null>(null);
 
-    // 2. Audio Preloading
-    const { isLoaded, loadingProgress, playNote, resumeAudio } = useHandpanAudio();
+    // 2. Audio Preloading (Prioritize Current Scale)
+    const priorityNotes = useMemo(() => {
+        if (!targetScale) return undefined;
+        return [
+            targetScale.notes.ding,
+            ...targetScale.notes.top,
+            ...(targetScale.notes.bottom || [])
+        ];
+    }, [targetScale.id]); // Stable dependency
+
+    const { isLoaded, loadingProgress, playNote, resumeAudio } = useHandpanAudio(priorityNotes);
 
     // 3. Handlers
     const stopPreview = () => {
@@ -1393,7 +1402,9 @@ export default function ReelPanClient() {
             onIsRecordingChange: setIsRecording,
             onRecordingComplete: handleRecordingComplete,
             disableRecordingUI: true,
-            showTouchText: false, // 비활성화 (화음 반주로 대체됨)
+            hideTouchText: false, // Keep mounted to avoid remount flash
+            showTouchText: false, // Disable idle Ready/Set/Touch cycle
+            useCountdownText: true, // ★ Use lightweight CountdownText instead of TouchText
             externalTouchText: recordCountdown ? recordCountdown.toString() : null, // 3D 카운트다운 텍스트 주입
             recordingCropMode: layoutMode === 'square' ? 'square' as 'square' : 'full' as 'full',
             enableZoom: false, // 마우스 휠 줌인/줌아웃 비활성화

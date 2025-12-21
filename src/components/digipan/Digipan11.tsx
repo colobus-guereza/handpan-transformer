@@ -94,6 +94,7 @@ interface Digipan11Props {
     disableRecordingUI?: boolean;
     externalTouchText?: string | null;
     showTouchText?: boolean;
+    disableJamSession?: boolean; // ★ Mobile Optimization
 }
 
 const Digipan11 = React.forwardRef<Digipan3DHandle, Digipan11Props>(({
@@ -120,6 +121,7 @@ const Digipan11 = React.forwardRef<Digipan3DHandle, Digipan11Props>(({
     recordingCropMode,
     externalTouchText = null,
     showTouchText,
+    disableJamSession = false,
 }, ref) => {
 
     // Internal Note Generation (C# Pygmy 11 Layout)
@@ -329,6 +331,7 @@ const Digipan11 = React.forwardRef<Digipan3DHandle, Digipan11Props>(({
             recordingCropMode={recordingCropMode}
             externalTouchText={externalTouchText}
             showTouchText={showTouchText}
+            disableJamSession={disableJamSession}
         />
     );
 });

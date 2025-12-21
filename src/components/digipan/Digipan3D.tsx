@@ -16,6 +16,7 @@ import html2canvas from 'html2canvas';
 import { useHandpanAudio } from '@/hooks/useHandpanAudio';
 import { usePathname } from 'next/navigation';
 import TouchText from './TouchText';
+import CountdownText from './CountdownText';
 import { useOctaveResonance, ResonanceSettings } from '@/hooks/useOctaveResonance';
 import { DEFAULT_HARMONIC_SETTINGS, DigipanHarmonicConfig } from '@/constants/harmonicDefaults';
 import { useDigipanRecorder } from '@/hooks/useDigipanRecorder';
@@ -138,6 +139,7 @@ interface Digipan3DProps {
     externalTouchText?: string | null; // NEW: 외부에서 주입하는 터치 텍스트 (카운트다운용)
     showTouchText?: boolean; // New: Toggle for idle Ready/Set/Touch cycle
     disableJamSession?: boolean; // NEW: Disable internal useJamSession audio engine
+    useCountdownText?: boolean; // NEW: Use lightweight CountdownText instead of TouchText
 }
 
 export interface Digipan3DHandle {
@@ -353,7 +355,7 @@ const ToneFieldMesh = React.memo(({
     const effectMaterialRef = useRef<THREE.MeshBasicMaterial>(null);
     const impactRingRef = useRef<THREE.Mesh>(null);
     const impactMaterialRef = useRef<THREE.MeshBasicMaterial>(null);
-    const animState = useRef({ active: false, time: 0 });
+    const animState = useRef({ active: false, time: 0, isFirstFrame: true, startTime: 0 });
 
     // Sound Breathing Configuration
     const SUSTAIN_DURATION = CLICK_EFFECT_CONFIG.timing.duration;
@@ -362,6 +364,13 @@ const ToneFieldMesh = React.memo(({
     useFrame((_state: any, delta: number) => {
         if (!animState.current.active || !effectMeshRef.current || !effectMaterialRef.current) {
             return;
+        }
+
+        // ★ Performance: Measure first frame timing
+        if (animState.current.isFirstFrame) {
+            const firstFrameDelay = performance.now() - animState.current.startTime;
+            console.log(`[Perf Visual] First animation frame delay: ${firstFrameDelay.toFixed(1)}ms`);
+            animState.current.isFirstFrame = false;
         }
 
         animState.current.time += delta;
@@ -429,17 +438,28 @@ const ToneFieldMesh = React.memo(({
     // }, []);
 
     const triggerPulse = () => {
+        // ★ Performance: Measure triggerPulse timing
+        const pulseStart = performance.now();
+        console.log('[Perf Visual] triggerPulse() called');
+
         // Start animation
-        animState.current = { active: true, time: 0 };
+        animState.current = { active: true, time: 0, isFirstFrame: true, startTime: performance.now() };
         setPulsing(true);
 
         // Initialize at 0 (animation will fade in)
         if (effectMaterialRef.current) {
             effectMaterialRef.current.opacity = 0;
         }
+
+        const pulseEnd = performance.now();
+        console.log(`[Perf Visual] triggerPulse() sync work: ${(pulseEnd - pulseStart).toFixed(1)}ms`);
     };
 
     const handlePointerDown = (e: any) => {
+        // ★ Performance Timing (Touch Handler Entry)
+        const touchStart = performance.now();
+        console.log(`[Perf] Touch Handler Start (note: ${note.label})`);
+
         e.stopPropagation();
         onClick?.(note.id);
 
@@ -450,6 +470,10 @@ const ToneFieldMesh = React.memo(({
 
         // Trigger Sound Breathing effect
         triggerPulse();
+
+        // ★ Performance Timing (Touch Handler End)
+        const touchEnd = performance.now();
+        console.log(`[Perf] Touch Handler Total: ${(touchEnd - touchStart).toFixed(1)}ms`);
     };
 
     return (
@@ -747,6 +771,7 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
     externalTouchText = null, // Default null
     showTouchText: showTouchTextProp,
     disableJamSession = false, // Default: enabled (false = NOT disabled)
+    useCountdownText = false, // Default: use TouchText
 }, ref) => {
     const pathname = usePathname();
     // ScaleInfoPanel은 /digipan-3d-test 경로에서만 표시
@@ -1441,12 +1466,16 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
                     {/* CyberBoat removed */}
                     {/* Touch Text - Hidden on Home Screen if ViewMode is 2 (Labels Visible) to avoid obscuring pitch info */}
                     {!hideTouchText && (
-                        <TouchText
-                            isIdle={isIdle && !isJamPlaying && showTouchText}
-                            suppressExplosion={false}
-                            overrideText={externalTouchText || introCountdown}
-                            interactionTrigger={interactionCount}
-                        />
+                        useCountdownText ? (
+                            <CountdownText text={externalTouchText || introCountdown} />
+                        ) : (
+                            <TouchText
+                                isIdle={isIdle && !isJamPlaying && showTouchText}
+                                suppressExplosion={false}
+                                overrideText={externalTouchText || introCountdown}
+                                interactionTrigger={interactionCount}
+                            />
+                        )
                     )}
                     <Suspense fallback={null}>
                         {backgroundContent ? backgroundContent : <HandpanImage backgroundImage={backgroundImage} centerX={centerX} centerY={centerY} />}

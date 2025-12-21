@@ -106,6 +106,9 @@ export default function ReelPanPage() {
     const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
     const isLongPressActive = useRef(false);
 
+    // ★ MIDI 중복 로딩 방지용 Ref (StrictMode 대응)
+    const lastLoadedMidiSrcRef = useRef<string | null>(null);
+
     // 2. Audio Preloading (Moved Up for Scope)
     const { isLoaded, loadingProgress, playNote, resumeAudio, preloadScaleNotes } = useHandpanAudio();
 
@@ -117,27 +120,52 @@ export default function ReelPanPage() {
         console.log(`[Audio] Preloading ${allNotes.length} notes for ${targetScale.name}`);
     }, [targetScale, preloadScaleNotes]);
 
-    // Auto-Load MIDI
+    // ★ Auto-Load MIDI (StrictMode 중복 실행 방지 적용)
     useEffect(() => {
         const loadMidi = async () => {
+            // [방어 로직 1] 곡이 없으면 초기화
             if (!currentSong.midiSrc) {
                 setMidiData(null);
+                lastLoadedMidiSrcRef.current = null;
+                return;
+            }
+
+            // [방어 로직 2 - 핵심] 이미 로드 요청한 곡과 동일하면 중단 (Double Init 방지)
+            if (lastLoadedMidiSrcRef.current === currentSong.midiSrc) {
+                console.log(`[Practice] ⏭️ Skip duplicate load for: ${currentSong.title}`);
                 return;
             }
 
             try {
-                // Stop any previous playback
+                // 로딩 시작 마킹 (동기적으로 즉시 설정하여 후속 호출 차단)
+                lastLoadedMidiSrcRef.current = currentSong.midiSrc;
+
+                // 기존 재생 중지
                 stopMidiPlay();
+
+                console.log(`[Practice] 🎵 Start loading MIDI: ${currentSong.title}`);
+                console.time('[Practice] parseMidi duration');
 
                 const response = await fetch(currentSong.midiSrc);
                 const arrayBuffer = await response.arrayBuffer();
-                // Use 'standard' algorithm for practice songs by default
+
+                // 무거운 연산 (여기가 렉의 주범, 이제 한 번만 실행됨)
                 const processedSong = await parseMidi(arrayBuffer, currentSong.title, 'standard');
 
+                console.timeEnd('[Practice] parseMidi duration');
+
+                // [방어 로직 3] 비동기 처리 중 곡이 바뀌었는지 최종 확인
+                if (lastLoadedMidiSrcRef.current !== currentSong.midiSrc) {
+                    console.log('[Practice] ⚠️ Song changed during parsing, discard result.');
+                    return;
+                }
+
                 setMidiData(processedSong);
-                console.log(`[Practice] Loaded MIDI: ${processedSong.midiName}`);
+                console.log(`[Practice] ✅ Successfully Loaded: ${processedSong.midiName}`);
             } catch (err) {
-                console.error(`[Practice] Error loading MIDI:`, err);
+                console.error(`[Practice] ❌ Error loading MIDI:`, err);
+                // 에러 발생 시 ref 초기화하여 재시도 가능하게 함
+                lastLoadedMidiSrcRef.current = null;
             }
         };
 
@@ -970,10 +998,14 @@ export default function ReelPanPage() {
     }, [drumPattern, drumTimeSignature, isDrumPlaying]);
 
     // [Drum Engine] Playback Sync (Bus Stop 모델 적용)
+    // ★ Mobile Optimization: 마운트 시 불필요한 Transport 조작 방지
+    const wasDrumEverStartedRef = useRef(false);
+
     useEffect(() => {
         isDrumPlayingRef.current = isDrumPlaying;
 
         if (isDrumPlaying) {
+            wasDrumEverStartedRef.current = true;  // 드럼이 시작되었음을 기록
             Tone.start();
 
             // ★★★ Bus Stop 모델: Transport 상태에 따른 시작 방식 ★★★
@@ -995,8 +1027,13 @@ export default function ReelPanPage() {
             // ═══════════════════════════════════════════════════════════════
             // [OFF 로직] 드럼 중지
             // ═══════════════════════════════════════════════════════════════
-            // 스케줄된 루프 클리어는 Pattern useEffect의 cleanup에서 처리됨
+            // ★ Mobile Optimization: 드럼이 한 번도 시작되지 않았으면 불필요한 Transport 조작 스킵
+            if (!wasDrumEverStartedRef.current) {
+                // 초기 마운트 - Transport 건드리지 않음
+                return;
+            }
 
+            // 스케줄된 루프 클리어는 Pattern useEffect의 cleanup에서 처리됨
             // Transport 정지 (화음 제거됨 - 드럼만 제어)
             console.log("[DrumDebug] Stopping Transport");
             Tone.Transport.stop();
