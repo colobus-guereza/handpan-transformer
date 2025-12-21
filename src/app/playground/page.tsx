@@ -161,17 +161,6 @@ export default function PlaygroundHome() {
     return (
         <div className="h-dvh w-screen overflow-x-auto snap-x snap-mandatory flex overflow-y-hidden bg-slate-950 text-white selection:bg-cyan-500 selection:text-white">
 
-            {/* Language Toggle - Fixed Position */}
-            <button
-                onClick={() => setLang(lang === 'ko' ? 'en' : 'ko')}
-                className="fixed top-[calc(1.5rem+env(safe-area-inset-top))] right-6 z-50 px-4 py-2 bg-white/5 backdrop-blur-md rounded-full text-sm font-bold text-slate-300 border border-white/10 shadow-lg hover:bg-white/10 transition-all flex items-center gap-2"
-            >
-                <Globe size={16} className="text-slate-400" />
-                <span className={lang === 'ko' ? 'text-white' : 'text-slate-500'}>KO</span>
-                <span className="text-slate-600">|</span>
-                <span className={lang === 'en' ? 'text-white' : 'text-slate-500'}>EN</span>
-            </button>
-
             {/* Background Decor - Fixed & Shared (Midnight Resonance) */}
             <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
                 {/* Deep Purple Aurora - moved further off screen on mobile */}
@@ -184,6 +173,17 @@ export default function PlaygroundHome() {
 
             {/* Screen 1: Main Landing (No Scroll) */}
             <section ref={screen1Ref} className="w-screen h-dvh flex-shrink-0 snap-center relative z-10 overflow-hidden">
+
+                {/* Language Toggle - Absolute Position (only visible in first section) */}
+                <button
+                    onClick={() => setLang(lang === 'ko' ? 'en' : 'ko')}
+                    className="absolute top-[calc(1.5rem+env(safe-area-inset-top))] right-6 z-50 px-4 py-2 bg-white/5 backdrop-blur-md rounded-full text-sm font-bold text-slate-300 border border-white/10 shadow-lg hover:bg-white/10 transition-all flex items-center gap-2"
+                >
+                    <Globe size={16} className="text-slate-400" />
+                    <span className={lang === 'ko' ? 'text-white' : 'text-slate-500'}>KO</span>
+                    <span className="text-slate-600">|</span>
+                    <span className={lang === 'en' ? 'text-white' : 'text-slate-500'}>EN</span>
+                </button>
 
                 {/* Main Title - Exact Vertical Center */}
                 <h1 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 !text-5xl lg:!text-7xl font-black tracking-tight text-center leading-tight whitespace-nowrap">
@@ -241,6 +241,17 @@ export default function PlaygroundHome() {
 
             {/* Screen 2: Service Introduction (Dark Mode) */}
             <section ref={screen2Ref} className="w-screen min-h-dvh flex-shrink-0 snap-center flex flex-col items-center overflow-y-auto relative z-10 bg-slate-950 text-white selection:bg-cyan-500 selection:text-white">
+
+                {/* Language Toggle - Absolute Position (only visible in second section) */}
+                <button
+                    onClick={() => setLang(lang === 'ko' ? 'en' : 'ko')}
+                    className="absolute top-[calc(1.5rem+env(safe-area-inset-top))] right-6 z-50 px-4 py-2 bg-white/5 backdrop-blur-md rounded-full text-sm font-bold text-slate-300 border border-white/10 shadow-lg hover:bg-white/10 transition-all flex items-center gap-2"
+                >
+                    <Globe size={16} className="text-slate-400" />
+                    <span className={lang === 'ko' ? 'text-white' : 'text-slate-500'}>KO</span>
+                    <span className="text-slate-600">|</span>
+                    <span className={lang === 'en' ? 'text-white' : 'text-slate-500'}>EN</span>
+                </button>
 
                 {/* Navigation Button: Back to Screen 1 */}
                 <button
