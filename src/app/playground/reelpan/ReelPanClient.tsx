@@ -71,11 +71,13 @@ export default function ReelPanClient() {
     const [drumBpm, setDrumBpm] = useState(100);
     const [drumPattern, setDrumPattern] = useState('Basic 8-beat');
     const [drumTimeSignature, setDrumTimeSignature] = useState('4/4');
+    const [isDrumSynthReady, setIsDrumSynthReady] = useState(false); // ★ 드럼 Synth 초기화 완료 상태
 
     // Chord Settings State
     const [showChordSettings, setShowChordSettings] = useState(false);
     const [chordProgressionType, setChordProgressionType] = useState('Cinematic');
     const [chordPadPreset, setChordPadPreset] = useState('Dreamy Pad');
+    const [isChordSynthReady, setIsChordSynthReady] = useState(false); // ★ 화음 Synth 초기화 완료 상태
 
     // Chord Pad State (독립적 시스템 - Scale Recommender와 분리)
     const chordPadSynthRef = useRef<Tone.PolySynth | null>(null);
@@ -246,11 +248,17 @@ export default function ReelPanClient() {
     useEffect(() => {
         if (typeof window === 'undefined') return;
 
+        // ★ StrictMode 대응: 인스턴스 ID로 중복 cleanup 방지
+        const instanceId = Date.now();
+        (window as any).__drumInstanceId = instanceId;
+        console.log("[DrumInit] Starting drum synth initialization... instanceId:", instanceId);
+
         // ═══════════════════════════════════════════════════════════════════════
         // 🔊 MASTER BUS: 전체 드럼 볼륨 제어
         // ═══════════════════════════════════════════════════════════════════════
         const masterGain = new Tone.Gain(0.8).toDestination();
         drumMasterGainRef.current = masterGain;
+        console.log("[DrumInit] Master gain created");
 
 
         // ═══════════════════════════════════════════════════════════════════════
@@ -396,28 +404,60 @@ export default function ReelPanClient() {
             volume: -6  // 매우 작은 볼륨 -> 약간 키움
         }).connect(lofiHatFilter);
 
+        // ★ 초기화 완료 상태 설정 (버튼 활성화)
+        setIsDrumSynthReady(true);
+        console.log("[DrumInit] Drum synths initialized successfully");
+
         // ═══════════════════════════════════════════════════════════════════════
         // 🧹 CLEANUP: 컴포넌트 언마운트 시 리소스 해제
         // ═══════════════════════════════════════════════════════════════════════
         return () => {
-            // Pop/Rock synths
-            kickSynthRef.current?.dispose();
-            snareSynthRef.current?.dispose();
-            hatSynthRef.current?.dispose();
-            // Jazz synths
-            hatSynthRef.current?.dispose();
-            // Jazz synths removed
-            // Lofi Chill synths
-            lofiKickSynthRef.current?.dispose();
-            lofiSnareSynthRef.current?.dispose();
-            lofiHatSynthRef.current?.dispose();
-            masterGain.dispose();
-            if (drumLoopIdRef.current !== null) Tone.Transport.clear(drumLoopIdRef.current);
+            console.log("[DrumCleanup] Running cleanup for instanceId:", instanceId);
 
-            // ★ 페이지 이탈 시 Transport 완전 정지 및 잔향 제거
-            Tone.Transport.stop();
-            Tone.Transport.cancel();
-            Tone.Transport.position = 0;
+            // ★ StrictMode 가드: 현재 활성 인스턴스가 아니면 cleanup 스킵
+            if ((window as any).__drumInstanceId !== instanceId) {
+                console.log("[DrumCleanup] Skipping cleanup - newer instance exists");
+                return;
+            }
+
+            // ★ 활성 인스턴스일 때만 버튼 비활성화
+            setIsDrumSynthReady(false);
+
+            // ★ 빠른 페이드 아웃 (300ms) 후 리소스 정리
+            const fadeOutTime = 0.3;
+            const now = Tone.now();
+
+            // Drum Master Gain 페이드 아웃
+            if (drumMasterGainRef.current) {
+                drumMasterGainRef.current.gain.rampTo(0, fadeOutTime, now);
+            }
+            // ★ Chord Master Gain은 ChordCleanup에서 관리 (DrumCleanup에서 건드리지 않음)
+
+            // 페이드 아웃 완료 후 리소스 정리 (350ms 후)
+            setTimeout(() => {
+                // 다시 한 번 검사: cleanup 도중 새 인스턴스가 생겼을 수 있음
+                if ((window as any).__drumInstanceId !== instanceId) {
+                    console.log("[DrumCleanup] Abort delayed cleanup - newer instance exists");
+                    return;
+                }
+
+                // Pop/Rock synths
+                kickSynthRef.current?.dispose();
+                snareSynthRef.current?.dispose();
+                hatSynthRef.current?.dispose();
+                // Lofi Chill synths
+                lofiKickSynthRef.current?.dispose();
+                lofiSnareSynthRef.current?.dispose();
+                lofiHatSynthRef.current?.dispose();
+                masterGain.dispose();
+                if (drumLoopIdRef.current !== null) Tone.Transport.clear(drumLoopIdRef.current);
+
+                // Transport 정지
+                Tone.Transport.stop();
+                Tone.Transport.cancel();
+                Tone.Transport.position = 0;
+                console.log("[DrumCleanup] Complete");
+            }, 350);
         };
     }, []);
 
@@ -425,47 +465,114 @@ export default function ReelPanClient() {
     useEffect(() => {
         if (typeof window === 'undefined') return;
 
-        // 1. Dispose Previous Nodes
-        chordPadSynthRef.current?.dispose();
-        chordEffectsRef.current.forEach(e => e.dispose());
-        chordEffectsRef.current = [];
+        // ★ StrictMode 대응: 인스턴스 ID로 중복 cleanup 방지
+        const instanceId = Date.now();
+        (window as any).__chordInstanceId = instanceId;
+        console.log("[ChordInit] Starting chord synth initialization... instanceId:", instanceId);
 
-        // 2. Ensure Master Bus Exists
-        if (!chordMasterGainRef.current) {
-            chordMasterGainRef.current = new Tone.Gain(0.35).toDestination();
-        }
-        const masterGain = chordMasterGainRef.current;
-
-        // 3. Create Dreamy Pad Synth (Stable Version)
-        // PAD Synth (dreamy triangle waves)
-        const synth = new Tone.PolySynth(Tone.Synth, {
-            oscillator: { type: "fattriangle", count: 3, spread: 30 },
-            envelope: { attack: 2.0, decay: 1.5, sustain: 0.9, release: 3.0, attackCurve: "exponential" },
-            volume: -12
-        });
-
-        // Effect Chain: Chorus -> Delay -> Reverb
-        const reverb = new Tone.Reverb({ decay: 8, wet: 0.4, preDelay: 0.1 });
-        const delay = new Tone.PingPongDelay({ delayTime: "4n.", feedback: 0.3, wet: 0.2 });
-        const chorus = new Tone.Chorus({ frequency: 0.3, delayTime: 4, depth: 0.6, spread: 180 }).start();
-
-        synth.chain(chorus, delay, reverb, masterGain);
-        synth.maxPolyphony = 6;
-
-        // 4. Update References
-        chordPadSynthRef.current = synth;
-        chordEffectsRef.current = [chorus, delay, reverb];
-
-        return () => {
-            // 🧹 CHORD CLEANUP: 컴포넌트 언마운트 시 리소스 해제
-            if (chordPartRef.current) {
-                chordPartRef.current.dispose();
-                chordPartRef.current = null;
-            }
-            chordPadSynthRef.current?.releaseAll();
+        // ★ 비동기 초기화 (Reverb는 Impulse Response Buffer 생성 대기 필요)
+        const initAudio = async () => {
+            // 1. Dispose Previous Nodes
             chordPadSynthRef.current?.dispose();
             chordEffectsRef.current.forEach(e => e.dispose());
             chordEffectsRef.current = [];
+
+            // 2. Master Bus - 항상 새로 생성 (gain=0 문제 방지)
+            if (chordMasterGainRef.current) {
+                chordMasterGainRef.current.disconnect();
+                chordMasterGainRef.current.dispose();
+            }
+            chordMasterGainRef.current = new Tone.Gain(0.35).toDestination();
+            const masterGain = chordMasterGainRef.current;
+
+            // 3. Create Reverb and await its ready state
+            const reverb = new Tone.Reverb({ decay: 8, wet: 0.4, preDelay: 0.1 });
+            await reverb.ready; // ★ 핵심: Impulse Response 생성 완료 대기
+
+            // 4. Check if still the active instance before continuing
+            if ((window as any).__chordInstanceId !== instanceId) {
+                console.log("[ChordInit] Aborting - newer instance exists");
+                reverb.dispose();
+                return;
+            }
+
+            // 5. Create other effects
+            const delay = new Tone.PingPongDelay({ delayTime: "4n.", feedback: 0.3, wet: 0.2 });
+            const chorus = new Tone.Chorus({ frequency: 0.3, delayTime: 4, depth: 0.6, spread: 180 }).start();
+
+            // 6. Create Dreamy Pad Synth
+            const synth = new Tone.PolySynth(Tone.Synth, {
+                oscillator: { type: "fattriangle", count: 3, spread: 30 },
+                envelope: { attack: 2.0, decay: 1.5, sustain: 0.9, release: 3.0, attackCurve: "exponential" },
+                volume: -12
+            });
+
+            synth.chain(chorus, delay, reverb, masterGain);
+            synth.maxPolyphony = 6;
+
+            // 7. Update References & Activate Button (Only if still active instance)
+            // ★ 완료 시점에 instanceId 재확인 (경합 조건 방지)
+            if ((window as any).__chordInstanceId === instanceId) {
+                chordPadSynthRef.current = synth;
+                chordEffectsRef.current = [chorus, delay, reverb];
+                setIsChordSynthReady(true);
+                console.log("[ChordInit] Audio initialized successfully (Reverb ready)");
+            } else {
+                console.log("[ChordInit] Completion abort - newer instance exists, disposing synth");
+                synth.dispose();
+                chorus.dispose();
+                delay.dispose();
+                reverb.dispose();
+            }
+        };
+
+        initAudio();
+
+        return () => {
+            console.log("[ChordCleanup] Running cleanup for instanceId:", instanceId);
+
+            // ★ StrictMode 가드: 현재 활성 인스턴스가 아니면 cleanup 스킵
+            if ((window as any).__chordInstanceId !== instanceId) {
+                console.log("[ChordCleanup] Skipping cleanup - newer instance exists");
+                return;
+            }
+
+            // ★ 활성 인스턴스일 때만 버튼 비활성화
+            setIsChordSynthReady(false);
+
+            // ★ Chord Master Gain 페이드 아웃 (DrumCleanup은 건드리지 않음)
+            const fadeOutTime = 0.3;
+            const now = Tone.now();
+            if (chordMasterGainRef.current) {
+                chordMasterGainRef.current.gain.rampTo(0, fadeOutTime, now);
+            }
+
+            // 🧹 CHORD CLEANUP: 페이드 아웃 완료 후 (350ms) 리소스 해제
+            setTimeout(() => {
+                // 다시 한 번 검사
+                if ((window as any).__chordInstanceId !== instanceId) {
+                    console.log("[ChordCleanup] Abort delayed cleanup - newer instance exists");
+                    return;
+                }
+
+                if (chordPartRef.current) {
+                    chordPartRef.current.dispose();
+                    chordPartRef.current = null;
+                }
+                chordPadSynthRef.current?.releaseAll();
+                chordPadSynthRef.current?.dispose();
+                chordEffectsRef.current.forEach(e => e.dispose());
+                chordEffectsRef.current = [];
+
+                // Master Gain도 정리 (initAudio에서 새로 생성하므로 여기서는 null만 설정)
+                if (chordMasterGainRef.current) {
+                    chordMasterGainRef.current.disconnect();
+                    chordMasterGainRef.current.dispose();
+                    chordMasterGainRef.current = null;
+                }
+
+                console.log("[ChordCleanup] Complete");
+            }, 350);
         };
     }, []); // Run once on mount (Stable)
 
@@ -737,6 +844,9 @@ export default function ReelPanClient() {
     // [Drum Engine] Playback Sync (Bus Stop 모델 적용)
     useEffect(() => {
         isDrumPlayingRef.current = isDrumPlaying;
+        console.log("[DrumPlayback] isDrumPlaying changed to:", isDrumPlaying);
+        console.log("[DrumPlayback] kickSynthRef.current:", !!kickSynthRef.current);
+        console.log("[DrumPlayback] Tone.context.state:", Tone.context.state);
 
         if (isDrumPlaying) {
             Tone.start();
@@ -793,7 +903,15 @@ export default function ReelPanClient() {
         }
 
         if (!isLongPressActive.current) {
+            // ★ 가드: Synth가 아직 준비되지 않았으면 무시
+            if (!isDrumSynthReady) {
+                console.warn("[DrumButton] Synth not ready yet. Please wait...");
+                return;
+            }
+
             // 짧게 눌렀을 때만 토글
+            console.log("[DrumButton] Short press detected, toggling drum");
+            console.log("[DrumButton] Current Tone.context.state:", Tone.context.state);
             Tone.start(); // [UX 개선] 즉시 AudioContext 활성화
             setIsDrumPlaying(prev => !prev);
         }
@@ -929,8 +1047,11 @@ export default function ReelPanClient() {
             Tone.Transport.bpm.value = drumBpm;
 
             chordPartRef.current = new Tone.Part((time, value) => {
+                const synth = chordPadSynthRef.current;
+                // ★ 방어 코드: Synth가 없거나 이미 disposed 상태면 무시
+                if (!synth || synth.disposed) return;
                 const chord = value as { notes: string[]; role: string };
-                chordPadSynthRef.current?.triggerAttackRelease(chord.notes, "4m", time);
+                synth.triggerAttackRelease(chord.notes, "4m", time);
             }, [
                 ["0:0:0", chordSets[0]],
                 ["4:0:0", chordSets[1]],
@@ -950,6 +1071,13 @@ export default function ReelPanClient() {
     // [Chord Pad] 화음 반주 토글 핸들러 (Bus Stop 모델 적용)
     const handleChordToggle = async () => {
         console.log("[ChordDebug] Toggle clicked. Current state:", isChordPlaying);
+
+        // ★ 가드: Synth가 아직 준비되지 않았으면 무시
+        if (!isChordSynthReady) {
+            console.warn("[ChordDebug] Synth not ready yet. Please wait...");
+            return;
+        }
+
         await Tone.start();
 
         if (isChordPlaying) {
@@ -983,9 +1111,10 @@ export default function ReelPanClient() {
             const chordSets = chordSetsRef.current;
             console.log("[ChordDebug] Starting chord. Sets available:", chordSets.length);
 
-            if (chordSets.length < 4 || !chordPadSynthRef.current) {
-                console.error("[ChordDebug] Failed to start. Sets:", chordSets.length, "Synth:", !!chordPadSynthRef.current);
-                alert(`화음 생성 실패! (Chords: ${chordSets.length})\n스케일 음이 너무 적거나 초기화 오류입니다.`);
+            // ★ FIX: disposed 상태 체크 추가 (React Strict Mode 이중 마운트 대응)
+            if (chordSets.length < 4 || !chordPadSynthRef.current || chordPadSynthRef.current.disposed) {
+                console.error("[ChordDebug] Failed to start. Sets:", chordSets.length, "Synth:", !!chordPadSynthRef.current, "Disposed:", chordPadSynthRef.current?.disposed);
+                alert(`화음 생성 실패! (Chords: ${chordSets.length})\n스케일 음이 너무 적거나 초기화 오류입니다.\n페이지를 새로고침해주세요.`);
                 return;
             }
 
@@ -1000,8 +1129,11 @@ export default function ReelPanClient() {
 
             // 화음 Part 생성 (16마디 무한 루프)
             chordPartRef.current = new Tone.Part((time, value) => {
+                const synth = chordPadSynthRef.current;
+                // ★ 방어 코드: Synth가 없거나 이미 disposed 상태면 무시
+                if (!synth || synth.disposed) return;
                 const chord = value as { notes: string[]; role: string };
-                chordPadSynthRef.current?.triggerAttackRelease(chord.notes, "4m", time);
+                synth.triggerAttackRelease(chord.notes, "4m", time);
             }, [
                 ["0:0:0", chordSets[0]],
                 ["4:0:0", chordSets[1]],
@@ -1524,11 +1656,19 @@ export default function ReelPanClient() {
                                 <button
                                     onPointerDown={handleDrumDown}
                                     onPointerUp={handleDrumUp}
+                                    disabled={!isDrumSynthReady}
                                     className={`w-12 h-12 rounded-full backdrop-blur-md border border-white/10 flex flex-col items-center justify-center transition-all active:scale-90 relative overflow-hidden group
-                                         ${isDrumPlaying ? 'bg-orange-500/40 border-orange-500/50' : 'bg-white/10 hover:bg-white/20'}
+                                         ${
+                                             !isDrumSynthReady
+                                                 ? 'bg-white/5 opacity-50 cursor-not-allowed'
+                                                 : isDrumPlaying
+                                                     ? 'bg-orange-500/40 border-orange-500/50'
+                                                     : 'bg-white/10 hover:bg-white/20'
+                                         }
                                      `}
+                                    title={!isDrumSynthReady ? '초기화 중...' : '드럼 반주 토글 (길게 누르면 설정)'}
                                 >
-                                    <Drum size={20} className={isDrumPlaying ? 'text-orange-200' : 'text-white/40'} />
+                                    <Drum size={20} className={!isDrumSynthReady ? 'text-white/20' : isDrumPlaying ? 'text-orange-200' : 'text-white/40'} />
                                     {isDrumPlaying && (
                                         <motion.div
                                             animate={{ opacity: [0, 1, 0] }}
@@ -1546,10 +1686,17 @@ export default function ReelPanClient() {
                                 <button
                                     onPointerDown={handleChordDown}
                                     onPointerUp={handleChordUp}
-                                    className={`w-12 h-12 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center transition-all active:scale-95 relative overflow-hidden group ${isChordPlaying ? 'bg-purple-500/30 border-purple-500/50' : 'bg-white/10 hover:bg-white/20'}`}
-                                    title="화음 반주 토글 (길게 누르면 설정)"
+                                    disabled={!isChordSynthReady}
+                                    className={`w-12 h-12 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center transition-all active:scale-95 relative overflow-hidden group ${
+                                        !isChordSynthReady
+                                            ? 'bg-white/5 opacity-50 cursor-not-allowed'
+                                            : isChordPlaying
+                                                ? 'bg-purple-500/30 border-purple-500/50'
+                                                : 'bg-white/10 hover:bg-white/20'
+                                    }`}
+                                    title={!isChordSynthReady ? '초기화 중...' : '화음 반주 토글 (길게 누르면 설정)'}
                                 >
-                                    <Music2 size={18} className={isChordPlaying ? 'text-purple-300' : 'text-white/40'} />
+                                    <Music2 size={18} className={!isChordSynthReady ? 'text-white/20' : isChordPlaying ? 'text-purple-300' : 'text-white/40'} />
                                     {isChordPlaying && (
                                         <motion.div
                                             animate={{ opacity: [0.3, 0.8, 0.3], scale: [1, 1.2, 1] }}
