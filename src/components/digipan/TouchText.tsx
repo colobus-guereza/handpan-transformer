@@ -320,7 +320,7 @@ const TouchText = ({ isIdle, suppressExplosion = false, overrideText, interactio
                 {currentText && (
                     <Center key={currentText}>
                         <Text3D
-                            font="https://threejs.org/examples/fonts/helvetiker_bold.typeface.json"
+                            font="/fonts/helvetiker_bold.typeface.json"
                             size={['4', '3', '2', '1'].includes(currentText) ? 14.4 : 12}
                             height={2}
                             curveSegments={12}
