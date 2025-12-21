@@ -35,6 +35,13 @@ export const useDigipanRecorder = ({
         cropModeRef.current = cropMode;
     }, [cropMode]);
 
+    // Keep track of the latest callback to avoid stale closures in onstop
+    const savedCallback = useRef(onRecordingComplete);
+
+    useEffect(() => {
+        savedCallback.current = onRecordingComplete;
+    }, [onRecordingComplete]);
+
     const startRecording = useCallback(() => {
         const canvas = canvasRef.current;
         const audioCtx = getAudioContext();
@@ -46,6 +53,27 @@ export const useDigipanRecorder = ({
         }
 
         try {
+            console.log(`[Recorder] Initializing... (Mode: ${cropModeRef.current})`);
+            // ... (stream setup code is unchanged) ...
+
+            // ... (options setup code is unchanged) ...
+
+            // 5. Setup MediaRecorder logic (with Ref usage)
+            // Note: We need to re-implement the setup part here because we are replacing the startRecording body logic wrapper
+            // But since I cannot easily replace just the middle, I will provide the context.
+            // Wait, replace_file_content replaces a chunk. I need to be careful to match existing code.
+            // The previous 'startRecording' function is long.
+
+            // Let's rely on the fact that I'm replacing the `startRecording` DEPENDENCIES array logic or usage.
+            // Actually, I should use `savedCallback.current` inside `recorder.onstop`.
+
+            // Let's modify the `recorder.onstop` block specifically if possible, OR rewrite startRecording start.
+
+            // To be safe and clean, I will replace the whole startRecording function definition loop if I can match it, 
+            // OR I will just inject the Ref at the top and change onstop.
+
+            // Checking the file content again... 
+
             console.log(`[Recorder] Initializing... (Mode: ${cropModeRef.current})`);
 
             let videoStream: MediaStream;

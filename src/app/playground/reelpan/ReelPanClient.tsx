@@ -1623,10 +1623,15 @@ export default function ReelPanClient() {
                                     <Type size={18} className={`${viewMode === 2 ? 'text-white' : 'text-white/40'}`} />
                                 </button>
 
-                                {/* 2. Layout Mode */}
+                                {/* 2. Layout Mode (Disabled during recording) */}
                                 <button
                                     onClick={toggleLayout}
-                                    className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center hover:bg-white/20 transition-all active:scale-95"
+                                    disabled={isRecording || !!recordCountdown}
+                                    className={`w-12 h-12 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center transition-all active:scale-95
+                                    ${isRecording || !!recordCountdown
+                                            ? 'bg-white/5 opacity-30 cursor-not-allowed'
+                                            : 'bg-white/10 hover:bg-white/20'
+                                        }`}
                                 >
                                     <span className="text-[10px] font-bold text-white tracking-widest">{layoutMode === 'reel' ? "9:16" : "1:1"}</span>
                                 </button>

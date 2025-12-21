@@ -192,9 +192,17 @@ export default function PlaygroundHome() {
                 </button>
 
                 {/* Main Title - Exact Vertical Center */}
-                <h1 className="absolute top-[calc(50%-30px)] left-1/2 -translate-x-1/2 -translate-y-1/2 !text-5xl lg:!text-7xl font-black tracking-tight text-center leading-tight whitespace-nowrap">
-                    <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-400">
+                <h1 className="absolute top-[calc(50%-30px)] left-1/2 -translate-x-1/2 -translate-y-1/2 !text-5xl lg:!text-7xl font-black tracking-tight text-center leading-tight whitespace-nowrap relative">
+                    <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-400 relative inline-block">
                         ReelPan
+                        {/* Navigation Button: Go to Screen 2 - Positioned like superscript */}
+                        <button
+                            onClick={() => scrollToSection(screen2Ref)}
+                            className="absolute -top-2 -right-[5px] text-slate-400 hover:text-cyan-300 transition-all animate-pulse-slow group"
+                            aria-label="Next Page"
+                        >
+                            <HelpCircle size={29} className="group-hover:scale-110 transition-transform" />
+                        </button>
                     </span>
                 </h1>
 
@@ -233,15 +241,6 @@ export default function PlaygroundHome() {
                         </span>
                         <div className="absolute inset-0 bg-gradient-to-r from-cyan-600/50 via-purple-600/50 to-cyan-600/50 bg-[length:200%_100%] opacity-0 group-hover:opacity-100 animate-shimmer transition-opacity duration-300" />
                     </Link>
-
-                    {/* Navigation Button: Go to Screen 2 */}
-                    <button
-                        onClick={() => scrollToSection(screen2Ref)}
-                        className="text-slate-400 hover:text-cyan-300 transition-all animate-pulse-slow group"
-                        aria-label="Next Page"
-                    >
-                        <HelpCircle size={29} className="group-hover:scale-110 transition-transform" />
-                    </button>
                 </div>
             </section>
 
