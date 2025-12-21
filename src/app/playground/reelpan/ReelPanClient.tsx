@@ -1726,24 +1726,6 @@ export default function ReelPanClient() {
                                         </div>
                                     </div>
 
-                                    {/* Pad Tone Preset */}
-                                    <div className="flex flex-col gap-3">
-                                        <span className="text-xs font-bold text-white/40 uppercase tracking-widest px-1">Pad Tone Preset</span>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            {['Dreamy Pad', 'Warm Strings', 'Crystal Bell', 'Airy Synth'].map((preset) => (
-                                                <button
-                                                    key={preset}
-                                                    onClick={() => setChordPadPreset(preset)}
-                                                    className={`px-3 py-3 rounded-2xl text-xs font-medium transition-all text-center
-                                                          ${chordPadPreset === preset
-                                                            ? 'bg-purple-500 text-white'
-                                                            : 'bg-white/5 text-white/60 hover:bg-white/10'}`}
-                                                >
-                                                    {preset}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
                                 </div>
 
                             </motion.div>
