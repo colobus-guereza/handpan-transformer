@@ -74,7 +74,7 @@ export default function ReelPanClient() {
 
     // Chord Settings State
     const [showChordSettings, setShowChordSettings] = useState(false);
-    const [chordProgressionType, setChordProgressionType] = useState('Cinematic 1-6-4-5');
+    const [chordProgressionType, setChordProgressionType] = useState('Cinematic');
     const [chordPadPreset, setChordPadPreset] = useState('Dreamy Pad');
 
     // Chord Pad State (독립적 시스템 - Scale Recommender와 분리)
@@ -413,6 +413,11 @@ export default function ReelPanClient() {
             lofiHatSynthRef.current?.dispose();
             masterGain.dispose();
             if (drumLoopIdRef.current !== null) Tone.Transport.clear(drumLoopIdRef.current);
+
+            // ★ 페이지 이탈 시 Transport 완전 정지 및 잔향 제거
+            Tone.Transport.stop();
+            Tone.Transport.cancel();
+            Tone.Transport.position = 0;
         };
     }, []);
 
@@ -452,7 +457,15 @@ export default function ReelPanClient() {
         chordEffectsRef.current = [chorus, delay, reverb];
 
         return () => {
-            // Cleanup handled by next effect run or component unmount
+            // 🧹 CHORD CLEANUP: 컴포넌트 언마운트 시 리소스 해제
+            if (chordPartRef.current) {
+                chordPartRef.current.dispose();
+                chordPartRef.current = null;
+            }
+            chordPadSynthRef.current?.releaseAll();
+            chordPadSynthRef.current?.dispose();
+            chordEffectsRef.current.forEach(e => e.dispose());
+            chordEffectsRef.current = [];
         };
     }, []); // Run once on mount (Stable)
 
@@ -834,16 +847,16 @@ export default function ReelPanClient() {
 
         // 1. 프리셋에 따른 도수(Degree) 선택
         switch (chordProgressionType) {
-            case 'Pop 1-5-6-4':
+            case 'Hopeful Pop':
                 progressionDegrees = [1, 5, 6, 4];
                 break;
-            case 'Jazz 2-5-1':
-                progressionDegrees = [2, 5, 1, 1]; // 2-5-1 (마지막은 1로 채움)
+            case 'Emotional Sad':
+                progressionDegrees = [6, 4, 1, 5];
                 break;
-            case 'Ambient Drone':
-                progressionDegrees = [1, 1, 4, 1]; // Root 위주의 드론
+            case 'Nostalgic Story':
+                progressionDegrees = [2, 5, 1, 1];
                 break;
-            case 'Cinematic 1-6-4-5':
+            case 'Cinematic':
             default:
                 progressionDegrees = [1, 6, 4, 5];
                 break;
@@ -1234,6 +1247,7 @@ export default function ReelPanClient() {
             externalTouchText: recordCountdown ? recordCountdown.toString() : null, // 3D 카운트다운 텍스트 주입
             recordingCropMode: layoutMode === 'square' ? 'square' as 'square' : 'full' as 'full',
             enableZoom: false, // 마우스 휠 줌인/줌아웃 비활성화
+            enablePan: false, // 카메라 이동(Pan) 비활성화
             disableJamSession: true, // ★ 방해꾼 제거: 내부 오디오 엔진 비활성화
         };
 
@@ -1710,7 +1724,7 @@ export default function ReelPanClient() {
                                     <div className="flex flex-col gap-3">
                                         <span className="text-xs font-bold text-white/40 uppercase tracking-widest px-1">Chord Progression Type</span>
                                         <div className="grid grid-cols-1 gap-2">
-                                            {['Cinematic 1-6-4-5', 'Pop 1-5-6-4', 'Jazz 2-5-1', 'Ambient Drone'].map((prog) => (
+                                            {['Cinematic', 'Hopeful Pop', 'Emotional Sad', 'Nostalgic Story'].map((prog) => (
                                                 <button
                                                     key={prog}
                                                     onClick={() => setChordProgressionType(prog)}

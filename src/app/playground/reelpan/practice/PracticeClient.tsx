@@ -112,7 +112,7 @@ export default function ReelPanPage() {
 
     // Chord Settings State
     const [showChordSettings, setShowChordSettings] = useState(false);
-    const [chordProgressionType, setChordProgressionType] = useState('Cinematic 1-6-4-5');
+    const [chordProgressionType, setChordProgressionType] = useState('Cinematic');
     const [chordPadPreset, setChordPadPreset] = useState('Dreamy Pad');
 
     // Chord Pad State (독립적 시스템 - Scale Recommender와 분리)
@@ -194,18 +194,30 @@ export default function ReelPanPage() {
     }, []);
 
     const handleTogglePlay = useCallback(async () => {
+        console.log('[Practice] handleTogglePlay clicked', {
+            hasMidi: !!midiData,
+            hasScale: !!targetScale,
+            hasDigipan: !!digipanRef.current,
+            isMidiPlaying,
+            isPaused
+        });
+
         if (!midiData || !targetScale || !digipanRef.current) {
-            console.log('[Play] No MIDI data or Digipan ref');
+            console.log('[Play] Aborting early:', {
+                midiData: !!midiData,
+                targetScale: !!targetScale,
+                digipanRef: !!digipanRef.current
+            });
             return;
         }
 
         if (isMidiPlaying && !isPaused) {
             // PAUSE Logic
+            console.log('[Play] Pausing playback');
             if (requestRef.current) {
                 cancelAnimationFrame(requestRef.current);
                 requestRef.current = 0;
             }
-            // Store the current elapsed time
             const now = Date.now();
             pausedTimeRef.current = (now - playbackStartTimeRef.current) / 1000;
             setIsPaused(true);
@@ -214,36 +226,29 @@ export default function ReelPanPage() {
 
         if (isMidiPlaying && isPaused) {
             // RESUME Logic
+            console.log('[Play] Resuming playback from', pausedTimeRef.current);
             resumeAudio();
             playbackStartTimeRef.current = Date.now() - (pausedTimeRef.current * 1000);
             setIsPaused(false);
-
-            // Re-start the tick loop
-            // Note: mappedNotes is needed inside tick, but we are inside the same closure
-            // We need to re-define tick or call it if it was defined outside.
-            // Actually, handleTogglePlay is a useCallback that defines tick inside it.
-            // Let's restructure to have a stable tick or re-run the start logic.
-        }
-
-        // START Logic (Initial)
-        if (!isMidiPlaying) {
+        } else {
+            // START Logic (Initial)
+            console.log('[Play] Starting new playback');
             const melodyTrack = midiData.tracks.find(t => t.role === 'melody');
             if (!melodyTrack) {
-                console.log('[Play] No melody track found');
+                console.warn('[Play] No melody track found');
                 return;
             }
 
             const transposition = midiData.matchResult?.transposition || 0;
             const mappedNotes = mapMidiToDigipan(melodyTrack.notes, transposition, targetScale);
+            console.log('[Play] Mapped notes:', mappedNotes.length);
 
             if (mappedNotes.length === 0) {
-                console.log('[Play] No playable notes mapped');
+                console.warn('[Play] No playable notes mapped');
                 return;
             }
 
-            // Resume Audio Context
             resumeAudio();
-
             setIsMidiPlaying(true);
             setIsPaused(false);
             setPlaybackTime(0);
@@ -257,10 +262,7 @@ export default function ReelPanPage() {
             }
         }
 
-        // The tick function and loop needs to be accessible for Resume as well.
-        // Let's pull it out of the conditional if it's starting or resuming.
-
-        // Re-calculate mappedNotes for the tick loop if resuming
+        // Common Tick Loop Initiation (for Start and Resume)
         const melodyTrack = midiData.tracks.find(t => t.role === 'melody')!;
         const transposition = midiData.matchResult?.transposition || 0;
         const mappedNotes = mapMidiToDigipan(melodyTrack.notes, transposition, targetScale);
@@ -270,7 +272,7 @@ export default function ReelPanPage() {
             const currentSeconds = (now - playbackStartTimeRef.current) / 1000;
             setPlaybackTime(currentSeconds);
 
-            // 4. Trigger Notes
+            // Trigger Notes
             while (playheadIndexRef.current < mappedNotes.length) {
                 const note = mappedNotes[playheadIndexRef.current];
                 if (note.time <= currentSeconds) {
@@ -281,12 +283,12 @@ export default function ReelPanPage() {
                 }
             }
 
-            // 5. Update Score Position (Smooth)
+            // Update Score Position (Smooth)
             if (scoreRef.current) {
                 scoreRef.current.updateTime(currentSeconds);
             }
 
-            // 6. Check Completion
+            // Check Completion
             if (playheadIndexRef.current >= mappedNotes.length && currentSeconds > mappedNotes[mappedNotes.length - 1].time + 1) {
                 stopMidiPlay();
                 return;
@@ -1062,11 +1064,29 @@ export default function ReelPanPage() {
         };
 
         const len = allNotes.length;
+        let progressionDegrees = [];
+
+        switch (chordProgressionType) {
+            case 'Hopeful Pop':
+                progressionDegrees = [1, 5, 6, 4];
+                break;
+            case 'Emotional Sad':
+                progressionDegrees = [6, 4, 1, 5];
+                break;
+            case 'Nostalgic Story':
+                progressionDegrees = [2, 5, 1, 1];
+                break;
+            case 'Cinematic':
+            default:
+                progressionDegrees = [1, 6, 4, 5];
+                break;
+        }
+
         const progressionIndices = [
-            { idx: 0, bar: 1, role: "Root (i)" },
-            { idx: 5 % len, bar: 5, role: "VI" },
-            { idx: 3 % len, bar: 9, role: "iv" },
-            { idx: 4 % len, bar: 13, role: "V" }
+            { idx: (progressionDegrees[0] - 1) % len, bar: 1, role: `Chord ${progressionDegrees[0]}` },
+            { idx: (progressionDegrees[1] - 1) % len, bar: 5, role: `Chord ${progressionDegrees[1]}` },
+            { idx: (progressionDegrees[2] - 1) % len, bar: 9, role: `Chord ${progressionDegrees[2]}` },
+            { idx: (progressionDegrees[3] - 1) % len, bar: 13, role: `Chord ${progressionDegrees[3]}` }
         ];
 
         chordSetsRef.current = progressionIndices.map(prog => ({
@@ -1084,7 +1104,7 @@ export default function ReelPanPage() {
             chordPadSynthRef.current?.releaseAll();
             setIsChordPlaying(false);
         }
-    }, [targetScale]);
+    }, [targetScale, chordProgressionType]);
 
     // [Chord Pad] 화음 반주 토글 핸들러 (Bus Stop 모델 적용)
     const handleChordToggle = async () => {
@@ -1551,107 +1571,26 @@ export default function ReelPanPage() {
 
                         <div className="flex-1 min-h-[100px]" />
 
-                        <footer className="w-full px-6 py-8 pb-10 bg-gradient-to-t from-black/95 to-transparent pointer-events-auto min-h-[180px] flex flex-col items-center gap-6">
-
-                            {/* 녹화 타이머 뱃지 */}
-                            <motion.div
-                                initial={false}
-                                animate={{
-                                    opacity: recordState === 'recording' ? 1 : 0,
-                                    y: recordState === 'recording' ? 0 : 10,
-                                }}
-                                transition={{ duration: 0.3 }}
-                                className={`flex items-center gap-2 px-4 py-1.5 rounded-full backdrop-blur-md border transition-all duration-300
-                                ${recordState === 'recording'
-                                        ? 'bg-red-500/20 border-red-500/50'
-                                        : 'bg-black/20 border-white/10 pointer-events-none'}
-                            `}
-                            >
-                                <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
-                                <span className="text-red-100 font-mono text-sm font-medium tracking-wider">{formatTime(recordTimer)}</span>
-                            </motion.div>
-
-                            {/* 하단 버튼 그룹 */}
-                            <div className="w-full flex items-center justify-between max-w-[380px]">
-                                {/* 1. Label Toggle */}
+                        <footer className="w-full px-6 py-8 pb-10 bg-gradient-to-t from-black/95 to-transparent pointer-events-auto min-h-[180px] flex flex-col items-center justify-center gap-6">
+                            {/* Play Button (Center) - ▶️ Main Play Button */}
+                            <div className="relative group z-10 flex justify-center">
+                                <div className={`absolute inset-0 bg-white/20 rounded-full blur-2xl transition-opacity duration-500 ${(isMidiPlaying && !isPaused) ? 'opacity-40 animate-pulse' : 'opacity-0 group-hover:opacity-30'}`} />
                                 <button
-                                    onClick={() => setViewMode(prev => prev === 2 ? 3 : 2)}
-                                    className={`w-12 h-12 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center hover:bg-white/20 transition-all active:scale-95 ${viewMode === 2 ? 'bg-white/20' : 'bg-white/10'}`}
+                                    onClick={handleTogglePlay}
+                                    className={`
+                                        w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300
+                                        ${(isMidiPlaying && !isPaused)
+                                            ? 'bg-rose-500 shadow-[0_0_25px_rgba(244,63,94,0.4)] scale-110'
+                                            : 'bg-emerald-500 shadow-[0_0_25px_rgba(16,185,129,0.4)] hover:scale-105 active:scale-95'}
+                                        text-white
+                                    `}
+                                    aria-label={(isMidiPlaying && !isPaused) ? "일시정지" : "재생"}
                                 >
-                                    <Type size={18} className={`${viewMode === 2 ? 'text-white' : 'text-white/40'}`} />
-                                </button>
-
-                                {/* 2. Layout Mode */}
-                                <button
-                                    onClick={toggleLayout}
-                                    className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center hover:bg-white/20 transition-all active:scale-95"
-                                >
-                                    <span className="text-[10px] font-bold text-white tracking-widest">{layoutMode === 'reel' ? "9:16" : "1:1"}</span>
-                                </button>
-
-                                {/* 3. Play Button (Center) - ▶️ Main Play Button */}
-                                <div className="relative group z-10 flex justify-center mx-2">
-                                    <div className={`absolute inset-0 bg-white/20 rounded-full blur-2xl transition-opacity duration-500 ${isMidiPlaying ? 'opacity-40 animate-pulse' : 'opacity-0 group-hover:opacity-30'}`} />
-                                    <button
-                                        onClick={handleTogglePlay}
-                                        className="relative transition-all duration-300 hover:scale-105 active:scale-95"
-                                        aria-label={isMidiPlaying ? "정지" : "재생"}
-                                    >
-                                        {/* Outer Ring */}
-                                        <div className={`flex items-center justify-center rounded-full border-4 transition-all duration-300 ${isMidiPlaying ? 'w-20 h-20 border-emerald-500' : 'w-16 h-16 border-white'}`}>
-                                            {/* Play/Stop Icon */}
-                                            <div className={`bg-white rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.3)] transition-all duration-300 ${isMidiPlaying ? 'w-8 h-8 rounded-md' : 'w-14 h-14 rounded-full'}`}>
-                                                {isMidiPlaying ? (
-                                                    <Square size={20} fill="currentColor" className="text-emerald-600" />
-                                                ) : (
-                                                    <Play size={28} fill="currentColor" className="text-black ml-1" />
-                                                )}
-                                            </div>
-                                        </div>
-                                    </button>
-                                </div>
-
-                                {/* 4. Drum Accompaniment */}
-                                <button
-                                    onPointerDown={handleDrumDown}
-                                    onPointerUp={handleDrumUp}
-                                    className={`w-12 h-12 rounded-full backdrop-blur-md border border-white/10 flex flex-col items-center justify-center transition-all active:scale-90 relative overflow-hidden group
-                                         ${isDrumPlaying ? 'bg-orange-500/40 border-orange-500/50' : 'bg-white/10 hover:bg-white/20'}
-                                     `}
-                                >
-                                    <Drum size={20} className={isDrumPlaying ? 'text-orange-200' : 'text-white/40'} />
-                                    {isDrumPlaying && (
-                                        <motion.div
-                                            animate={{ opacity: [0, 1, 0] }}
-                                            transition={{ duration: 1, repeat: Infinity }}
-                                            className="absolute bottom-1 w-1 h-1 rounded-full bg-orange-400"
-                                        />
+                                    {(isMidiPlaying && !isPaused) ? (
+                                        <Pause size={32} fill="white" />
+                                    ) : (
+                                        <Play size={32} fill="white" className="ml-1" />
                                     )}
-                                    {/* Long press indicator hint */}
-                                    <div className="absolute -top-1 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Settings2 size={8} className="text-white/40" />
-                                    </div>
-                                </button>
-
-                                {/* 5. Chord Pad (화음 반주) Toggle */}
-                                <button
-                                    onPointerDown={handleChordDown}
-                                    onPointerUp={handleChordUp}
-                                    className={`w-12 h-12 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center transition-all active:scale-95 relative overflow-hidden group ${isChordPlaying ? 'bg-purple-500/30 border-purple-500/50' : 'bg-white/10 hover:bg-white/20'}`}
-                                    title="화음 반주 토글 (길게 누르면 설정)"
-                                >
-                                    <Music2 size={18} className={isChordPlaying ? 'text-purple-300' : 'text-white/40'} />
-                                    {isChordPlaying && (
-                                        <motion.div
-                                            animate={{ opacity: [0.3, 0.8, 0.3], scale: [1, 1.2, 1] }}
-                                            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                                            className="absolute inset-0 rounded-full bg-purple-500/20"
-                                        />
-                                    )}
-                                    {/* Long press indicator hint */}
-                                    <div className="absolute -top-1 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Settings2 size={8} className="text-white/40" />
-                                    </div>
                                 </button>
                             </div>
                         </footer>
@@ -1824,7 +1763,7 @@ export default function ReelPanPage() {
                                     <div className="flex flex-col gap-3">
                                         <span className="text-xs font-bold text-white/40 uppercase tracking-widest px-1">Chord Progression Type</span>
                                         <div className="grid grid-cols-1 gap-2">
-                                            {['Cinematic 1-6-4-5', 'Pop 1-5-6-4', 'Jazz 2-5-1', 'Ambient Drone'].map((prog) => (
+                                            {['Cinematic', 'Hopeful Pop', 'Emotional Sad', 'Nostalgic Story'].map((prog) => (
                                                 <button
                                                     key={prog}
                                                     onClick={() => setChordProgressionType(prog)}
