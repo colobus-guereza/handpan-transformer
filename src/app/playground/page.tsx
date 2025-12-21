@@ -201,14 +201,14 @@ export default function PlaygroundHome() {
                             className="absolute -top-2 left-full -ml-[2px] text-slate-400 hover:text-cyan-300 transition-all animate-pulse-slow group"
                             aria-label="Next Page"
                         >
-                            <HelpCircle size={29} className="group-hover:scale-110 transition-transform" />
+                            <HelpCircle size={26} className="group-hover:scale-110 transition-transform" />
                         </button>
                     </span>
                 </h1>
 
                 {/* Subtitle & CTA - Below Center */}
                 <div className="absolute top-[calc(50%+10px)] left-1/2 -translate-x-1/2 mt-12 flex flex-col items-center gap-6">
-                    <p className="!text-[0.975rem] sm:!text-[1.1375rem] lg:!text-[1.625rem] text-slate-400 font-medium tracking-wide flex items-center gap-2 whitespace-nowrap justify-center">
+                    <p className="!text-[1.17rem] sm:!text-[1.365rem] lg:!text-[1.95rem] text-slate-400 font-medium tracking-wide flex items-center gap-2 whitespace-nowrap justify-center relative -top-[25px]">
                         {lang === 'en' ? (
                             <>
                                 {t.subtitleStart}<span className="text-cyan-400 font-bold">{t.subtitleDing}</span>
@@ -226,7 +226,7 @@ export default function PlaygroundHome() {
                         className="group relative px-8 py-3.5 bg-white/10 border border-white/20 text-white rounded-full font-bold !text-base lg:!text-lg tracking-wide shadow-[0_0_20px_rgba(6,182,212,0.15)] hover:shadow-[0_0_30px_rgba(168,85,247,0.3)] hover:-translate-y-1 transition-all duration-300 overflow-hidden backdrop-blur-md w-[240px] whitespace-nowrap"
                     >
                         <span className="relative z-10 flex items-center gap-2 justify-center">
-                            {t.cta} <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                            {t.cta} <ArrowRight size={18} className="animate-[wiggle_2s_ease-in-out_infinite] group-hover:translate-x-1 group-hover:animate-none transition-transform" />
                         </span>
                         <div className="absolute inset-0 bg-gradient-to-r from-cyan-600/50 via-purple-600/50 to-cyan-600/50 bg-[length:200%_100%] opacity-0 group-hover:opacity-100 animate-shimmer transition-opacity duration-300" />
                     </Link>

@@ -19,11 +19,16 @@ const config: Config = {
       animation: {
         shimmer: "shimmer 2s linear infinite",
         "pulse-slow": "pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        wiggle: "wiggle 2s ease-in-out infinite",
       },
       keyframes: {
         shimmer: {
           from: { backgroundPosition: "0 0" },
           to: { backgroundPosition: "-200% 0" },
+        },
+        wiggle: {
+          "0%, 100%": { transform: "translateX(0)" },
+          "50%": { transform: "translateX(4px)" },
         },
       },
     },
