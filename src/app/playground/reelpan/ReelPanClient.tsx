@@ -1362,7 +1362,14 @@ export default function ReelPanClient() {
         if (song.midiSrc) {
             try {
                 console.log('MIDI 파일 로딩 중:', song.midiSrc);
-                const midiResult = await parseMidi(song.midiSrc);
+                // 1. Fetch MIDI File
+                const response = await fetch(song.midiSrc);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const arrayBuffer = await response.arrayBuffer();
+
+                // 2. Parse MIDI (ArrayBuffer, FileName)
+                const midiResult = await parseMidi(arrayBuffer, song.title);
+
                 if (midiResult) {
                     setMidiData(midiResult);
                     console.log('MIDI 파일 로딩 완료:', midiResult);
@@ -1814,9 +1821,8 @@ export default function ReelPanClient() {
                             {selectedSong?.xmlSrc && (
                                 <button
                                     onClick={() => setShowScore(!showScore)}
-                                    className={`absolute right-4 w-10 h-10 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center transition-all hover:bg-white/20 ${
-                                        showScore ? 'bg-white/20' : 'bg-white/10'
-                                    }`}
+                                    className={`absolute right-4 w-10 h-10 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center transition-all hover:bg-white/20 ${showScore ? 'bg-white/20' : 'bg-white/10'
+                                        }`}
                                 >
                                     <FileText size={18} className={showScore ? 'text-white' : 'text-white/60'} />
                                 </button>
@@ -2182,22 +2188,20 @@ export default function ReelPanClient() {
                                     <div className="flex items-center gap-2">
                                         <button
                                             onClick={() => setSelectorMode('scale')}
-                                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
-                                                selectorMode === 'scale'
+                                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${selectorMode === 'scale'
                                                     ? 'bg-white/20 text-white'
                                                     : 'bg-white/5 text-white/60 hover:text-white/80'
-                                            }`}
+                                                }`}
                                         >
                                             <Type size={16} className="inline mr-2" />
                                             스케일
                                         </button>
                                         <button
                                             onClick={() => setSelectorMode('song')}
-                                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
-                                                selectorMode === 'song'
+                                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${selectorMode === 'song'
                                                     ? 'bg-white/20 text-white'
                                                     : 'bg-white/5 text-white/60 hover:text-white/80'
-                                            }`}
+                                                }`}
                                         >
                                             <Music size={16} className="inline mr-2" />
                                             곡
@@ -2397,11 +2401,10 @@ export default function ReelPanClient() {
                                                             <button
                                                                 onClick={toggleSongPlayback}
                                                                 disabled={!selectedSong.midiSrc}
-                                                                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-lg ${
-                                                                    selectedSong.midiSrc
+                                                                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-lg ${selectedSong.midiSrc
                                                                         ? 'bg-slate-300/25 hover:bg-slate-300/40 text-slate-100 border border-slate-200/30'
                                                                         : 'bg-gray-500/25 text-gray-400 border border-gray-500/30 cursor-not-allowed'
-                                                                } backdrop-blur-sm`}
+                                                                    } backdrop-blur-sm`}
                                                             >
                                                                 {isSongPlaying ? (
                                                                     <Volume2 size={20} className="animate-pulse" />

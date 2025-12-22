@@ -128,28 +128,30 @@ export const useOctaveResonance = ({ getAudioContext, getMasterGain }: UseOctave
         const now = ctx.currentTime;
         const startTime = now + settings.delayTime;
 
-        // ★ [수정됨] 클릭 방지를 위한 미니 램프 시간 (2ms)
+        // ★ [롤백됨] 클릭 방지를 위한 미니 램프 시간 (2ms로 복구)
         const ANTI_CLICK_RAMP_TIME = 0.002;
+
+        // [정밀 진단] 스케줄링 여유 시간 측정
+        const scheduleMargin = startTime - now;
 
         console.log(`[Debug-Resonance] [스케줄링]`);
         console.log(`[Debug-Resonance]   ctx.currentTime: ${now.toFixed(4)}s`);
         console.log(`[Debug-Resonance]   startTime: ${startTime.toFixed(4)}s (delay: ${settings.delayTime}s)`);
+        console.log(`[Debug-Resonance]   여유 마진: ${(scheduleMargin * 1000).toFixed(2)}ms ${scheduleMargin < 0.02 ? '⚠️ 위험(Too Tight)' : '✅ 안전'}`);
         console.log(`[Debug-Resonance]   trimStart: ${settings.trimStart}s`);
         console.log(`[Debug-Resonance]   fadeIn: ${settings.fadeInDuration}s (curve: ${settings.fadeInCurve})`);
         console.log(`[Debug-Resonance]   targetGain: ${settings.masterGain}`);
         console.log(`[Debug-Resonance]   antiClickRamp: ${ANTI_CLICK_RAMP_TIME * 1000}ms`);
 
-        // ★ [수정됨] Gain Ramp - 클릭 방지 로직 적용
-        // 문제: setValueAtTime(0, T)와 linearRampToValueAtTime(0.01, T)가 같은 시간에 예약되면 클릭 발생
-        // 해결: linearRamp가 2ms 후로 예약되도록 수정
-        console.log(`[Debug-Resonance] ★★★ Gain Ramp 시작 (수정된 로직) ★★★`);
+        // ★ [롤백됨] Gain Ramp - 2ms 램프로 복귀
+        console.log(`[Debug-Resonance] ★★★ Gain Ramp 시작 (2ms 램프) ★★★`);
 
         // 1. 시작 시점에 완전 무음 설정
         gainNode.gain.setValueAtTime(0, startTime);
         console.log(`[Debug-Resonance]   setValueAtTime(0, ${startTime.toFixed(4)})`);
 
         if (settings.fadeInCurve > 1) {
-            // 2. 2ms에 걸쳐 0 → 0.01로 부드럽게 전환 (클릭 방지)
+            // 2. 2ms에 걸쳐 0 → 0.01로 부드럽게 전환
             const miniRampEnd = startTime + ANTI_CLICK_RAMP_TIME;
             gainNode.gain.linearRampToValueAtTime(0.01, miniRampEnd);
             console.log(`[Debug-Resonance]   ✅ linearRamp(0.01, ${miniRampEnd.toFixed(4)}) - 2ms 오프셋 적용`);
