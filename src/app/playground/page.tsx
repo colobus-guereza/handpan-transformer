@@ -607,7 +607,7 @@ export default function PlaygroundHome() {
 
                         {/* 안내문구 섹션 */}
                         <div className="w-full max-w-5xl mx-auto mt-8 p-6 rounded-3xl bg-transparent border-transparent">
-                            <div className="flex flex-col gap-3 items-center text-center">
+                            <div className="flex flex-col gap-3 items-start text-left">
                                 <p className="text-[1.05rem] leading-relaxed text-slate-300">
                                     {t.audioGuide1}
                                 </p>
