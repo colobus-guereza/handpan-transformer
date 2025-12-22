@@ -7,6 +7,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { SCALES } from '@/data/handpanScales';
 import { Layout, Check, Square, Circle, Smartphone, Keyboard, Play, Pause, Volume2, Download, Trash2, X, Type, ChevronDown, Share2, RefreshCcw, Drum, SlidersHorizontal, Settings2, Sparkles, ArrowLeft, Music2, Music, FileText } from 'lucide-react';
 
+// MIDI parsing utilities
+import { parseMidi, findBestMatchScale } from '@/lib/midiUtils';
+
 // Score Component
 import { OSMDScoreHandle } from '@/components/score/OSMDScore';
 const OSMDScore = dynamic(() => import('@/components/score/OSMDScore'), {
@@ -82,6 +85,7 @@ export default function ReelPanClient() {
     const [selectedSong, setSelectedSong] = useState<any>(null); // 선택된 곡
     const [isSongPlaying, setIsSongPlaying] = useState(false); // 곡 자동연주 상태
     const [showScore, setShowScore] = useState(false); // 악보 표시 상태
+    const [midiData, setMidiData] = useState<any>(null); // 로딩된 MIDI 데이터
     const [isChordPlaying, setIsChordPlaying] = useState(false); // Chord Pad 반주 토글
     const [recordingBlob, setRecordingBlob] = useState<Blob | null>(null);
     const [recordedVideoUrl, setRecordedVideoUrl] = useState<string | null>(null);
@@ -1344,7 +1348,7 @@ export default function ReelPanClient() {
         }, 200);
     };
 
-    const handleSongSelect = (song: any) => {
+    const handleSongSelect = async (song: any) => {
         setSelectedSong(song);
         // 곡의 스케일로 자동 전환
         const songScale = SCALES.find(s => s.name === song.scaleName);
@@ -1353,21 +1357,109 @@ export default function ReelPanClient() {
         }
         setShowScaleSelector(false);
         setIsSongPlaying(false);
+
+        // MIDI 파일 로딩
+        if (song.midiSrc) {
+            try {
+                console.log('MIDI 파일 로딩 중:', song.midiSrc);
+                const midiResult = await parseMidi(song.midiSrc);
+                if (midiResult) {
+                    setMidiData(midiResult);
+                    console.log('MIDI 파일 로딩 완료:', midiResult);
+                } else {
+                    console.error('MIDI 파일 파싱 실패');
+                    setMidiData(null);
+                }
+            } catch (error) {
+                console.error('MIDI 파일 로딩 에러:', error);
+                setMidiData(null);
+            }
+        } else {
+            setMidiData(null);
+        }
     };
 
     const toggleSongPlayback = async () => {
-        if (!selectedSong?.midiSrc) return;
+        if (!selectedSong?.midiSrc || !midiData) return;
 
         if (isSongPlaying) {
             // 곡 재생 중지
             setIsSongPlaying(false);
-            // MIDI 재생 중지 로직 (추후 구현)
+            console.log('곡 재생 중지:', selectedSong.title);
+            // MIDI 재생 중지 로직은 추후 구현
         } else {
             // 곡 재생 시작
             setIsSongPlaying(true);
-            // MIDI 파일 로딩 및 자동연주 로직 (추후 구현)
             console.log('곡 재생 시작:', selectedSong.title);
+
+            try {
+                // MIDI 트랙에서 노트 추출 및 재생
+                const tracks = midiData.tracks || [];
+                let allNotes: any[] = [];
+
+                tracks.forEach((track: any) => {
+                    if (track.notes) {
+                        allNotes = allNotes.concat(track.notes.map((note: any) => ({
+                            time: note.time,
+                            duration: note.duration,
+                            midi: note.midi,
+                            noteName: note.name,
+                            velocity: note.velocity
+                        })));
+                    }
+                });
+
+                // 시간순으로 정렬
+                allNotes.sort((a, b) => a.time - b.time);
+
+                console.log('추출된 노트 수:', allNotes.length);
+
+                // 간단한 재생 로직 (실제로는 더 복잡한 타이밍 로직 필요)
+                let delay = 0;
+                const bpm = midiData.header?.tempos?.[0]?.bpm || 120;
+                const startTime = performance.now();
+
+                for (const note of allNotes.slice(0, 20)) { // 처음 20개 노트만 테스트
+                    const noteTime = (note.time * 60) / bpm * 1000; // ms 단위로 변환
+                    const playDelay = noteTime - delay;
+
+                    if (playDelay > 0) {
+                        await new Promise(resolve => setTimeout(resolve, playDelay));
+                    }
+
+                    // 핸드판 노트로 변환하여 재생
+                    const handpanNote = convertMidiNoteToHandpan(note.midi);
+                    if (handpanNote) {
+                        playNote(handpanNote);
+                        console.log('노트 재생:', handpanNote, '원본 MIDI:', note.midi);
+                    }
+
+                    delay = noteTime;
+                }
+
+            } catch (error) {
+                console.error('곡 재생 에러:', error);
+                setIsSongPlaying(false);
+            }
         }
+    };
+
+    // MIDI 노트를 핸드판 노트로 변환하는 헬퍼 함수
+    const convertMidiNoteToHandpan = (midiNote: number): string | null => {
+        // 간단한 MIDI to 노트 변환 (실제로는 더 정확한 매핑 필요)
+        const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        const octave = Math.floor(midiNote / 12) - 1;
+        const noteIndex = midiNote % 12;
+        const noteName = noteNames[noteIndex] + octave;
+
+        // 현재 스케일에 포함된 노트인지 확인
+        const currentScaleNotes = [
+            targetScale.notes.ding,
+            ...targetScale.notes.top,
+            ...targetScale.notes.bottom
+        ];
+
+        return currentScaleNotes.includes(noteName) ? noteName : null;
     };
 
     // Recording Handlers
