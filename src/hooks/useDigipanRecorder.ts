@@ -128,14 +128,16 @@ export const useDigipanRecorder = ({
                 offscreenCanvasRef.current = offscreen;
                 console.log(`[RecorderDebug] ${Date.now()} Offscreen canvas created`);
 
-                const offCtx = offscreen.getContext('2d');
+                const offCtx = offscreen.getContext('2d', { alpha: false });
                 if (!offCtx) {
                     console.error('[Recorder] Failed to get offscreen context');
                     isInitializingRef.current = false;
                     return;
                 }
 
-                // ★ Pre-draw: 캡처 전 첫 프레임 강제 그리기 (검정 깜빡임 방지)
+                // ★ Pre-draw: 배경 채우기 + 첫 프레임 강제 그리기 (검정 깜빡임 방지)
+                offCtx.fillStyle = '#000000';
+                offCtx.fillRect(0, 0, squareSize, squareSize);
                 offCtx.drawImage(
                     canvas,
                     cropX, cropY, originalSquareSize, originalSquareSize,
@@ -181,13 +183,15 @@ export const useDigipanRecorder = ({
                     offscreenCanvasRef.current = offscreen;
                     console.log(`[RecorderDebug] ${Date.now()} Offscreen canvas created`);
 
-                    const offCtx = offscreen.getContext('2d');
+                    const offCtx = offscreen.getContext('2d', { alpha: false });
                     if (!offCtx) {
                         // Fallback
                         console.error('[Recorder] Failed to get context for resize, using original');
                         videoStream = canvas.captureStream(targetFPS);
                     } else {
-                        // ★ Pre-draw: 캡처 전 첫 프레임 강제 그리기 (검정 깜빡임 방지)
+                        // ★ Pre-draw: 배경 채우기 + 첫 프레임 강제 그리기 (검정 깜빡임 방지)
+                        offCtx.fillStyle = '#000000';
+                        offCtx.fillRect(0, 0, destWidth, destHeight);
                         offCtx.drawImage(canvas, 0, 0, srcWidth, srcHeight, 0, 0, destWidth, destHeight);
 
                         const copyFrame = () => {
@@ -209,24 +213,33 @@ export const useDigipanRecorder = ({
                     offscreen.height = srcHeight;
                     offscreenCanvasRef.current = offscreen;
 
-                    const offCtx = offscreen.getContext('2d');
+                    const offCtx = offscreen.getContext('2d', { alpha: false });
                     if (!offCtx) {
                         console.error('[Recorder] Failed to get context, using original canvas as fallback');
                         videoStream = canvas.captureStream(targetFPS);
                     } else {
-                        // ★ Pre-draw: 캡처 전 첫 프레임 강제 그리기 (검정 깜빡임 방지)
-                        offCtx.drawImage(canvas, 0, 0);
+                        // ★ Pre-draw: 배경 채우기 + 첫 프레임 강제 그리기 (검정 깜빡임 방지)
+                        console.log(`[RecorderDebug] ${Date.now()} Step 1: fillRect starting...`);
+                        offCtx.fillStyle = '#000000';
+                        offCtx.fillRect(0, 0, srcWidth, srcHeight);
+                        console.log(`[RecorderDebug] ${Date.now()} Step 1: fillRect completed`);
 
+                        console.log(`[RecorderDebug] ${Date.now()} Step 2: drawImage from WebGL starting...`);
+                        offCtx.drawImage(canvas, 0, 0);
+                        console.log(`[RecorderDebug] ${Date.now()} Step 2: drawImage completed`);
+
+                        console.log(`[RecorderDebug] ${Date.now()} Step 3: Starting copyFrame loop...`);
                         const copyFrame = () => {
                             if (!offscreenCanvasRef.current) return;
                             offCtx.drawImage(canvas, 0, 0);
                             animationFrameRef.current = requestAnimationFrame(copyFrame);
                         };
                         copyFrame();
+                        console.log(`[RecorderDebug] ${Date.now()} Step 3: copyFrame loop started`);
 
-                        console.log(`[RecorderDebug] ${Date.now()} Calling captureStream(${targetFPS})...`);
+                        console.log(`[RecorderDebug] ${Date.now()} Step 4: Calling captureStream(${targetFPS})...`);
                         videoStream = offscreen.captureStream(targetFPS);
-                        console.log(`[RecorderDebug] ${Date.now()} captureStream completed`);
+                        console.log(`[RecorderDebug] ${Date.now()} Step 4: captureStream completed`);
                     }
                 }
             }

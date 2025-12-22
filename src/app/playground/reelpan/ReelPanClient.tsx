@@ -155,7 +155,7 @@ export default function ReelPanClient() {
         ];
     }, [targetScale.id]); // Stable dependency
 
-    const { isLoaded, loadingProgress, playNote, resumeAudio } = useHandpanAudio(priorityNotes);
+    const { isLoaded, loadingProgress, playNote, resumeAudio } = useHandpanAudio();
 
     // 3. Handlers
     const stopPreview = () => {
@@ -1439,7 +1439,7 @@ export default function ReelPanClient() {
             hideTouchText: false, // Keep mounted to avoid remount flash
             showTouchText: false, // Disable idle Ready/Set/Touch cycle
             useCountdownText: true, // ★ Use lightweight CountdownText instead of TouchText
-            externalTouchText: recordCountdown ? recordCountdown.toString() : null, // 3D 카운트다운 텍스트 주입
+            // externalTouchText REMOVED - now using HTML overlay to prevent 3D re-render
             recordingCropMode: layoutMode === 'square' ? 'square' as 'square' : 'full' as 'full',
             enableZoom: false, // 마우스 휠 줌인/줌아웃 비활성화
             enablePan: false, // 카메라 이동(Pan) 비활성화
@@ -1627,6 +1627,24 @@ export default function ReelPanClient() {
                     )}
                 </AnimatePresence>
 
+                {/* === Layer 2.5: Recording Countdown Overlay (HTML - prevents 3D re-render flash) === */}
+                <AnimatePresence>
+                    {recordCountdown && (
+                        <motion.div
+                            key="countdown-overlay"
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            transition={{ duration: 0.3, ease: 'easeOut' }}
+                            className="absolute inset-0 flex items-center justify-center z-[25] pointer-events-none"
+                        >
+                            <span className="text-white text-8xl font-bold drop-shadow-2xl" style={{ textShadow: '0 0 40px rgba(255,255,255,0.5)' }}>
+                                {recordCountdown}
+                            </span>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
                 {/* === Layer 3: System UI (Controls) - 리뷰 모드가 아닐 때만 표시 === */}
                 {recordState !== 'reviewing' && (
                     <div className="absolute inset-0 z-20 pointer-events-none flex flex-col justify-between">
@@ -1782,7 +1800,8 @@ export default function ReelPanClient() {
 
                         </footer>
                     </div>
-                )}
+                )
+                }
 
                 {/* === Layer 3.5: Drum Settings Popup === */}
                 <AnimatePresence>
@@ -2148,82 +2167,84 @@ export default function ReelPanClient() {
 
                 {/* === Layer 6: Countdown Overlay REMOVED (Now using 3D externalTouchText) === */}
 
-            </main>
+            </main >
 
             {/* ============================================================
                 LAYER 5: Review Overlay (녹화 완료 시에만 등장)
                 - 여기가 '3가지 선택지'가 나오는 핵심 UI입니다.
             ============================================================= */}
             <AnimatePresence>
-                {recordState === 'reviewing' && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="fixed inset-0 z-[200] flex flex-col items-center justify-end bg-black/70 backdrop-blur-md"
-                    >
-                        {/* Preview Area (Video) */}
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                            {recordedVideoUrl ? (
-                                <video
-                                    src={recordedVideoUrl || undefined}
-                                    loop
-                                    autoPlay
-                                    playsInline
-                                    className="w-full h-full object-contain max-w-[480px]"
-                                />
-                            ) : (
-                                <div className="text-white/50 text-center">
-                                    <p className="text-2xl font-bold text-white mb-2">Done! 🎉</p>
-                                    <p>Loading preview...</p>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Action Bar (Compact Bottom Bar) */}
+                {
+                    recordState === 'reviewing' && (
                         <motion.div
-                            initial={{ y: 60, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            exit={{ y: 60, opacity: 0 }}
-                            transition={{ duration: 0.25, delay: 0.1 }}
-                            className="w-full max-w-md bg-zinc-900/95 border-t border-white/10 rounded-t-2xl px-5 py-3 flex items-center justify-center gap-4 shadow-2xl backdrop-blur-xl"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="fixed inset-0 z-[200] flex flex-col items-center justify-end bg-black/70 backdrop-blur-md"
                         >
-                            {/* Retake (Red) */}
-                            <button
-                                onClick={handleDiscardRecording}
-                                className="w-11 h-11 rounded-full bg-red-500/20 flex items-center justify-center text-red-400 hover:bg-red-500/30 transition active:scale-95"
-                                aria-label="Retake"
-                            >
-                                <RefreshCcw size={20} />
-                            </button>
+                            {/* Preview Area (Video) */}
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                {recordedVideoUrl ? (
+                                    <video
+                                        src={recordedVideoUrl || undefined}
+                                        loop
+                                        autoPlay
+                                        playsInline
+                                        className="w-full h-full object-contain max-w-[480px]"
+                                    />
+                                ) : (
+                                    <div className="text-white/50 text-center">
+                                        <p className="text-2xl font-bold text-white mb-2">Done! 🎉</p>
+                                        <p>Loading preview...</p>
+                                    </div>
+                                )}
+                            </div>
 
-                            {/* Time Badge */}
-                            <span className="px-3 py-1.5 rounded-full bg-white/10 text-white/80 text-sm font-mono tracking-wider">
-                                {formatTime(recordTimer)}
-                            </span>
-
-                            {/* Save */}
-                            <button
-                                onClick={handleSaveRecording}
-                                className="w-11 h-11 rounded-full bg-zinc-800 flex items-center justify-center text-white hover:bg-zinc-700 transition active:scale-95"
-                                aria-label="Save"
+                            {/* Action Bar (Compact Bottom Bar) */}
+                            <motion.div
+                                initial={{ y: 60, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ y: 60, opacity: 0 }}
+                                transition={{ duration: 0.25, delay: 0.1 }}
+                                className="w-full max-w-md bg-zinc-900/95 border-t border-white/10 rounded-t-2xl px-5 py-3 flex items-center justify-center gap-4 shadow-2xl backdrop-blur-xl"
                             >
-                                <Download size={20} />
-                            </button>
+                                {/* Retake (Red) */}
+                                <button
+                                    onClick={handleDiscardRecording}
+                                    className="w-11 h-11 rounded-full bg-red-500/20 flex items-center justify-center text-red-400 hover:bg-red-500/30 transition active:scale-95"
+                                    aria-label="Retake"
+                                >
+                                    <RefreshCcw size={20} />
+                                </button>
 
-                            {/* Share */}
-                            <button
-                                onClick={handleShareRecording}
-                                className="w-11 h-11 rounded-full bg-white flex items-center justify-center text-black hover:bg-gray-100 shadow-md transition active:scale-95"
-                                aria-label="Share"
-                            >
-                                <Share2 size={20} />
-                            </button>
+                                {/* Time Badge */}
+                                <span className="px-3 py-1.5 rounded-full bg-white/10 text-white/80 text-sm font-mono tracking-wider">
+                                    {formatTime(recordTimer)}
+                                </span>
+
+                                {/* Save */}
+                                <button
+                                    onClick={handleSaveRecording}
+                                    className="w-11 h-11 rounded-full bg-zinc-800 flex items-center justify-center text-white hover:bg-zinc-700 transition active:scale-95"
+                                    aria-label="Save"
+                                >
+                                    <Download size={20} />
+                                </button>
+
+                                {/* Share */}
+                                <button
+                                    onClick={handleShareRecording}
+                                    className="w-11 h-11 rounded-full bg-white flex items-center justify-center text-black hover:bg-gray-100 shadow-md transition active:scale-95"
+                                    aria-label="Share"
+                                >
+                                    <Share2 size={20} />
+                                </button>
+                            </motion.div>
                         </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                    )
+                }
+            </AnimatePresence >
 
             <style jsx global>{`
                 body {
