@@ -1340,8 +1340,8 @@ export default function ReelPanPage() {
                 <div className="absolute top-[120px] left-0 w-full h-[15%] z-[2] flex items-end justify-center bg-white overflow-hidden border-b border-white">
                     {currentSong.xmlSrc && midiData ? (
                         <div className="w-full h-full relative flex items-center">
-                            {/* Vertical Playhead Line (Fixed Position) */}
-                            <div className="absolute left-[20%] top-0 bottom-0 w-[2px] bg-red-500/80 z-20 shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+                            {/* Vertical Playhead Line (Fixed Position - Center) */}
+                            <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-[2px] bg-red-500/80 z-20 shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
                             <div className="w-full h-[120px]">
                                 <OSMDScore
                                     ref={scoreRef}

@@ -311,18 +311,18 @@ const OSMDScore = forwardRef<OSMDScoreHandle, OSMDScoreProps>(({
                 ref={scrollContainerRef}
                 className="w-full h-full relative overflow-x-auto overflow-y-hidden scrollbar-hide flex"
             >
-                <div style={{ minWidth: '20%', flexShrink: 0 }} />
+                <div style={{ minWidth: '50%', flexShrink: 0 }} />
                 <div
                     ref={containerRef}
                     id="osmd-container"
                     className="h-full min-w-fit flex-shrink-0"
                 />
-                <div style={{ minWidth: '60%', flexShrink: 0 }} />
+                <div style={{ minWidth: '50%', flexShrink: 0 }} />
 
                 {loopStartX !== null && (
                     <div
                         className="absolute top-0 bottom-0 z-40 pointer-events-none flex flex-col items-center -translate-x-1/2"
-                        style={{ left: `calc(20% + ${loopStartX}px)` }}
+                        style={{ left: `calc(50% + ${loopStartX}px)` }}
                     >
                         <div className="mt-[25px] mb-1 w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center text-xs font-bold text-black shadow-md border border-yellow-600 z-50">
                             A
@@ -334,7 +334,7 @@ const OSMDScore = forwardRef<OSMDScoreHandle, OSMDScoreProps>(({
                 {loopEndX !== null && (
                     <div
                         className="absolute top-0 bottom-0 z-40 pointer-events-none flex flex-col items-center -translate-x-1/2"
-                        style={{ left: `calc(20% + ${loopEndX}px)` }}
+                        style={{ left: `calc(50% + ${loopEndX}px)` }}
                     >
                         <div className="mt-[25px] mb-1 w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center text-xs font-bold text-black shadow-md border border-yellow-600 z-50">
                             B
