@@ -1638,7 +1638,13 @@ export default function ReelPanClient() {
                             transition={{ duration: 0.3, ease: 'easeOut' }}
                             className="absolute inset-0 flex items-center justify-center z-[25] pointer-events-none"
                         >
-                            <span className="text-white text-8xl font-bold drop-shadow-2xl" style={{ textShadow: '0 0 40px rgba(255,255,255,0.5)' }}>
+                            <span
+                                className={`text-8xl font-bold drop-shadow-2xl ${recordCountdown === 'Touch!'
+                                    ? 'text-red-600'
+                                    : 'text-yellow-400'
+                                    }`}
+                                style={{}}
+                            >
                                 {recordCountdown}
                             </span>
                         </motion.div>
