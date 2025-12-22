@@ -16,7 +16,7 @@ import { ProcessedSong } from '@/store/useMidiStore';
 import * as Tone from 'tone';
 
 const PRACTICE_SONGS = [
-    { id: '1', title: 'Spirited Away', scaleName: 'D Kurd 10', midiSrc: undefined, xmlSrc: undefined },
+    { id: '1', title: 'Spirited Away', scaleName: 'D Kurd 10', midiSrc: '/practice/midi/spirited_away.mid', xmlSrc: '/practice/score/spirited_away.xml' },
     { id: '2', title: 'First Step (Interstellar)', scaleName: 'E Amara 18', midiSrc: undefined, xmlSrc: undefined },
     { id: '3', title: 'Merry-Go-Round', scaleName: 'B Celtic Minor', midiSrc: undefined, xmlSrc: undefined },
     {
@@ -1631,6 +1631,11 @@ export default function ReelPanPage() {
                                                 role="button"
                                                 onClick={() => {
                                                     setCurrentSong(song);
+                                                    // Auto-switch scale based on song's scale name
+                                                    const matchedScale = SCALES.find(s => s.name === song.scaleName);
+                                                    if (matchedScale) {
+                                                        setTargetScale(matchedScale);
+                                                    }
                                                     setShowScaleSelector(false);
                                                 }}
                                                 className={`p-4 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border ${isSelected
