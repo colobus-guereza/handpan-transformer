@@ -3,7 +3,7 @@
 import type { Viewport } from 'next';
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { Camera, Music, Heart, Users, ArrowRight, ArrowLeft, Globe, Smartphone, Box, Type, Drum, Sparkles, HelpCircle, Music2, Play, Square, Clock, Volume2, Download, Share2 } from 'lucide-react';
+import { Camera, Music, Heart, Users, ArrowRight, ArrowLeft, Globe, Smartphone, Box, Type, Drum, Sparkles, HelpCircle, Music2, Play, Square, Clock, Volume2, Download, Share2, Hand } from 'lucide-react';
 import ReelPanSlider from '@/components/playground/ReelPanSlider';
 import { SCALES } from '@/data/handpanScales';
 import { useHandpanAudio } from '@/hooks/useHandpanAudio';
@@ -65,8 +65,10 @@ const translations = {
         uiFeature3Description: "Press the red button in the center to start or stop recording your performance.",
         uiFeature4Title: "Save & Share",
         uiFeature4Description: "Once recording is complete, you can save it to your album or share it to external services.",
-        uiFeature5Title: "Drum & Chord Accompaniment",
+        uiFeature5Title: "Drum & Chord Backing Tracks",
         uiFeature5Description: "Enrich your performance by adding simple drum or chord backing tracks. Long press the button for more options.",
+        uiFeature6Title: "Silent Mode OFF & Refresh",
+        uiFeature6Description: "Most errors can be resolved with these two actions.",
         audioGuide1: "If the handpan doesn't make a sound when you touch it, please turn off silent mode on your phone first.",
         audioGuide2: "If there's still no sound or the sound is strange after turning off silent mode, please refresh the page.",
         audioGuide3: "Most issues are resolved by turning off silent mode or refreshing the page.",
@@ -137,8 +139,10 @@ const translations = {
         uiFeature3Description: "중앙의 빨간 버튼을 눌러 연주를 녹화하거나 정지할 수 있습니다.",
         uiFeature4Title: "저장 & 공유",
         uiFeature4Description: "녹화가 완료되면 앨범에 저장하거나 외부 서비스에 공유할 수 있습니다.",
-        uiFeature5Title: "드럼 & 화음 반주",
+        uiFeature5Title: "드럼 & 화음",
         uiFeature5Description: "심플한 드럼/화음 반주를 더하여 연주를 더욱 풍부하게 만들 수 있습니다. 버튼을 길게 눌러보세요.",
+        uiFeature6Title: "무음모드OFF & 새로고침",
+        uiFeature6Description: "대부분의 오류는 두 가지 액션으로 해결됩니다.",
         audioGuide1: "핸드팬을 터치해도 소리가 안 나면, 휴대폰 무음 모드를 먼저 꺼주세요.",
         audioGuide2: "무음 모드를 껐는데도 소리가 없거나 소리가 이상하면, 페이지를 새로고침해 주세요.",
         audioGuide3: "대부분은 무음 모드 해제 또는 새로고침으로 해결됩니다.",
@@ -576,21 +580,7 @@ export default function PlaygroundHome() {
                                 <p className="text-slate-400 text-[1.05rem] text-center">{t.uiFeature3Description}</p>
                             </div>
 
-                            {/* 4. Save & Share */}
-                            <div className="p-6 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 hover:scale-[1.015] transition-all duration-500 flex flex-col items-center gap-4">
-                                <div className="flex items-center justify-center gap-3">
-                                    <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center">
-                                        <Download size={24} className="text-white/80" />
-                                    </div>
-                                    <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center">
-                                        <Share2 size={24} className="text-white/80" />
-                                    </div>
-                                </div>
-                                <h4 className="text-lg font-bold text-white">{t.uiFeature4Title}</h4>
-                                <p className="text-slate-400 text-[1.05rem] text-center">{t.uiFeature4Description}</p>
-                            </div>
-
-                            {/* 5. Drum & Chord Accompaniment */}
+                            {/* 4. Drum & Chord Accompaniment */}
                             <div className="p-6 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 hover:scale-[1.015] transition-all duration-500 flex flex-col items-center gap-4">
                                 <div className="flex items-center justify-center gap-3">
                                     <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center">
@@ -603,20 +593,14 @@ export default function PlaygroundHome() {
                                 <h4 className="text-lg font-bold text-white">{t.uiFeature5Title}</h4>
                                 <p className="text-slate-400 text-[1.05rem] text-center">{t.uiFeature5Description}</p>
                             </div>
-                        </div>
 
-                        {/* 안내문구 섹션 */}
-                        <div className="w-full max-w-5xl mx-auto mt-8 p-6 rounded-3xl bg-transparent border-transparent">
-                            <div className="flex flex-col gap-3 items-start text-left">
-                                <p className="text-[1.05rem] leading-relaxed text-slate-300">
-                                    {t.audioGuide1}
-                                </p>
-                                <p className="text-[1.05rem] leading-relaxed text-slate-300">
-                                    {t.audioGuide2}
-                                </p>
-                                <p className="text-[1.05rem] leading-relaxed text-slate-300">
-                                    {t.audioGuide3}
-                                </p>
+                            {/* 5. Silent Mode OFF & Refresh */}
+                            <div className="p-6 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 hover:scale-[1.015] transition-all duration-500 flex flex-col items-center gap-4">
+                                <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center">
+                                    <span className="text-2xl font-bold text-white/80">?!</span>
+                                </div>
+                                <h4 className="text-lg font-bold text-white">{t.uiFeature6Title}</h4>
+                                <p className="text-slate-400 text-[1.05rem] text-center">{t.uiFeature6Description}</p>
                             </div>
                         </div>
                     </div>
