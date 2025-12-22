@@ -128,26 +128,42 @@ export const useOctaveResonance = ({ getAudioContext, getMasterGain }: UseOctave
         const now = ctx.currentTime;
         const startTime = now + settings.delayTime;
 
+        // ★ [수정됨] 클릭 방지를 위한 미니 램프 시간 (2ms)
+        const ANTI_CLICK_RAMP_TIME = 0.002;
+
         console.log(`[Debug-Resonance] [스케줄링]`);
         console.log(`[Debug-Resonance]   ctx.currentTime: ${now.toFixed(4)}s`);
         console.log(`[Debug-Resonance]   startTime: ${startTime.toFixed(4)}s (delay: ${settings.delayTime}s)`);
         console.log(`[Debug-Resonance]   trimStart: ${settings.trimStart}s`);
         console.log(`[Debug-Resonance]   fadeIn: ${settings.fadeInDuration}s (curve: ${settings.fadeInCurve})`);
         console.log(`[Debug-Resonance]   targetGain: ${settings.masterGain}`);
+        console.log(`[Debug-Resonance]   antiClickRamp: ${ANTI_CLICK_RAMP_TIME * 1000}ms`);
 
-        // ★ Gain Ramp - 노이즈 발생 가능 지점
-        console.log(`[Debug-Resonance] ★★★ Gain Ramp 시작 (클릭 노이즈 가능 지점) ★★★`);
+        // ★ [수정됨] Gain Ramp - 클릭 방지 로직 적용
+        // 문제: setValueAtTime(0, T)와 linearRampToValueAtTime(0.01, T)가 같은 시간에 예약되면 클릭 발생
+        // 해결: linearRamp가 2ms 후로 예약되도록 수정
+        console.log(`[Debug-Resonance] ★★★ Gain Ramp 시작 (수정된 로직) ★★★`);
+
+        // 1. 시작 시점에 완전 무음 설정
         gainNode.gain.setValueAtTime(0, startTime);
-        console.log(`[Debug-Resonance]   setValueAtTime(0, ${startTime.toFixed(4)}) 호출됨`);
+        console.log(`[Debug-Resonance]   setValueAtTime(0, ${startTime.toFixed(4)})`);
 
         if (settings.fadeInCurve > 1) {
-            gainNode.gain.linearRampToValueAtTime(0.01, startTime);
-            console.log(`[Debug-Resonance]   ⚠️ linearRamp(0.01, ${startTime.toFixed(4)}) - 같은 시간에 예약! (클릭 원인?)`);
-            gainNode.gain.exponentialRampToValueAtTime(settings.masterGain, startTime + settings.fadeInDuration);
-            console.log(`[Debug-Resonance]   exponentialRamp(${settings.masterGain}, ${(startTime + settings.fadeInDuration).toFixed(4)})`);
+            // 2. 2ms에 걸쳐 0 → 0.01로 부드럽게 전환 (클릭 방지)
+            const miniRampEnd = startTime + ANTI_CLICK_RAMP_TIME;
+            gainNode.gain.linearRampToValueAtTime(0.01, miniRampEnd);
+            console.log(`[Debug-Resonance]   ✅ linearRamp(0.01, ${miniRampEnd.toFixed(4)}) - 2ms 오프셋 적용`);
+
+            // 3. 이후 지수 곡선으로 목표 볼륨까지 페이드인
+            const fadeEndTime = miniRampEnd + settings.fadeInDuration;
+            gainNode.gain.exponentialRampToValueAtTime(settings.masterGain, fadeEndTime);
+            console.log(`[Debug-Resonance]   exponentialRamp(${settings.masterGain}, ${fadeEndTime.toFixed(4)})`);
         } else {
-            gainNode.gain.linearRampToValueAtTime(settings.masterGain, startTime + settings.fadeInDuration);
-            console.log(`[Debug-Resonance]   linearRamp(${settings.masterGain}, ${(startTime + settings.fadeInDuration).toFixed(4)})`);
+            // 선형 램프: 시작부터 바로 목표 볼륨까지
+            const fadeEndTime = startTime + ANTI_CLICK_RAMP_TIME + settings.fadeInDuration;
+            gainNode.gain.linearRampToValueAtTime(0.01, startTime + ANTI_CLICK_RAMP_TIME);
+            gainNode.gain.linearRampToValueAtTime(settings.masterGain, fadeEndTime);
+            console.log(`[Debug-Resonance]   linearRamp(${settings.masterGain}, ${fadeEndTime.toFixed(4)})`);
         }
 
         source.start(startTime, settings.trimStart);

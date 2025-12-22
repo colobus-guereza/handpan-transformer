@@ -5,7 +5,27 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { motion, AnimatePresence } from "framer-motion";
 import { SCALES } from '@/data/handpanScales';
-import { Layout, Check, Square, Circle, Smartphone, Keyboard, Play, Pause, Volume2, Download, Trash2, X, Type, ChevronDown, Share2, RefreshCcw, Drum, SlidersHorizontal, Settings2, Sparkles, ArrowLeft, Music2 } from 'lucide-react';
+import { Layout, Check, Square, Circle, Smartphone, Keyboard, Play, Pause, Volume2, Download, Trash2, X, Type, ChevronDown, Share2, RefreshCcw, Drum, SlidersHorizontal, Settings2, Sparkles, ArrowLeft, Music2, Music, FileText } from 'lucide-react';
+
+// Score Component
+import { OSMDScoreHandle } from '@/components/score/OSMDScore';
+const OSMDScore = dynamic(() => import('@/components/score/OSMDScore'), {
+    ssr: false,
+});
+
+// 곡 데이터 구조 (Practice와 동일)
+const REELPAN_SONGS = [
+    { id: '1', title: 'Spirited Away', scaleName: 'D Kurd 10', midiSrc: '/practice/midi/spiritedaway.mid', xmlSrc: '/practice/score/spiritedaway.xml' },
+    { id: '2', title: 'First Step (Interstellar)', scaleName: 'E Amara 18', midiSrc: undefined, xmlSrc: undefined },
+    { id: '3', title: 'Merry-Go-Round', scaleName: 'B Celtic Minor', midiSrc: undefined, xmlSrc: undefined },
+    {
+        id: '4',
+        title: 'We wish you a merry christmas',
+        scaleName: 'D Kurd 9',
+        midiSrc: '/practice/midi/wewishyouamerrychristmas.mid',
+        xmlSrc: '/practice/score/wewishyouamerrychristmas.xml'
+    }
+];
 import { Digipan3DHandle } from "@/components/digipan/Digipan3D";
 import { useHandpanAudio } from "@/hooks/useHandpanAudio";
 import { getNoteFrequency } from "@/constants/noteFrequencies";
@@ -58,6 +78,10 @@ export default function ReelPanClient() {
     const [showScaleSelector, setShowScaleSelector] = useState(false);
     const [targetScale, setTargetScale] = useState(SCALES.find(s => s.id === 'd_kurd_10') || SCALES[0]);
     const [previewingScaleId, setPreviewingScaleId] = useState<string | null>(null);
+    const [selectorMode, setSelectorMode] = useState<'scale' | 'song'>('scale'); // 스케일 vs 곡 선택 모드
+    const [selectedSong, setSelectedSong] = useState<any>(null); // 선택된 곡
+    const [isSongPlaying, setIsSongPlaying] = useState(false); // 곡 자동연주 상태
+    const [showScore, setShowScore] = useState(false); // 악보 표시 상태
     const [isChordPlaying, setIsChordPlaying] = useState(false); // Chord Pad 반주 토글
     const [recordingBlob, setRecordingBlob] = useState<Blob | null>(null);
     const [recordedVideoUrl, setRecordedVideoUrl] = useState<string | null>(null);
@@ -1311,8 +1335,39 @@ export default function ReelPanClient() {
             // 로딩 완료 시뮬레이션 (실제 3D 컴포넌트 마운트 시간 고려)
             setTimeout(() => {
                 setIsScaleLoading(false);
+                // 곡 선택 모드에서 스케일이 변경되면 곡 선택 해제
+                if (selectedSong) {
+                    setSelectedSong(null);
+                    setIsSongPlaying(false);
+                }
             }, 400);
         }, 200);
+    };
+
+    const handleSongSelect = (song: any) => {
+        setSelectedSong(song);
+        // 곡의 스케일로 자동 전환
+        const songScale = SCALES.find(s => s.name === song.scaleName);
+        if (songScale && songScale.id !== targetScale.id) {
+            setTargetScale(songScale);
+        }
+        setShowScaleSelector(false);
+        setIsSongPlaying(false);
+    };
+
+    const toggleSongPlayback = async () => {
+        if (!selectedSong?.midiSrc) return;
+
+        if (isSongPlaying) {
+            // 곡 재생 중지
+            setIsSongPlaying(false);
+            // MIDI 재생 중지 로직 (추후 구현)
+        } else {
+            // 곡 재생 시작
+            setIsSongPlaying(true);
+            // MIDI 파일 로딩 및 자동연주 로직 (추후 구현)
+            console.log('곡 재생 시작:', selectedSong.title);
+        }
     };
 
     // Recording Handlers
@@ -1662,22 +1717,54 @@ export default function ReelPanClient() {
                             >
                                 <ArrowLeft size={20} />
                             </Link>
+
+                            {/* 악보 표시 버튼 - 선택된 곡에 악보가 있을 때만 표시 */}
+                            {selectedSong?.xmlSrc && (
+                                <button
+                                    onClick={() => setShowScore(!showScore)}
+                                    className={`absolute right-4 w-10 h-10 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center transition-all hover:bg-white/20 ${
+                                        showScore ? 'bg-white/20' : 'bg-white/10'
+                                    }`}
+                                >
+                                    <FileText size={18} className={showScore ? 'text-white' : 'text-white/60'} />
+                                </button>
+                            )}
+
                             <motion.button
                                 onClick={() => setShowScaleSelector(true)}
                                 disabled={isRecording || !!recordCountdown}
-                                key={targetScale.id}
+                                key={selectedSong ? selectedSong.id : targetScale.id}
                                 initial={{ y: -10, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
                                 className={`flex flex-col items-center justify-center transition-all ${isRecording || !!recordCountdown ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105 active:scale-95'}`}
                             >
                                 <div className="flex items-center gap-1.5">
                                     <h1 className="text-white font-normal text-xl tracking-normal drop-shadow-md group-hover:text-white/80 transition-colors">
-                                        {targetScale.name}
+                                        {selectedSong ? selectedSong.title : targetScale.name}
                                     </h1>
                                     <ChevronDown size={18} className="text-white/60 group-hover:text-white/80 transition-colors mt-0.5" />
                                 </div>
                             </motion.button>
                         </header>
+
+                        {/* 악보 표시 영역 */}
+                        <AnimatePresence>
+                            {showScore && selectedSong?.xmlSrc && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: '15%' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="w-full bg-white overflow-hidden border-b border-black/5 z-[5]"
+                                >
+                                    <OSMDScore
+                                        musicXmlUrl={selectedSong.xmlSrc}
+                                        drawCredits={false}
+                                        autoResize={true}
+                                        zoom={0.8}
+                                    />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
                         <div className="flex-1 min-h-[100px]" />
 
@@ -1997,81 +2084,285 @@ export default function ReelPanClient() {
                             exit={{ opacity: 0, y: 20 }}
                             className="absolute inset-0 z-[100] bg-black/60 backdrop-blur-[40px] flex flex-col pointer-events-auto"
                         >
-                            <div className="flex items-center justify-between px-6 py-6 border-b border-white/[0.08]">
-                                <h2 className="text-white font-bold text-sm tracking-[0.25em] uppercase opacity-90">Select Scale</h2>
-                                <button
-                                    onClick={() => setShowScaleSelector(false)}
-                                    className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all border border-white/[0.05]"
-                                >
-                                    ✕
-                                </button>
+                            <div className="px-6 py-6 border-b border-white/[0.08]">
+                                {/* 탭 헤더 */}
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => setSelectorMode('scale')}
+                                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                                                selectorMode === 'scale'
+                                                    ? 'bg-white/20 text-white'
+                                                    : 'bg-white/5 text-white/60 hover:text-white/80'
+                                            }`}
+                                        >
+                                            <Type size={16} className="inline mr-2" />
+                                            스케일
+                                        </button>
+                                        <button
+                                            onClick={() => setSelectorMode('song')}
+                                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                                                selectorMode === 'song'
+                                                    ? 'bg-white/20 text-white'
+                                                    : 'bg-white/5 text-white/60 hover:text-white/80'
+                                            }`}
+                                        >
+                                            <Music size={16} className="inline mr-2" />
+                                            곡
+                                        </button>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowScaleSelector(false)}
+                                        className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all border border-white/[0.05]"
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
+                                <h2 className="text-white font-bold text-sm tracking-[0.25em] uppercase opacity-90">
+                                    {selectorMode === 'scale' ? 'Select Scale' : 'Select Song'}
+                                </h2>
                             </div>
 
                             <div className="flex-1 overflow-y-auto px-4 py-6 custom-scrollbar flex flex-col gap-4">
-                                {/* Search & Filter Controls */}
-                                <div className="flex flex-col gap-3 px-2">
-                                    <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar" style={{ touchAction: 'pan-x' }}>
-                                        {(() => {
-                                            // 1. Calculate available counts and stats
-                                            const stats = SCALES.reduce((acc, scale) => {
-                                                const totalNotes = 1 + scale.notes.top.length + scale.notes.bottom.length;
+                                {/* Search & Filter Controls - Scale Mode Only */}
+                                {selectorMode === 'scale' && (
+                                    <div className="flex flex-col gap-3 px-2">
+                                        <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar" style={{ touchAction: 'pan-x' }}>
+                                            {(() => {
+                                                // 1. Calculate available counts and stats
+                                                const stats = SCALES.reduce((acc, scale) => {
+                                                    const totalNotes = 1 + scale.notes.top.length + scale.notes.bottom.length;
 
-                                                // Count by N
-                                                acc[totalNotes] = (acc[totalNotes] || 0) + 1;
+                                                    // Count by N
+                                                    acc[totalNotes] = (acc[totalNotes] || 0) + 1;
 
-                                                // Count Mutant
-                                                if (scale.id.includes('mutant') || scale.tags.some(t => t.toLowerCase().includes('mutant'))) {
-                                                    acc.mutant = (acc.mutant || 0) + 1;
-                                                }
-                                                return acc;
-                                            }, { mutant: 0 } as Record<string, number>);
+                                                    // Count Mutant
+                                                    if (scale.id.includes('mutant') || scale.tags.some(t => t.toLowerCase().includes('mutant'))) {
+                                                        acc.mutant = (acc.mutant || 0) + 1;
+                                                    }
+                                                    return acc;
+                                                }, { mutant: 0 } as Record<string, number>);
 
-                                            const availableCounts = Object.keys(stats)
-                                                .filter(k => k !== 'mutant')
-                                                .map(Number)
-                                                .sort((a, b) => a - b);
+                                                const availableCounts = Object.keys(stats)
+                                                    .filter(k => k !== 'mutant')
+                                                    .map(Number)
+                                                    .sort((a, b) => a - b);
 
-                                            const filters = [
-                                                { label: 'All', value: 'all', count: SCALES.length },
-                                                ...availableCounts.map(n => ({ label: `${n}`, value: String(n), count: stats[n] })),
-                                                { label: 'Mutant', value: 'mutant', count: stats.mutant }
-                                            ];
+                                                const filters = [
+                                                    { label: 'All', value: 'all', count: SCALES.length },
+                                                    ...availableCounts.map(n => ({ label: `${n}`, value: String(n), count: stats[n] })),
+                                                    { label: 'Mutant', value: 'mutant', count: stats.mutant }
+                                                ];
 
-                                            return filters.map(filter => (
-                                                <button
-                                                    key={filter.value}
-                                                    onClick={() => setFilterNoteCount(filter.value)}
-                                                    className={`px-3 py-1.5 rounded-full flex items-center gap-2 transition-all border whitespace-nowrap
-                                                        ${filterNoteCount === filter.value
-                                                            ? 'bg-slate-300/80 border-slate-200 text-slate-900 shadow-[0_0_15px_rgba(200,200,210,0.4)]'
-                                                            : 'bg-white/[0.03] border-white/[0.08] text-white/40 hover:text-slate-200/80 hover:bg-slate-300/10'}`}
-                                                >
-                                                    <span className="text-[13px] font-black uppercase tracking-widest">{filter.label}</span>
-                                                    <span className={`text-[13px] font-bold ${filterNoteCount === filter.value ? 'opacity-80' : 'opacity-30'}`}>
-                                                        {filter.count}
-                                                    </span>
-                                                </button>
-                                            ));
-                                        })()}
+                                                return filters.map(filter => (
+                                                    <button
+                                                        key={filter.value}
+                                                        onClick={() => setFilterNoteCount(filter.value)}
+                                                        className={`px-3 py-1.5 rounded-full flex items-center gap-2 transition-all border whitespace-nowrap
+                                                            ${filterNoteCount === filter.value
+                                                                ? 'bg-slate-300/80 border-slate-200 text-slate-900 shadow-[0_0_15px_rgba(200,200,210,0.4)]'
+                                                                : 'bg-white/[0.03] border-white/[0.08] text-white/40 hover:text-slate-200/80 hover:bg-slate-300/10'}`}
+                                                    >
+                                                        <span className="text-[13px] font-black uppercase tracking-widest">{filter.label}</span>
+                                                        <span className={`text-[13px] font-bold ${filterNoteCount === filter.value ? 'opacity-80' : 'opacity-30'}`}>
+                                                            {filter.count}
+                                                        </span>
+                                                    </button>
+                                                ));
+                                            })()}
+                                        </div>
+                                        <div className="flex justify-end gap-5 px-1 pt-1">
+                                            <button
+                                                onClick={() => setSortBy('name')}
+                                                className={`text-[12px] font-black uppercase tracking-[0.2em] transition-all ${sortBy === 'name' ? 'text-slate-200' : 'text-white/20 hover:text-slate-200/60'}`}
+                                            >
+                                                A-Z
+                                            </button>
+                                            <button
+                                                onClick={() => setSortBy('notes')}
+                                                className={`text-[12px] font-black uppercase tracking-[0.2em] transition-all ${sortBy === 'notes' ? 'text-slate-200' : 'text-white/20 hover:text-slate-200/60'}`}
+                                            >
+                                                Notes
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div className="flex justify-end gap-5 px-1 pt-1">
-                                        <button
-                                            onClick={() => setSortBy('name')}
-                                            className={`text-[12px] font-black uppercase tracking-[0.2em] transition-all ${sortBy === 'name' ? 'text-slate-200' : 'text-white/20 hover:text-slate-200/60'}`}
-                                        >
-                                            A-Z
-                                        </button>
-                                        <button
-                                            onClick={() => setSortBy('notes')}
-                                            className={`text-[12px] font-black uppercase tracking-[0.2em] transition-all ${sortBy === 'notes' ? 'text-slate-200' : 'text-white/20 hover:text-slate-200/60'}`}
-                                        >
-                                            Notes
-                                        </button>
-                                    </div>
-                                </div>
+                                )}
 
-                                {/* Scales List */}
+                                {/* Scales or Songs List */}
                                 <div className="grid grid-cols-1 gap-3 pb-20">
+                                    {selectorMode === 'scale' ? (
+                                        <>
+                                            {/* Current Selected Scale - First in List */}
+                                            {(() => {
+                                                const currentScale = processedScales.find(s => s.id === targetScale.id);
+                                                if (!currentScale) return null;
+                                                const isDisabled = currentScale.id === 'e_amara_18';
+
+                                                return (
+                                                    <div key={currentScale.id} className="mb-2">
+                                                        <div className="text-[12px] font-black uppercase tracking-[0.3em] text-white/30 mb-2 px-2">CURRENT SELECTED</div>
+                                                        <div
+                                                            role="button"
+                                                            tabIndex={isDisabled ? -1 : 0}
+                                                            onClick={() => !isDisabled && handleScaleSelect(currentScale)}
+                                                            onKeyDown={(e) => { if (!isDisabled && (e.key === 'Enter' || e.key === ' ')) handleScaleSelect(currentScale); }}
+                                                            className={`p-4 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border ${isDisabled
+                                                                ? 'cursor-default bg-slate-300/[0.02] backdrop-blur-md border-slate-300/10 opacity-50 pointer-events-none'
+                                                                : 'cursor-pointer bg-slate-300/[0.06] backdrop-blur-md border-slate-300/30 hover:bg-slate-300/10 hover:border-slate-200/50'
+                                                                }`}
+                                                        >
+                                                            <div className="flex items-center z-10 flex-1 min-w-0 pr-4">
+                                                                <span className={`font-black text-xl tracking-tight truncate ${isDisabled ? 'text-white/40' : 'text-white'}`}>
+                                                                    {currentScale.name}
+                                                                </span>
+                                                                {isDisabled && (
+                                                                    <span className="ml-3 text-xs font-medium text-white/30 uppercase tracking-wider">
+                                                                        Under Maintenance
+                                                                    </span>
+                                                                )}
+                                                            </div>
+
+                                                            {!isDisabled && (
+                                                                <div className="flex items-center gap-3 z-10 shrink-0">
+                                                                    <button
+                                                                        onClick={(e) => handlePreview(e, currentScale)}
+                                                                        className="w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-lg bg-slate-300/25 hover:bg-slate-300/40 text-slate-100 border border-slate-200/30 backdrop-blur-sm"
+                                                                    >
+                                                                        {previewingScaleId === currentScale.id ? (
+                                                                            <Volume2 size={20} className="animate-pulse" />
+                                                                        ) : (
+                                                                            <Play size={22} fill="currentColor" className="ml-1" />
+                                                                        )}
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
+
+                                            {/* Other Scales */}
+                                            {processedScales.filter(scale => scale.id !== targetScale.id).map((scale) => {
+                                                const isDisabled = scale.id === 'e_amara_18';
+                                                return (
+                                                    <div
+                                                        key={scale.id}
+                                                        role="button"
+                                                        tabIndex={isDisabled ? -1 : 0}
+                                                        onClick={() => !isDisabled && handleScaleSelect(scale)}
+                                                        onKeyDown={(e) => { if (!isDisabled && (e.key === 'Enter' || e.key === ' ')) handleScaleSelect(scale); }}
+                                                        className={`p-4 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border ${isDisabled
+                                                            ? 'cursor-default bg-white/[0.01] border-white/[0.02] text-white/40 opacity-50 pointer-events-none'
+                                                            : 'cursor-pointer bg-white/[0.02] border-white/[0.05] text-white hover:bg-slate-300/[0.08] hover:border-slate-300/30'
+                                                            }`}
+                                                    >
+                                                        <div className="flex items-center z-10 flex-1 min-w-0 pr-4">
+                                                            <span className={`font-black text-xl tracking-tight truncate ${isDisabled ? 'text-white/40' : 'text-white/90'}`}>
+                                                                {scale.name}
+                                                            </span>
+                                                            {isDisabled && (
+                                                                <span className="ml-3 text-xs font-medium text-white/30 uppercase tracking-wider">
+                                                                    Under Maintenance
+                                                                </span>
+                                                            )}
+                                                        </div>
+
+                                                        {!isDisabled && (
+                                                            <div className="flex items-center gap-3 z-10 shrink-0">
+                                                                <button
+                                                                    onClick={(e) => handlePreview(e, scale)}
+                                                                    className="w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-lg bg-white/10 hover:bg-slate-300/25 text-white hover:text-slate-100 border border-white/10 hover:border-slate-200/30"
+                                                                >
+                                                                    {previewingScaleId === scale.id ? (
+                                                                        <Volume2 size={20} className="animate-pulse" />
+                                                                    ) : (
+                                                                        <Play size={22} fill="currentColor" className="ml-1" />
+                                                                    )}
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </>
+                                    ) : (
+                                        /* Songs List */
+                                        <>
+                                            {/* Current Selected Song - First in List */}
+                                            {selectedSong && (
+                                                <div className="mb-2">
+                                                    <div className="text-[12px] font-black uppercase tracking-[0.3em] text-white/30 mb-2 px-2">CURRENT SELECTED</div>
+                                                    <div className="p-4 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border cursor-pointer bg-slate-300/[0.06] backdrop-blur-md border-slate-300/30">
+                                                        <div className="flex items-center z-10 flex-1 min-w-0 pr-4">
+                                                            <div className="flex items-center gap-3">
+                                                                <FileText size={20} className="text-white/60" />
+                                                                <span className="font-black text-xl tracking-tight truncate text-white">
+                                                                    {selectedSong.title}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center gap-3 z-10 shrink-0">
+                                                            <button
+                                                                onClick={toggleSongPlayback}
+                                                                disabled={!selectedSong.midiSrc}
+                                                                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-lg ${
+                                                                    selectedSong.midiSrc
+                                                                        ? 'bg-slate-300/25 hover:bg-slate-300/40 text-slate-100 border border-slate-200/30'
+                                                                        : 'bg-gray-500/25 text-gray-400 border border-gray-500/30 cursor-not-allowed'
+                                                                } backdrop-blur-sm`}
+                                                            >
+                                                                {isSongPlaying ? (
+                                                                    <Volume2 size={20} className="animate-pulse" />
+                                                                ) : (
+                                                                    <Play size={22} fill="currentColor" className="ml-1" />
+                                                                )}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Other Songs */}
+                                            {REELPAN_SONGS.filter(song => !selectedSong || song.id !== selectedSong.id).map((song) => (
+                                                <div
+                                                    key={song.id}
+                                                    role="button"
+                                                    tabIndex={0}
+                                                    onClick={() => handleSongSelect(song)}
+                                                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleSongSelect(song); }}
+                                                    className="p-4 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border cursor-pointer bg-white/[0.02] border-white/[0.05] text-white hover:bg-slate-300/[0.08] hover:border-slate-300/30"
+                                                >
+                                                    <div className="flex items-center z-10 flex-1 min-w-0 pr-4">
+                                                        <div className="flex items-center gap-3">
+                                                            <FileText size={20} className="text-white/60" />
+                                                            <div>
+                                                                <span className="font-black text-xl tracking-tight truncate text-white/90 block">
+                                                                    {song.title}
+                                                                </span>
+                                                                <span className="text-sm text-white/50 block mt-1">
+                                                                    {song.scaleName}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-3 z-10 shrink-0">
+                                                        {song.midiSrc && (
+                                                            <div className="flex items-center gap-2 text-xs text-white/40">
+                                                                <Music size={12} />
+                                                                <span>MIDI</span>
+                                                            </div>
+                                                        )}
+                                                        {song.xmlSrc && (
+                                                            <div className="flex items-center gap-2 text-xs text-white/40">
+                                                                <FileText size={12} />
+                                                                <span>Score</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </>
+                                    )}
                                     {/* Current Selected Scale - First in List */}
                                     {(() => {
                                         const currentScale = processedScales.find(s => s.id === targetScale.id);

@@ -1,0 +1,5306 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 2.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+
+<score-partwise version="2.0">
+    <movement-title>무제</movement-title>
+    <identification>
+        <encoding>
+            <software>Logic Pro</software>
+            <encoding-date>2025-12-22</encoding-date>
+            <supports attribute="new-system" element="print" type="yes" value="yes"/>
+            <supports attribute="new-page" element="print" type="yes" value="yes"/>
+        </encoding>
+    </identification>
+    <defaults>
+        <scaling>
+            <millimeters>7.540625</millimeters>
+            <tenths>40</tenths>
+        </scaling>
+        <page-layout>
+            <page-height>1575</page-height>
+            <page-width>1113</page-width>
+            <page-margins type="both">
+                <left-margin>58</left-margin>
+                <right-margin>58</right-margin>
+                <top-margin>66</top-margin>
+                <bottom-margin>66</bottom-margin>
+            </page-margins>
+        </page-layout>
+        <system-layout>
+            <system-margins>
+                <left-margin>26</left-margin>
+                <right-margin>0</right-margin>
+            </system-margins>
+            <system-distance>81</system-distance>
+            <top-system-distance>43</top-system-distance>
+        </system-layout>
+        <staff-layout>
+            <staff-distance>81</staff-distance>
+        </staff-layout>
+    </defaults>
+    <part-list>
+        <part-group number="2" type="start">
+            <group-symbol>bracket</group-symbol>
+            <group-barline>no</group-barline>
+        </part-group>
+        <part-group number="3" type="start">
+            <group-symbol>none</group-symbol>
+            <group-barline>yes</group-barline>
+        </part-group>
+        <score-part id="P1">
+            <part-name>Studio Grand</part-name>
+            <score-instrument id="P1-I1">
+                <instrument-name>Choir Aahs</instrument-name>
+            </score-instrument>
+            <midi-instrument id="P1-I1">
+                <midi-channel>1</midi-channel>
+                <midi-program>53</midi-program>
+            </midi-instrument>
+        </score-part>
+        <score-part id="P2">
+            <part-name>Studio Grand</part-name>
+            <score-instrument id="P2-I1">
+                <instrument-name>Choir Aahs</instrument-name>
+            </score-instrument>
+            <midi-instrument id="P2-I1">
+                <midi-channel>1</midi-channel>
+                <midi-program>53</midi-program>
+            </midi-instrument>
+        </score-part>
+        <part-group number="2" type="stop"/>
+        <part-group number="3" type="stop"/>
+    </part-list>
+    <part id="P1">
+        <measure number="1" width="384">
+            <print page-number="1">
+                <system-layout>
+                    <system-margins>
+                        <left-margin>126</left-margin>
+                        <right-margin>0</right-margin>
+                    </system-margins>
+                    <top-system-distance>96</top-system-distance>
+                </system-layout>
+                <measure-numbering>none</measure-numbering>
+            </print>
+            <attributes>
+                <divisions>4</divisions>
+                <key>
+                    <fifths>-1</fifths>
+                    <mode>minor</mode>
+                </key>
+                <time>
+                    <beats>4</beats>
+                    <beat-type>4</beat-type>
+                </time>
+                <clef>
+                    <sign>G</sign>
+                    <line>2</line>
+                </clef>
+            </attributes>
+            <sound tempo="100"/>
+            <note>
+                <rest/>
+                <duration>8</duration>
+                <voice>1</voice>
+                <type>half</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>1</voice>
+                <type>quarter</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>F</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>G</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+        </measure>
+        <measure number="2" width="452">
+            <print new-system="no"/>
+            <note>
+                <pitch>
+                    <step>F</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>A</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>F</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>5</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>down</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>E</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>G</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <staff>1</staff>
+            </note>
+        </measure>
+        <measure number="3" width="499">
+            <print new-system="yes">
+                <system-layout>
+                    <system-margins>
+                        <left-margin>26</left-margin>
+                        <right-margin>0</right-margin>
+                    </system-margins>
+                    <system-distance>81</system-distance>
+                </system-layout>
+            </print>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>5</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>down</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>G</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>D</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>F</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>D</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>4</duration>
+                <voice>1</voice>
+                <type>quarter</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+        </measure>
+        <measure number="4" width="437">
+            <print new-system="no"/>
+            <note>
+                <rest/>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>F</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>4</duration>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>quarter</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <notations>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>E</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>4</duration>
+                <voice>1</voice>
+                <type>quarter</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <notations>
+                    <tied type="stop"/>
+                </notations>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>F</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>E</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+        </measure>
+        <measure number="5" width="499">
+            <print new-system="yes">
+                <system-layout>
+                    <system-margins>
+                        <left-margin>26</left-margin>
+                        <right-margin>0</right-margin>
+                    </system-margins>
+                    <system-distance>81</system-distance>
+                </system-layout>
+            </print>
+            <note>
+                <pitch>
+                    <step>B</step>
+                    <alter>-1</alter>
+                    <octave>3</octave>
+                </pitch>
+                <duration>2</duration>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+                <notations>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>D</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+            </note>
+            <note>
+                <pitch>
+                    <step>B</step>
+                    <alter>-1</alter>
+                    <octave>3</octave>
+                </pitch>
+                <duration>2</duration>
+                <tie type="stop"/>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+                <notations>
+                    <tied type="stop"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>E</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>F</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>G</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>3</octave>
+                </pitch>
+                <duration>2</duration>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+                <notations>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>3</octave>
+                </pitch>
+                <duration>2</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+        </measure>
+        <measure number="6" width="437">
+            <print new-system="no"/>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>3</octave>
+                </pitch>
+                <duration>2</duration>
+                <tie type="stop"/>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <notations>
+                    <tied type="stop"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>F</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>G</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>B</step>
+                    <alter>-1</alter>
+                    <octave>3</octave>
+                </pitch>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>D</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>2</duration>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+                <notations>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>D</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+                <notations>
+                    <tied type="stop"/>
+                </notations>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>B</step>
+                    <alter>-1</alter>
+                    <octave>3</octave>
+                </pitch>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+        </measure>
+        <measure number="7" width="515">
+            <print new-system="yes">
+                <system-layout>
+                    <system-margins>
+                        <left-margin>26</left-margin>
+                        <right-margin>0</right-margin>
+                    </system-margins>
+                    <system-distance>81</system-distance>
+                </system-layout>
+            </print>
+            <note>
+                <pitch>
+                    <step>G</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>F</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>4</duration>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>quarter</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <notations>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>G</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>4</duration>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>quarter</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <notations>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <notations>
+                    <tied type="stop"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>G</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <notations>
+                    <tied type="stop"/>
+                </notations>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>F</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>G</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+        </measure>
+        <measure number="8" width="421">
+            <print new-system="no"/>
+            <note>
+                <pitch>
+                    <step>F</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>A</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>F</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>5</octave>
+                </pitch>
+                <duration>2</duration>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>down</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+                <notations>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>5</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>down</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+                <notations>
+                    <tied type="stop"/>
+                </notations>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>E</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>2</duration>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+                <notations>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>G</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>2</duration>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+                <notations>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>E</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+                <notations>
+                    <tied type="stop"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>G</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+                <notations>
+                    <tied type="stop"/>
+                </notations>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+        </measure>
+        <measure number="9" width="511">
+            <print new-page="yes" page-number="2">
+                <system-layout>
+                    <system-margins>
+                        <left-margin>26</left-margin>
+                        <right-margin>0</right-margin>
+                    </system-margins>
+                    <top-system-distance>43</top-system-distance>
+                </system-layout>
+            </print>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>5</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>down</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>G</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>D</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>F</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>D</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>D</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>2</duration>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+                <notations>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>D</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+                <notations>
+                    <tied type="stop"/>
+                </notations>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+        </measure>
+        <measure number="10" width="425">
+            <print new-system="no"/>
+            <note>
+                <pitch>
+                    <step>E</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>F</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>3</octave>
+                </pitch>
+                <duration>4</duration>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>quarter</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <notations>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>4</duration>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>quarter</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <notations>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>3</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+                <notations>
+                    <tied type="stop"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>3</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+                <notations>
+                    <tied type="stop"/>
+                </notations>
+            </note>
+            <note>
+                <rest/>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <staff>1</staff>
+            </note>
+        </measure>
+        <measure number="11" width="516">
+            <print new-system="yes">
+                <system-layout>
+                    <system-margins>
+                        <left-margin>26</left-margin>
+                        <right-margin>0</right-margin>
+                    </system-margins>
+                    <system-distance>81</system-distance>
+                </system-layout>
+            </print>
+            <note>
+                <pitch>
+                    <step>B</step>
+                    <alter>-1</alter>
+                    <octave>3</octave>
+                </pitch>
+                <duration>2</duration>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+                <notations>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>D</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+            </note>
+            <note>
+                <pitch>
+                    <step>B</step>
+                    <alter>-1</alter>
+                    <octave>3</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+                <notations>
+                    <tied type="stop"/>
+                </notations>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>E</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>F</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>G</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>3</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+                <notations>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>3</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">continue</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>3</octave>
+                </pitch>
+                <duration>2</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+        </measure>
+        <measure number="12" width="420">
+            <print new-system="no"/>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>3</octave>
+                </pitch>
+                <duration>2</duration>
+                <tie type="stop"/>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <notations>
+                    <tied type="stop"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>F</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>G</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>B</step>
+                    <alter>-1</alter>
+                    <octave>3</octave>
+                </pitch>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>B</step>
+                    <alter>-1</alter>
+                    <octave>3</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+        </measure>
+        <measure number="13" width="473">
+            <print new-system="yes">
+                <system-layout>
+                    <system-margins>
+                        <left-margin>26</left-margin>
+                        <right-margin>0</right-margin>
+                    </system-margins>
+                    <system-distance>81</system-distance>
+                </system-layout>
+            </print>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>G</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+            </note>
+            <note>
+                <pitch>
+                    <step>F</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>4</duration>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>quarter</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <notations>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>F</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>4</duration>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>quarter</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <notations>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+                <notations>
+                    <tied type="stop"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>F</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>F</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+                <notations>
+                    <tied type="stop"/>
+                </notations>
+            </note>
+            <note>
+                <rest/>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+            </note>
+            <note>
+                <pitch>
+                    <step>B</step>
+                    <alter>-1</alter>
+                    <octave>3</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+        </measure>
+        <measure number="14" width="464">
+            <print new-system="no"/>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>3</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+                <notations>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>C</step>
+                    <octave>5</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>3</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">continue</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>3</octave>
+                </pitch>
+                <duration>2</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>3</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>C</step>
+                    <octave>5</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>3</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">continue</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>3</octave>
+                </pitch>
+                <duration>2</duration>
+                <tie type="stop"/>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+                <notations>
+                    <tied type="stop"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>5</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>down</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+                <notations>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>C</step>
+                    <octave>5</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+            </note>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">continue</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>2</duration>
+                <tie type="stop"/>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+                <notations>
+                    <tied type="stop"/>
+                </notations>
+            </note>
+        </measure>
+        <measure number="15" width="489">
+            <print new-system="yes">
+                <system-layout>
+                    <system-margins>
+                        <left-margin>26</left-margin>
+                        <right-margin>0</right-margin>
+                    </system-margins>
+                    <system-distance>81</system-distance>
+                </system-layout>
+            </print>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>5</octave>
+                </pitch>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+            </note>
+            <note>
+                <pitch>
+                    <step>D</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>5</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>down</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>B</step>
+                    <alter>-1</alter>
+                    <octave>3</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>D</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+                <notations>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>A</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+            </note>
+            <note>
+                <pitch>
+                    <step>D</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">continue</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>D</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>2</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>D</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>A</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+            </note>
+            <note>
+                <pitch>
+                    <step>D</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">continue</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>D</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>2</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+        </measure>
+        <measure number="16" width="447">
+            <print new-system="no"/>
+            <note>
+                <pitch>
+                    <step>D</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <notations>
+                    <tied type="stop"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>A</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+                <notations>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>A</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+            </note>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">continue</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>2</duration>
+                <tie type="stop"/>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+                <notations>
+                    <tied type="stop"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+            </note>
+            <note>
+                <pitch>
+                    <step>B</step>
+                    <alter>-1</alter>
+                    <octave>3</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>G</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+        </measure>
+        <measure number="17" width="446">
+            <print new-page="yes" page-number="3">
+                <system-layout>
+                    <system-margins>
+                        <left-margin>26</left-margin>
+                        <right-margin>0</right-margin>
+                    </system-margins>
+                    <top-system-distance>43</top-system-distance>
+                </system-layout>
+            </print>
+            <note>
+                <pitch>
+                    <step>D</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>2</duration>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+                <notations>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>F</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+            </note>
+            <note>
+                <pitch>
+                    <step>D</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>2</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>D</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>F</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+            </note>
+            <note>
+                <pitch>
+                    <step>D</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>2</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">continue</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>D</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+                <notations>
+                    <tied type="stop"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>F</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>E</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>B</step>
+                    <alter>-1</alter>
+                    <octave>3</octave>
+                </pitch>
+                <duration>2</duration>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+                <notations>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>D</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+            </note>
+            <note>
+                <pitch>
+                    <step>B</step>
+                    <alter>-1</alter>
+                    <octave>3</octave>
+                </pitch>
+                <duration>2</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+        </measure>
+        <measure number="18" width="490">
+            <print new-system="no"/>
+            <note>
+                <pitch>
+                    <step>B</step>
+                    <alter>-1</alter>
+                    <octave>3</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>E</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+            </note>
+            <note>
+                <pitch>
+                    <step>B</step>
+                    <alter>-1</alter>
+                    <octave>3</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+                <notations>
+                    <tied type="stop"/>
+                </notations>
+            </note>
+            <note>
+                <rest/>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>F</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+                <notations>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>G</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+            </note>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">continue</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>2</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <notations>
+                    <tied type="stop"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>G</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+        </measure>
+        <measure number="19" width="486">
+            <print new-system="yes">
+                <system-layout>
+                    <system-margins>
+                        <left-margin>26</left-margin>
+                        <right-margin>0</right-margin>
+                    </system-margins>
+                    <system-distance>81</system-distance>
+                </system-layout>
+            </print>
+            <note>
+                <pitch>
+                    <step>G</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>4</duration>
+                <voice>1</voice>
+                <type>quarter</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>G</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>4</duration>
+                <voice>1</voice>
+                <type>quarter</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>1</voice>
+                <type>quarter</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>B</step>
+                    <alter>-1</alter>
+                    <octave>3</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+        </measure>
+        <measure number="20" width="451">
+            <print new-system="no"/>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>3</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+                <notations>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>C</step>
+                    <octave>5</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>3</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">continue</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>3</octave>
+                </pitch>
+                <duration>2</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>3</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>C</step>
+                    <octave>5</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>3</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">continue</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>3</octave>
+                </pitch>
+                <duration>2</duration>
+                <tie type="stop"/>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+                <notations>
+                    <tied type="stop"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>5</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>down</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+                <notations>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>C</step>
+                    <octave>5</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+            </note>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">continue</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>2</duration>
+                <tie type="stop"/>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+                <notations>
+                    <tied type="stop"/>
+                </notations>
+            </note>
+        </measure>
+        <measure number="21" width="937">
+            <print new-system="yes">
+                <system-layout>
+                    <system-margins>
+                        <left-margin>26</left-margin>
+                        <right-margin>0</right-margin>
+                    </system-margins>
+                    <system-distance>81</system-distance>
+                </system-layout>
+            </print>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>5</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>down</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>D</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>5</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>down</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>B</step>
+                    <alter>-1</alter>
+                    <octave>3</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>D</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+                <notations>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>A</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+            </note>
+            <note>
+                <pitch>
+                    <step>D</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">continue</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>D</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>2</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>D</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>A</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+            </note>
+            <note>
+                <pitch>
+                    <step>D</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">continue</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>D</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>2</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+        </measure>
+        <measure number="22" width="937">
+            <print new-system="yes">
+                <system-layout>
+                    <system-margins>
+                        <left-margin>26</left-margin>
+                        <right-margin>0</right-margin>
+                    </system-margins>
+                    <system-distance>81</system-distance>
+                </system-layout>
+            </print>
+            <note>
+                <pitch>
+                    <step>D</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <notations>
+                    <tied type="stop"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>A</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>A</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>B</step>
+                    <alter>-1</alter>
+                    <octave>3</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>G</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>F</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>E</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+        </measure>
+        <measure number="23" width="545">
+            <print new-page="yes" page-number="4">
+                <system-layout>
+                    <system-margins>
+                        <left-margin>26</left-margin>
+                        <right-margin>0</right-margin>
+                    </system-margins>
+                    <top-system-distance>43</top-system-distance>
+                </system-layout>
+            </print>
+            <note>
+                <pitch>
+                    <step>B</step>
+                    <alter>-1</alter>
+                    <octave>3</octave>
+                </pitch>
+                <duration>2</duration>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+                <notations>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>D</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+            </note>
+            <note>
+                <pitch>
+                    <step>B</step>
+                    <alter>-1</alter>
+                    <octave>3</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+                <notations>
+                    <tied type="stop"/>
+                </notations>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>E</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>F</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>G</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>3</octave>
+                </pitch>
+                <duration>2</duration>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+                <notations>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>3</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+                <notations>
+                    <tied type="stop"/>
+                </notations>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+        </measure>
+        <measure number="24" width="391">
+            <print new-system="no"/>
+            <note>
+                <pitch>
+                    <step>F</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>G</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>4</duration>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>quarter</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <notations>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>G</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>4</duration>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>quarter</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <notations>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>G</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+                <notations>
+                    <tied type="stop"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+                <notations>
+                    <tied type="stop"/>
+                </notations>
+            </note>
+            <note>
+                <rest/>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <staff>1</staff>
+            </note>
+        </measure>
+        <measure number="25" width="509">
+            <print new-system="yes">
+                <system-layout>
+                    <system-margins>
+                        <left-margin>26</left-margin>
+                        <right-margin>0</right-margin>
+                    </system-margins>
+                    <system-distance>81</system-distance>
+                </system-layout>
+            </print>
+            <note>
+                <pitch>
+                    <step>G</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">begin</beam>
+            </note>
+            <note>
+                <pitch>
+                    <step>F</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <beam number="1">end</beam>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>3</octave>
+                </pitch>
+                <duration>8</duration>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>half</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <notations>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>8</duration>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>half</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <notations>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>F</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>8</duration>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>half</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <notations>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>3</octave>
+                </pitch>
+                <duration>4</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>quarter</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>4</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>quarter</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>F</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>4</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>quarter</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+        </measure>
+        <measure number="26" width="427">
+            <print new-system="no"/>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>3</octave>
+                </pitch>
+                <duration>8</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>half</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>8</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>half</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>F</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>8</duration>
+                <tie type="stop"/>
+                <tie type="start"/>
+                <voice>1</voice>
+                <type>half</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <notations>
+                    <tied type="stop"/>
+                    <tied type="start"/>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>3</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <notations>
+                    <tied type="stop"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <notations>
+                    <tied type="stop"/>
+                </notations>
+            </note>
+            <note>
+                <chord/>
+                <pitch>
+                    <step>F</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>1</duration>
+                <tie type="stop"/>
+                <voice>1</voice>
+                <type>16th</type>
+                <stem>up</stem>
+                <staff>1</staff>
+                <notations>
+                    <tied type="stop"/>
+                </notations>
+            </note>
+            <note>
+                <rest/>
+                <duration>1</duration>
+                <voice>1</voice>
+                <type>16th</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>eighth</type>
+                <staff>1</staff>
+            </note>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>1</voice>
+                <type>quarter</type>
+                <staff>1</staff>
+            </note>
+        </measure>
+    </part>
+    <part id="P2">
+        <measure number="1" width="384">
+            <print new-page="yes"/>
+            <attributes>
+                <divisions>1</divisions>
+                <key>
+                    <fifths>-1</fifths>
+                    <mode>minor</mode>
+                </key>
+                <time>
+                    <beats>4</beats>
+                    <beat-type>4</beat-type>
+                </time>
+                <staves>2</staves>
+                <clef number="1">
+                    <sign>G</sign>
+                    <line>2</line>
+                </clef>
+                <clef number="2">
+                    <sign>F</sign>
+                    <line>4</line>
+                </clef>
+            </attributes>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>1</voice>
+                <type>whole</type>
+                <staff>1</staff>
+            </note>
+            <backup>
+                <duration>4</duration>
+            </backup>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>2</voice>
+                <type>whole</type>
+                <staff>2</staff>
+            </note>
+        </measure>
+        <measure number="2" width="452">
+            <print new-system="no"/>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>1</voice>
+                <type>whole</type>
+                <staff>1</staff>
+            </note>
+            <backup>
+                <duration>4</duration>
+            </backup>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>2</voice>
+                <type>whole</type>
+                <staff>2</staff>
+            </note>
+        </measure>
+        <measure number="3" width="499">
+            <print new-system="no"/>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>1</voice>
+                <type>whole</type>
+                <staff>1</staff>
+            </note>
+            <backup>
+                <duration>4</duration>
+            </backup>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>2</voice>
+                <type>whole</type>
+                <staff>2</staff>
+            </note>
+        </measure>
+        <measure number="4" width="437">
+            <print new-system="no"/>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>1</voice>
+                <type>whole</type>
+                <staff>1</staff>
+            </note>
+            <backup>
+                <duration>4</duration>
+            </backup>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>2</voice>
+                <type>whole</type>
+                <staff>2</staff>
+            </note>
+        </measure>
+        <measure number="5" width="499">
+            <print new-system="no"/>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>1</voice>
+                <type>whole</type>
+                <staff>1</staff>
+            </note>
+            <backup>
+                <duration>4</duration>
+            </backup>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>2</voice>
+                <type>whole</type>
+                <staff>2</staff>
+            </note>
+        </measure>
+        <measure number="6" width="437">
+            <print new-system="no"/>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>1</voice>
+                <type>whole</type>
+                <staff>1</staff>
+            </note>
+            <backup>
+                <duration>4</duration>
+            </backup>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>2</voice>
+                <type>whole</type>
+                <staff>2</staff>
+            </note>
+        </measure>
+        <measure number="7" width="515">
+            <print new-system="no"/>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>1</voice>
+                <type>whole</type>
+                <staff>1</staff>
+            </note>
+            <backup>
+                <duration>4</duration>
+            </backup>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>2</voice>
+                <type>whole</type>
+                <staff>2</staff>
+            </note>
+        </measure>
+        <measure number="8" width="421">
+            <print new-system="no"/>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>1</voice>
+                <type>whole</type>
+                <staff>1</staff>
+            </note>
+            <backup>
+                <duration>4</duration>
+            </backup>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>2</voice>
+                <type>whole</type>
+                <staff>2</staff>
+            </note>
+        </measure>
+        <measure number="9" width="511">
+            <print new-page="yes"/>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>1</voice>
+                <type>whole</type>
+                <staff>1</staff>
+            </note>
+            <backup>
+                <duration>4</duration>
+            </backup>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>2</voice>
+                <type>whole</type>
+                <staff>2</staff>
+            </note>
+        </measure>
+        <measure number="10" width="425">
+            <print new-system="no"/>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>1</voice>
+                <type>whole</type>
+                <staff>1</staff>
+            </note>
+            <backup>
+                <duration>4</duration>
+            </backup>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>2</voice>
+                <type>whole</type>
+                <staff>2</staff>
+            </note>
+        </measure>
+        <measure number="11" width="516">
+            <print new-system="no"/>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>1</voice>
+                <type>whole</type>
+                <staff>1</staff>
+            </note>
+            <backup>
+                <duration>4</duration>
+            </backup>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>2</voice>
+                <type>whole</type>
+                <staff>2</staff>
+            </note>
+        </measure>
+        <measure number="12" width="420">
+            <print new-system="no"/>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>1</voice>
+                <type>whole</type>
+                <staff>1</staff>
+            </note>
+            <backup>
+                <duration>4</duration>
+            </backup>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>2</voice>
+                <type>whole</type>
+                <staff>2</staff>
+            </note>
+        </measure>
+        <measure number="13" width="473">
+            <print new-system="no"/>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>1</voice>
+                <type>whole</type>
+                <staff>1</staff>
+            </note>
+            <backup>
+                <duration>4</duration>
+            </backup>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>2</voice>
+                <type>whole</type>
+                <staff>2</staff>
+            </note>
+        </measure>
+        <measure number="14" width="464">
+            <print new-system="no"/>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>1</voice>
+                <type>whole</type>
+                <staff>1</staff>
+            </note>
+            <backup>
+                <duration>4</duration>
+            </backup>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>2</voice>
+                <type>whole</type>
+                <staff>2</staff>
+            </note>
+        </measure>
+        <measure number="15" width="489">
+            <print new-system="no"/>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>1</voice>
+                <type>whole</type>
+                <staff>1</staff>
+            </note>
+            <backup>
+                <duration>4</duration>
+            </backup>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>2</voice>
+                <type>whole</type>
+                <staff>2</staff>
+            </note>
+        </measure>
+        <measure number="16" width="447">
+            <print new-system="no"/>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>1</voice>
+                <type>whole</type>
+                <staff>1</staff>
+            </note>
+            <backup>
+                <duration>4</duration>
+            </backup>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>2</voice>
+                <type>whole</type>
+                <staff>2</staff>
+            </note>
+        </measure>
+        <measure number="17" width="446">
+            <print new-page="yes"/>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>1</voice>
+                <type>whole</type>
+                <staff>1</staff>
+            </note>
+            <backup>
+                <duration>4</duration>
+            </backup>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>2</voice>
+                <type>whole</type>
+                <staff>2</staff>
+            </note>
+        </measure>
+        <measure number="18" width="490">
+            <print new-system="no"/>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>1</voice>
+                <type>whole</type>
+                <staff>1</staff>
+            </note>
+            <backup>
+                <duration>4</duration>
+            </backup>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>2</voice>
+                <type>whole</type>
+                <staff>2</staff>
+            </note>
+        </measure>
+        <measure number="19" width="486">
+            <print new-system="no"/>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>1</voice>
+                <type>whole</type>
+                <staff>1</staff>
+            </note>
+            <backup>
+                <duration>4</duration>
+            </backup>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>2</voice>
+                <type>whole</type>
+                <staff>2</staff>
+            </note>
+        </measure>
+        <measure number="20" width="451">
+            <print new-system="no"/>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>1</voice>
+                <type>whole</type>
+                <staff>1</staff>
+            </note>
+            <backup>
+                <duration>4</duration>
+            </backup>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>2</voice>
+                <type>whole</type>
+                <staff>2</staff>
+            </note>
+        </measure>
+        <measure number="21" width="937">
+            <print new-system="no"/>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>1</voice>
+                <type>whole</type>
+                <staff>1</staff>
+            </note>
+            <backup>
+                <duration>4</duration>
+            </backup>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>2</voice>
+                <type>whole</type>
+                <staff>2</staff>
+            </note>
+        </measure>
+        <measure number="22" width="937">
+            <print new-system="no"/>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>1</voice>
+                <type>whole</type>
+                <staff>1</staff>
+            </note>
+            <backup>
+                <duration>4</duration>
+            </backup>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>2</voice>
+                <type>whole</type>
+                <staff>2</staff>
+            </note>
+        </measure>
+        <measure number="23" width="545">
+            <print new-page="yes"/>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>1</voice>
+                <type>whole</type>
+                <staff>1</staff>
+            </note>
+            <backup>
+                <duration>4</duration>
+            </backup>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>2</voice>
+                <type>whole</type>
+                <staff>2</staff>
+            </note>
+        </measure>
+        <measure number="24" width="391">
+            <print new-system="no"/>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>1</voice>
+                <type>whole</type>
+                <staff>1</staff>
+            </note>
+            <backup>
+                <duration>4</duration>
+            </backup>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>2</voice>
+                <type>whole</type>
+                <staff>2</staff>
+            </note>
+        </measure>
+        <measure number="25" width="509">
+            <print new-system="no"/>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>1</voice>
+                <type>whole</type>
+                <staff>1</staff>
+            </note>
+            <backup>
+                <duration>4</duration>
+            </backup>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>2</voice>
+                <type>whole</type>
+                <staff>2</staff>
+            </note>
+        </measure>
+        <measure number="26" width="427">
+            <print new-system="no"/>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>1</voice>
+                <type>whole</type>
+                <staff>1</staff>
+            </note>
+            <backup>
+                <duration>4</duration>
+            </backup>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="start"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>2</voice>
+                <type>whole</type>
+                <staff>2</staff>
+            </note>
+        </measure>
+        <measure number="27">
+            <direction placement="below">
+                <direction-type>
+                    <pedal line="no" type="stop"/>
+                </direction-type>
+                <staff>2</staff>
+            </direction>
+            <note>
+                <rest/>
+                <duration>4</duration>
+                <voice>2</voice>
+                <staff>1</staff>
+            </note>
+        </measure>
+    </part>
+</score-partwise>
