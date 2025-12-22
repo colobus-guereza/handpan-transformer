@@ -15,7 +15,7 @@ const OSMDScore = dynamic(() => import('@/components/score/OSMDScore'), {
 
 // 곡 데이터 구조 (Practice와 동일)
 const REELPAN_SONGS = [
-    { id: '1', title: 'Spirited Away', scaleName: 'D Kurd 10', midiSrc: '/practice/midi/spiritedaway.mid', xmlSrc: '/practice/score/spiritedaway.xml' },
+    { id: '1', title: 'Spirited Away', scaleName: 'D Kurd 10', midiSrc: '/practice/midi/spirited_away.mid', xmlSrc: '/practice/score/spirited_away.xml' },
     { id: '2', title: 'First Step (Interstellar)', scaleName: 'E Amara 18', midiSrc: undefined, xmlSrc: undefined },
     { id: '3', title: 'Merry-Go-Round', scaleName: 'B Celtic Minor', midiSrc: undefined, xmlSrc: undefined },
     {
