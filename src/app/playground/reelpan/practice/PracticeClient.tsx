@@ -1337,7 +1337,7 @@ export default function ReelPanPage() {
                 </div>
 
                 {/* === Layer 1.2: Score Area (Top, right below header) === */}
-                <div className="absolute top-[120px] left-0 w-full h-[15%] z-[2] flex items-end justify-center bg-white overflow-hidden border-b border-black/5">
+                <div className="absolute top-[120px] left-0 w-full h-[15%] z-[2] flex items-end justify-center bg-white overflow-hidden border-b border-white">
                     {currentSong.xmlSrc && midiData ? (
                         <div className="w-full h-full relative flex items-center">
                             {/* Vertical Playhead Line (Fixed Position) */}

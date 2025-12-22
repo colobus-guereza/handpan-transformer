@@ -1141,24 +1141,38 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
 
     // Optimized Click Handler (Stable Callback)
     const handleToneFieldClick = useCallback((id: number) => {
-        // 1. Audio Priority: Play immediately
-        // Note: playNote is handled inside ToneFieldMesh for instant feedback? 
-        // No, ToneFieldMesh calls playNote via prop.
-        // Wait, ToneFieldMesh implementation:
-        // handlePointerDown -> onClick(id) -> playNote(label)
-        // See lines 1127-1133 of Digipan3D.tsx (ToneFieldMesh)
-        // It calls onClick THEN playNote.
-        // So handleToneFieldClick runs BEFORE main note audio? No, inside onClick.
-        // Javascript is single threaded.
-        // To be safe, Resonance should be triggered asap.
+        // ★ [디버그] 모바일 환경 감지 및 하모닉스 디버깅
+        const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const touchTime = performance.now();
+        const clickedNote = notes.find(n => n.id === id);
+        const audioCtx = getAudioContext?.();
+
+        console.log(`[Debug-Harmonics] ===== 터치 시작 =====`);
+        console.log(`[Debug-Harmonics] 환경: ${isMobileDevice ? '📱 모바일' : '💻 데스크톱'}`);
+        console.log(`[Debug-Harmonics] User-Agent: ${navigator.userAgent.substring(0, 80)}...`);
+        console.log(`[Debug-Harmonics] 터치된 노트: ${clickedNote?.label} (id: ${id}, freq: ${clickedNote?.frequency}Hz)`);
+        console.log(`[Debug-Harmonics] AudioContext 상태: ${audioCtx?.state || 'N/A'}`);
+        console.log(`[Debug-Harmonics] AudioContext sampleRate: ${audioCtx?.sampleRate || 'N/A'}Hz`);
+        console.log(`[Debug-Harmonics] AudioContext baseLatency: ${(audioCtx?.baseLatency ?? 'N/A')}s`);
+        console.log(`[Debug-Harmonics] AudioContext outputLatency: ${((audioCtx as any)?.outputLatency ?? 'N/A')}s`);
 
         // 2. Play Resonant Notes (Lookup Map - O(1))
         const resonantTargets = resonanceMap[id];
         if (resonantTargets) {
+            console.log(`[Debug-Harmonics] ★ 하모닉 활성화됨! 타겟 수: ${resonantTargets.length}`);
+            resonantTargets.forEach((target, i) => {
+                console.log(`[Debug-Harmonics]   ${i + 1}. ${target.label} (gain: ${target.settings.masterGain}, delay: ${target.settings.delayTime}s, trim: ${target.settings.trimStart}s)`);
+            });
+
+            const harmonicStart = performance.now();
             resonantTargets.forEach(target => {
                 playResonantNote(target.label, target.settings);
             });
+            console.log(`[Debug-Harmonics] 하모닉 스케줄 완료: ${(performance.now() - harmonicStart).toFixed(1)}ms`);
+        } else {
+            console.log(`[Debug-Harmonics] 일반 톤필드 (하모닉 없음)`);
         }
+        console.log(`[Debug-Harmonics] 총 처리 시간: ${(performance.now() - touchTime).toFixed(1)}ms`);
 
         // 3. Logic & State Updates
         resetIdleTimer(3500);

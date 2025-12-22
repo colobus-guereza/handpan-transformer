@@ -3,8 +3,11 @@
 import type { Viewport } from 'next';
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { Camera, Music, Heart, Users, ArrowRight, ArrowLeft, Globe, Smartphone, Box, Type, Drum, Sparkles, HelpCircle, Music2, Play, Square, Clock } from 'lucide-react';
+import { Camera, Music, Heart, Users, ArrowRight, ArrowLeft, Globe, Smartphone, Box, Type, Drum, Sparkles, HelpCircle, Music2, Play, Square, Clock, Volume2, Download, Share2 } from 'lucide-react';
 import ReelPanSlider from '@/components/playground/ReelPanSlider';
+import { SCALES } from '@/data/handpanScales';
+import { useHandpanAudio } from '@/hooks/useHandpanAudio';
+import { getNoteFrequency } from '@/constants/noteFrequencies';
 
 /*
 export const viewport: Viewport = {
@@ -52,14 +55,18 @@ const translations = {
         feature4Title: "Secondary Creation",
         feature4Description: "The created reel video is not the end, but the beginning. Add and process your own creative ideas to recreate it into your own unique content.",
         uiFeaturesTitle: "UI Features",
+        uiFeature0Title: "Scale Preview",
+        uiFeature0Description: "Plays a chromatic pattern to help you gauge the scale's atmosphere.",
         uiFeature1Title: "Show/Hide Labels",
         uiFeature1Description: "You can show or hide the pitch and note numbers on the tone fields.",
         uiFeature2Title: "Layout Mode",
         uiFeature2Description: "Switch between vertical (9:16) and square (1:1) layouts to suit your needs.",
         uiFeature3Title: "Start/Stop Recording",
         uiFeature3Description: "Press the red button in the center to start or stop recording your performance.",
-        uiFeature4Title: "Drum & Chord Accompaniment",
-        uiFeature4Description: "Enrich your performance by adding simple drum or chord backing tracks. Long press the button for more options.",
+        uiFeature4Title: "Save & Share",
+        uiFeature4Description: "Once recording is complete, you can save it to your album or share it to external services.",
+        uiFeature5Title: "Drum & Chord Accompaniment",
+        uiFeature5Description: "Enrich your performance by adding simple drum or chord backing tracks. Long press the button for more options.",
         audioGuide1: "If the handpan doesn't make a sound when you touch it, please turn off silent mode on your phone first.",
         audioGuide2: "If there's still no sound or the sound is strange after turning off silent mode, please refresh the page.",
         audioGuide3: "Most issues are resolved by turning off silent mode or refreshing the page.",
@@ -120,14 +127,18 @@ const translations = {
         feature4Title: "2차 창작",
         feature4Description: "제작된 릴스 영상은 끝이 아닌 시작입니다. 당신만의 창의적인 아이디어를 더하고 가공하여, 나만의 고유한 콘텐츠로 재창조해 보세요.",
         uiFeaturesTitle: "UI 기능 설명",
+        uiFeature0Title: "스케일 미리듣기",
+        uiFeature0Description: "스케일의 분위기를 가늠해볼 수 있는 크로매틱 패턴을 재생합니다.",
         uiFeature1Title: "라벨 표시/숨김",
         uiFeature1Description: "톤필드의 피치와 노트번호를 표시하거나 숨길 수 있습니다.",
         uiFeature2Title: "레이아웃 모드",
         uiFeature2Description: "세로형(9:16)과 정사각형(1:1) 레이아웃을 전환할 수 있습니다.",
         uiFeature3Title: "녹화 시작/정지",
         uiFeature3Description: "중앙의 빨간 버튼을 눌러 연주를 녹화하거나 정지할 수 있습니다.",
-        uiFeature4Title: "드럼 & 화음 반주",
-        uiFeature4Description: "심플한 드럼/화음 반주를 더하여 연주를 더욱 풍부하게 만들 수 있습니다. 버튼을 길게 눌러보세요.",
+        uiFeature4Title: "저장 & 공유",
+        uiFeature4Description: "녹화가 완료되면 앨범에 저장하거나 외부 서비스에 공유할 수 있습니다.",
+        uiFeature5Title: "드럼 & 화음 반주",
+        uiFeature5Description: "심플한 드럼/화음 반주를 더하여 연주를 더욱 풍부하게 만들 수 있습니다. 버튼을 길게 눌러보세요.",
         audioGuide1: "핸드팬을 터치해도 소리가 안 나면, 휴대폰 무음 모드를 먼저 꺼주세요.",
         audioGuide2: "무음 모드를 껐는데도 소리가 없거나 소리가 이상하면, 페이지를 새로고침해 주세요.",
         audioGuide3: "대부분은 무음 모드 해제 또는 새로고침으로 해결됩니다.",
@@ -156,6 +167,89 @@ const translations = {
 export default function PlaygroundHome() {
     const [lang, setLang] = useState<'ko' | 'en'>('ko');
     const t = translations[lang];
+    const [previewingScaleId, setPreviewingScaleId] = useState<string | null>(null);
+    
+    // F# Low Pygmy 14 스케일 찾기
+    const previewScale = SCALES.find(s => s.id === 'fs_low_pygmy_14_mutant') || SCALES[0];
+    
+    // 오디오 관련 훅 및 refs
+    const { playNote, resumeAudio } = useHandpanAudio();
+    const abortControllerRef = useRef<AbortController | null>(null);
+    
+    // 미리듣기 중지 함수
+    const stopPreview = () => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+            abortControllerRef.current = null;
+        }
+        setPreviewingScaleId(null);
+    };
+    
+    // 미리듣기 핸들러 (ReelPanClient와 동일한 로직)
+    const handlePreview = async (e: React.MouseEvent, scale: any) => {
+        e.stopPropagation();
+        resumeAudio(); // Ensure audio context is ready
+
+        if (previewingScaleId === scale.id) {
+            stopPreview();
+            return;
+        }
+
+        stopPreview();
+        setPreviewingScaleId(scale.id);
+
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+
+        const allNotes = [scale.notes.ding, ...scale.notes.top, ...(scale.notes.bottom || [])];
+        const sortedNotes = [...allNotes].sort((a, b) => getNoteFrequency(a) - getNoteFrequency(b));
+
+        const wait = (ms: number) => new Promise<void>((resolve, reject) => {
+            if (controller.signal.aborted) return reject(new Error('Aborted'));
+            const id = setTimeout(() => {
+                if (controller.signal.aborted) reject(new Error('Aborted'));
+                else resolve();
+            }, ms);
+            controller.signal.addEventListener('abort', () => clearTimeout(id));
+        });
+
+        try {
+            // Ascending
+            for (let i = 0; i < sortedNotes.length; i++) {
+                const note = sortedNotes[i];
+                const isDing = note === scale.notes.ding;
+                let delay = isDing ? 500 : 180;
+                delay += Math.random() * 30;
+                if (i === 0) await wait(50);
+                else await wait(delay);
+                playNote(note);
+                if (isDing) await wait(600);
+            }
+            await wait(400);
+            // Descending
+            for (let i = sortedNotes.length - 1; i >= 0; i--) {
+                const note = sortedNotes[i];
+                const isDing = note === scale.notes.ding;
+                let delay = isDing ? 800 : 180;
+                delay += Math.random() * 30;
+                await wait(delay);
+                playNote(note);
+            }
+            setPreviewingScaleId(null);
+            abortControllerRef.current = null;
+        } catch (err: any) {
+            if (err.message !== 'Aborted') {
+                console.error('Preview error:', err);
+            }
+        }
+    };
+    
+    // 컴포넌트 언마운트 시 미리듣기 중지
+    useEffect(() => {
+        return () => {
+            stopPreview();
+        };
+    }, []);
 
     const screen2Ref = useRef<HTMLDivElement>(null);
     const screen1Ref = useRef<HTMLDivElement>(null);
@@ -419,6 +513,32 @@ export default function PlaygroundHome() {
                     <div>
                         <h3 className="text-3xl font-bold text-center mb-12 whitespace-nowrap">{t.uiFeaturesTitle}</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                            {/* 0. Scale Preview (새로 추가) */}
+                            <div className="p-6 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 hover:scale-[1.015] transition-all duration-500 flex flex-col items-center gap-4">
+                                {/* 스케일 카드 UI (ReelPan 스타일 복제) */}
+                                <div className="w-full max-w-[256px] p-4 rounded-[32px] bg-slate-300/[0.06] backdrop-blur-md border border-slate-300/30 hover:bg-slate-300/10 hover:border-slate-200/50 transition-all duration-300 flex items-center justify-between group relative overflow-hidden">
+                                    <div className="flex items-center z-10 flex-1 min-w-0 pr-4">
+                                        <span className="font-black text-xl tracking-tight truncate text-white">
+                                            {previewScale.name}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-3 z-10 shrink-0">
+                                        <button
+                                            onClick={(e) => handlePreview(e, previewScale)}
+                                            className="w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-lg bg-white/10 hover:bg-slate-300/25 text-white hover:text-slate-100 border border-white/10 hover:border-slate-200/30"
+                                        >
+                                            {previewingScaleId === previewScale.id ? (
+                                                <Volume2 size={20} className="animate-pulse" />
+                                            ) : (
+                                                <Play size={22} fill="currentColor" className="ml-1" />
+                                            )}
+                                        </button>
+                                    </div>
+                                </div>
+                                <h4 className="text-lg font-bold text-white">{t.uiFeature0Title}</h4>
+                                <p className="text-slate-400 text-[1.05rem] text-center">{t.uiFeature0Description}</p>
+                            </div>
+
                             {/* 1. Label Toggle */}
                             <div className="p-6 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 hover:scale-[1.015] transition-all duration-500 flex flex-col items-center gap-4">
                                 <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center">
@@ -456,7 +576,21 @@ export default function PlaygroundHome() {
                                 <p className="text-slate-400 text-[1.05rem] text-center">{t.uiFeature3Description}</p>
                             </div>
 
-                            {/* 4. Drum & Chord Accompaniment */}
+                            {/* 4. Save & Share */}
+                            <div className="p-6 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 hover:scale-[1.015] transition-all duration-500 flex flex-col items-center gap-4">
+                                <div className="flex items-center justify-center gap-3">
+                                    <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center">
+                                        <Download size={24} className="text-white/80" />
+                                    </div>
+                                    <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center">
+                                        <Share2 size={24} className="text-white/80" />
+                                    </div>
+                                </div>
+                                <h4 className="text-lg font-bold text-white">{t.uiFeature4Title}</h4>
+                                <p className="text-slate-400 text-[1.05rem] text-center">{t.uiFeature4Description}</p>
+                            </div>
+
+                            {/* 5. Drum & Chord Accompaniment */}
                             <div className="p-6 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 hover:scale-[1.015] transition-all duration-500 flex flex-col items-center gap-4">
                                 <div className="flex items-center justify-center gap-3">
                                     <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center">
@@ -466,8 +600,8 @@ export default function PlaygroundHome() {
                                         <Music2 size={24} className="text-white/80" />
                                     </div>
                                 </div>
-                                <h4 className="text-lg font-bold text-white">{t.uiFeature4Title}</h4>
-                                <p className="text-slate-400 text-[1.05rem] text-center">{t.uiFeature4Description}</p>
+                                <h4 className="text-lg font-bold text-white">{t.uiFeature5Title}</h4>
+                                <p className="text-slate-400 text-[1.05rem] text-center">{t.uiFeature5Description}</p>
                             </div>
                         </div>
 

@@ -73,58 +73,89 @@ export const useOctaveResonance = ({ getAudioContext, getMasterGain }: UseOctave
     }, [getContext]);
 
     const playResonantNote = useCallback(async (noteName: string, settings: ResonanceSettings) => {
-        const ctx = getContext();
-        if (!ctx) return;
+        // ★ [디버그] 모바일 환경 특화 하모닉 재생 디버깅
+        const isMobileDevice = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const playStart = performance.now();
+        console.log(`[Debug-Resonance] ===== 하모닉 재생 시작: ${noteName} =====`);
+        console.log(`[Debug-Resonance] 환경: ${isMobileDevice ? '📱 모바일' : '💻 데스크톱'}`);
 
-        // Resume context if suspended (browser autoplay policy)
-        if (ctx.state === 'suspended') {
-            await ctx.resume();
+        const ctx = getContext();
+        if (!ctx) {
+            console.warn(`[Debug-Resonance] ⚠️ AudioContext 없음!`);
+            return;
         }
 
+        console.log(`[Debug-Resonance] AudioContext 상태: ${ctx.state}`);
+        console.log(`[Debug-Resonance] AudioContext sampleRate: ${ctx.sampleRate}Hz`);
+        console.log(`[Debug-Resonance] AudioContext currentTime: ${ctx.currentTime.toFixed(4)}s`);
+        console.log(`[Debug-Resonance] AudioContext baseLatency: ${ctx.baseLatency ?? 'N/A'}s`);
+
+        if (ctx.state === 'suspended') {
+            console.log(`[Debug-Resonance] AudioContext resume 시도...`);
+            const resumeStart = performance.now();
+            await ctx.resume();
+            console.log(`[Debug-Resonance] AudioContext resume 완료: ${(performance.now() - resumeStart).toFixed(1)}ms`);
+        }
+
+        // 버퍼 로딩 시간 측정
+        const bufferStart = performance.now();
         const buffer = await loadBuffer(noteName);
-        if (!buffer) return;
+        const bufferLoadTime = performance.now() - bufferStart;
+
+        if (!buffer) {
+            console.warn(`[Debug-Resonance] ⚠️ 버퍼 로드 실패: ${noteName}`);
+            return;
+        }
+
+        console.log(`[Debug-Resonance] 버퍼 로드: ${bufferLoadTime.toFixed(1)}ms (캐시 ${bufferLoadTime < 1 ? 'HIT ✅' : 'MISS ❌'})`);
+        console.log(`[Debug-Resonance] 버퍼 길이: ${buffer.duration.toFixed(2)}s, 채널: ${buffer.numberOfChannels}`);
 
         const source = ctx.createBufferSource();
         source.buffer = buffer;
 
-        // Create Gain Node for Envelope Control
         const gainNode = ctx.createGain();
         source.connect(gainNode);
 
-        // --- CRITICAL FIX: Route to Shared Master Gain (Limiter) ---
-        // If masterGainGetter is provided, connect to it. Otherwise connect to destination.
-        // This ensures harmonics go through the same Limiter as main notes.
         const masterGain = getMasterGain ? getMasterGain() : null;
+        console.log(`[Debug-Resonance] Master Gain 연결: ${masterGain ? '✅ Limiter 경유' : '❌ destination 직접'}`);
+
         if (masterGain) {
             gainNode.connect(masterGain);
         } else {
             gainNode.connect(ctx.destination);
         }
 
-        // Schedule Timing
         const now = ctx.currentTime;
         const startTime = now + settings.delayTime;
 
-        // 1. Attack Trim (Offset start position)
+        console.log(`[Debug-Resonance] [스케줄링]`);
+        console.log(`[Debug-Resonance]   ctx.currentTime: ${now.toFixed(4)}s`);
+        console.log(`[Debug-Resonance]   startTime: ${startTime.toFixed(4)}s (delay: ${settings.delayTime}s)`);
+        console.log(`[Debug-Resonance]   trimStart: ${settings.trimStart}s`);
+        console.log(`[Debug-Resonance]   fadeIn: ${settings.fadeInDuration}s (curve: ${settings.fadeInCurve})`);
+        console.log(`[Debug-Resonance]   targetGain: ${settings.masterGain}`);
 
-        // 2. Fade In (Exponential Ramp)
-        // Initial silence
+        // ★ Gain Ramp - 노이즈 발생 가능 지점
+        console.log(`[Debug-Resonance] ★★★ Gain Ramp 시작 (클릭 노이즈 가능 지점) ★★★`);
         gainNode.gain.setValueAtTime(0, startTime);
+        console.log(`[Debug-Resonance]   setValueAtTime(0, ${startTime.toFixed(4)}) 호출됨`);
 
         if (settings.fadeInCurve > 1) {
-            // WebAudio implementation:
-            gainNode.gain.linearRampToValueAtTime(0.01, startTime); // Prevent 0 error for exp
+            gainNode.gain.linearRampToValueAtTime(0.01, startTime);
+            console.log(`[Debug-Resonance]   ⚠️ linearRamp(0.01, ${startTime.toFixed(4)}) - 같은 시간에 예약! (클릭 원인?)`);
             gainNode.gain.exponentialRampToValueAtTime(settings.masterGain, startTime + settings.fadeInDuration);
+            console.log(`[Debug-Resonance]   exponentialRamp(${settings.masterGain}, ${(startTime + settings.fadeInDuration).toFixed(4)})`);
         } else {
-            // Linear
             gainNode.gain.linearRampToValueAtTime(settings.masterGain, startTime + settings.fadeInDuration);
+            console.log(`[Debug-Resonance]   linearRamp(${settings.masterGain}, ${(startTime + settings.fadeInDuration).toFixed(4)})`);
         }
 
-        // Play
-        // start(when, offset, duration)
         source.start(startTime, settings.trimStart);
+        console.log(`[Debug-Resonance]   source.start(${startTime.toFixed(4)}, ${settings.trimStart}) 호출됨`);
 
-        // Stop after buffer duration (optional, garbage collection handles it)
+        const totalTime = performance.now() - playStart;
+        console.log(`[Debug-Resonance] 총 처리 시간: ${totalTime.toFixed(1)}ms`);
+        console.log(`[Debug-Resonance] ===== 하모닉 재생 스케줄 완료 =====`);
     }, [getContext, loadBuffer, getMasterGain]);
 
     // Smart Preloading Function
