@@ -126,50 +126,45 @@ export const useOctaveResonance = ({ getAudioContext, getMasterGain }: UseOctave
         }
 
         const now = ctx.currentTime;
-        const startTime = now + settings.delayTime;
 
-        // ★ [롤백됨] 클릭 방지를 위한 미니 램프 시간 (2ms로 복구)
-        const ANTI_CLICK_RAMP_TIME = 0.002;
+        // ★ [솔루션 A] 방어적 선행 스케줄링 (Defensive Pre-scheduling)
+        // iOS Safari를 위한 안전 마진: 최소 50ms 이상 확보
+        const SAFE_MARGIN = 0.05; // 50ms
+        const effectiveDelay = Math.max(settings.delayTime, SAFE_MARGIN);
+        const startTime = now + effectiveDelay;
 
         // [정밀 진단] 스케줄링 여유 시간 측정
         const scheduleMargin = startTime - now;
 
-        console.log(`[Debug-Resonance] [스케줄링]`);
-        console.log(`[Debug-Resonance]   ctx.currentTime: ${now.toFixed(4)}s`);
-        console.log(`[Debug-Resonance]   startTime: ${startTime.toFixed(4)}s (delay: ${settings.delayTime}s)`);
-        console.log(`[Debug-Resonance]   여유 마진: ${(scheduleMargin * 1000).toFixed(2)}ms ${scheduleMargin < 0.02 ? '⚠️ 위험(Too Tight)' : '✅ 안전'}`);
+        console.log(`[Debug-Resonance] [솔루션 A: 방어적 선행 스케줄링]`);
+        console.log(`[Debug-Resonance]   ctx.currentTime (now): ${now.toFixed(4)}s`);
+        console.log(`[Debug-Resonance]   원래 delay: ${settings.delayTime}s, 적용된 delay: ${effectiveDelay}s`);
+        console.log(`[Debug-Resonance]   startTime: ${startTime.toFixed(4)}s`);
+        console.log(`[Debug-Resonance]   여유 마진: ${(scheduleMargin * 1000).toFixed(2)}ms ${scheduleMargin < 0.05 ? '⚠️ 위험' : '✅ 안전(50ms+)'}`)
         console.log(`[Debug-Resonance]   trimStart: ${settings.trimStart}s`);
         console.log(`[Debug-Resonance]   fadeIn: ${settings.fadeInDuration}s (curve: ${settings.fadeInCurve})`);
         console.log(`[Debug-Resonance]   targetGain: ${settings.masterGain}`);
-        console.log(`[Debug-Resonance]   antiClickRamp: ${ANTI_CLICK_RAMP_TIME * 1000}ms`);
 
-        // ★ [롤백됨] Gain Ramp - 2ms 램프로 복귀
-        console.log(`[Debug-Resonance] ★★★ Gain Ramp 시작 (2ms 램프) ★★★`);
+        // ★ [핵심] Gain Node 이중 앵커링 (Double Anchoring)
+        // WebKit 보간 버그 방지: now와 startTime 양쪽에 setValueAtTime(0) 설정
+        console.log(`[Debug-Resonance] ★★★ 이중 앵커링 시작 ★★★`);
 
-        // 1. 시작 시점에 완전 무음 설정
+        // 1. 즉시 0으로 고정 (현재 시점)
+        gainNode.gain.setValueAtTime(0, now);
+        console.log(`[Debug-Resonance]   ① setValueAtTime(0, now=${now.toFixed(4)}) - 즉시 고정`);
+
+        // 2. 재생 시작 시점에도 0으로 앵커 (WebKit 보간 버그 방지)
         gainNode.gain.setValueAtTime(0, startTime);
-        console.log(`[Debug-Resonance]   setValueAtTime(0, ${startTime.toFixed(4)})`);
+        console.log(`[Debug-Resonance]   ② setValueAtTime(0, startTime=${startTime.toFixed(4)}) - 앵커`);
 
-        if (settings.fadeInCurve > 1) {
-            // 2. 2ms에 걸쳐 0 → 0.01로 부드럽게 전환
-            const miniRampEnd = startTime + ANTI_CLICK_RAMP_TIME;
-            gainNode.gain.linearRampToValueAtTime(0.01, miniRampEnd);
-            console.log(`[Debug-Resonance]   ✅ linearRamp(0.01, ${miniRampEnd.toFixed(4)}) - 2ms 오프셋 적용`);
+        // 3. 볼륨 증가 램프 (startTime 이후부터)
+        const fadeEndTime = startTime + settings.fadeInDuration;
+        gainNode.gain.linearRampToValueAtTime(settings.masterGain, fadeEndTime);
+        console.log(`[Debug-Resonance]   ③ linearRamp(${settings.masterGain}, ${fadeEndTime.toFixed(4)})`);
 
-            // 3. 이후 지수 곡선으로 목표 볼륨까지 페이드인
-            const fadeEndTime = miniRampEnd + settings.fadeInDuration;
-            gainNode.gain.exponentialRampToValueAtTime(settings.masterGain, fadeEndTime);
-            console.log(`[Debug-Resonance]   exponentialRamp(${settings.masterGain}, ${fadeEndTime.toFixed(4)})`);
-        } else {
-            // 선형 램프: 시작부터 바로 목표 볼륨까지
-            const fadeEndTime = startTime + ANTI_CLICK_RAMP_TIME + settings.fadeInDuration;
-            gainNode.gain.linearRampToValueAtTime(0.01, startTime + ANTI_CLICK_RAMP_TIME);
-            gainNode.gain.linearRampToValueAtTime(settings.masterGain, fadeEndTime);
-            console.log(`[Debug-Resonance]   linearRamp(${settings.masterGain}, ${fadeEndTime.toFixed(4)})`);
-        }
-
+        // 4. 소스 재생 예약
         source.start(startTime, settings.trimStart);
-        console.log(`[Debug-Resonance]   source.start(${startTime.toFixed(4)}, ${settings.trimStart}) 호출됨`);
+        console.log(`[Debug-Resonance]   ④ source.start(${startTime.toFixed(4)}, ${settings.trimStart}) 호출됨`);
 
         const totalTime = performance.now() - playStart;
         console.log(`[Debug-Resonance] 총 처리 시간: ${totalTime.toFixed(1)}ms`);
