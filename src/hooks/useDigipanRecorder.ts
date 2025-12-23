@@ -92,8 +92,8 @@ export const useDigipanRecorder = ({
             const isMobileDevice = typeof navigator !== 'undefined' &&
                 /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-            // FPS 설정: 모바일/데스크톱 모두 30fps (애니메이션 부드러움)
-            const targetFPS = 30;
+            // FPS 설정: 모바일/데스크톱 모두 60fps (터치 애니메이션 부드러움)
+            const targetFPS = 60;
 
             console.log(`[RecorderDebug] ${Date.now()} Canvas dimensions: ${canvas.width}x${canvas.height}`);
             console.log(`[RecorderDebug] ${Date.now()} cropMode: ${cropModeRef.current}, isMobile: ${isMobileDevice}`);
