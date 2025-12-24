@@ -2189,8 +2189,8 @@ export default function ReelPanClient() {
                                         <button
                                             onClick={() => setSelectorMode('scale')}
                                             className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${selectorMode === 'scale'
-                                                    ? 'bg-white/20 text-white'
-                                                    : 'bg-white/5 text-white/60 hover:text-white/80'
+                                                ? 'bg-white/20 text-white'
+                                                : 'bg-white/5 text-white/60 hover:text-white/80'
                                                 }`}
                                         >
                                             <Type size={16} className="inline mr-2" />
@@ -2198,9 +2198,9 @@ export default function ReelPanClient() {
                                         </button>
                                         <button
                                             onClick={() => setSelectorMode('song')}
-                                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${selectorMode === 'song'
-                                                    ? 'bg-white/20 text-white'
-                                                    : 'bg-white/5 text-white/60 hover:text-white/80'
+                                            className={`hidden px-4 py-2 rounded-lg text-sm font-bold transition-all ${selectorMode === 'song'
+                                                ? 'bg-white/20 text-white'
+                                                : 'bg-white/5 text-white/60 hover:text-white/80'
                                                 }`}
                                         >
                                             <Music size={16} className="inline mr-2" />
@@ -2402,8 +2402,8 @@ export default function ReelPanClient() {
                                                                 onClick={toggleSongPlayback}
                                                                 disabled={!selectedSong.midiSrc}
                                                                 className={`w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-lg ${selectedSong.midiSrc
-                                                                        ? 'bg-slate-300/25 hover:bg-slate-300/40 text-slate-100 border border-slate-200/30'
-                                                                        : 'bg-gray-500/25 text-gray-400 border border-gray-500/30 cursor-not-allowed'
+                                                                    ? 'bg-slate-300/25 hover:bg-slate-300/40 text-slate-100 border border-slate-200/30'
+                                                                    : 'bg-gray-500/25 text-gray-400 border border-gray-500/30 cursor-not-allowed'
                                                                     } backdrop-blur-sm`}
                                                             >
                                                                 {isSongPlaying ? (
@@ -2458,98 +2458,6 @@ export default function ReelPanClient() {
                                             ))}
                                         </>
                                     )}
-                                    {/* Current Selected Scale - First in List */}
-                                    {(() => {
-                                        const currentScale = processedScales.find(s => s.id === targetScale.id);
-                                        if (!currentScale) return null;
-                                        const isDisabled = currentScale.id === 'e_amara_18';
-
-                                        return (
-                                            <div key={currentScale.id} className="mb-2">
-                                                <div className="text-[12px] font-black uppercase tracking-[0.3em] text-white/30 mb-2 px-2">CURRENT SELECTED</div>
-                                                <div
-                                                    role="button"
-                                                    tabIndex={isDisabled ? -1 : 0}
-                                                    onClick={() => !isDisabled && handleScaleSelect(currentScale)}
-                                                    onKeyDown={(e) => { if (!isDisabled && (e.key === 'Enter' || e.key === ' ')) handleScaleSelect(currentScale); }}
-                                                    className={`p-4 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border ${isDisabled
-                                                        ? 'cursor-default bg-slate-300/[0.02] backdrop-blur-md border-slate-300/10 opacity-50 pointer-events-none'
-                                                        : 'cursor-pointer bg-slate-300/[0.06] backdrop-blur-md border-slate-300/30 hover:bg-slate-300/10 hover:border-slate-200/50'
-                                                        }`}
-                                                >
-                                                    <div className="flex items-center z-10 flex-1 min-w-0 pr-4">
-                                                        <span className={`font-black text-xl tracking-tight truncate ${isDisabled ? 'text-white/40' : 'text-white'}`}>
-                                                            {currentScale.name}
-                                                        </span>
-                                                        {isDisabled && (
-                                                            <span className="ml-3 text-xs font-medium text-white/30 uppercase tracking-wider">
-                                                                Under Maintenance
-                                                            </span>
-                                                        )}
-                                                    </div>
-
-                                                    {!isDisabled && (
-                                                        <div className="flex items-center gap-3 z-10 shrink-0">
-                                                            <button
-                                                                onClick={(e) => handlePreview(e, currentScale)}
-                                                                className="w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-lg bg-slate-300/25 hover:bg-slate-300/40 text-slate-100 border border-slate-200/30 backdrop-blur-sm"
-                                                            >
-                                                                {previewingScaleId === currentScale.id ? (
-                                                                    <Volume2 size={20} className="animate-pulse" />
-                                                                ) : (
-                                                                    <Play size={22} fill="currentColor" className="ml-1" />
-                                                                )}
-                                                            </button>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        );
-                                    })()}
-
-                                    {/* Other Scales */}
-                                    {processedScales.filter(scale => scale.id !== targetScale.id).map((scale) => {
-                                        const isDisabled = scale.id === 'e_amara_18';
-                                        return (
-                                            <div
-                                                key={scale.id}
-                                                role="button"
-                                                tabIndex={isDisabled ? -1 : 0}
-                                                onClick={() => !isDisabled && handleScaleSelect(scale)}
-                                                onKeyDown={(e) => { if (!isDisabled && (e.key === 'Enter' || e.key === ' ')) handleScaleSelect(scale); }}
-                                                className={`p-4 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border ${isDisabled
-                                                    ? 'cursor-default bg-white/[0.01] border-white/[0.02] text-white/40 opacity-50 pointer-events-none'
-                                                    : 'cursor-pointer bg-white/[0.02] border-white/[0.05] text-white hover:bg-slate-300/[0.08] hover:border-slate-300/30'
-                                                    }`}
-                                            >
-                                                <div className="flex items-center z-10 flex-1 min-w-0 pr-4">
-                                                    <span className={`font-black text-xl tracking-tight truncate ${isDisabled ? 'text-white/40' : 'text-white/90'}`}>
-                                                        {scale.name}
-                                                    </span>
-                                                    {isDisabled && (
-                                                        <span className="ml-3 text-xs font-medium text-white/30 uppercase tracking-wider">
-                                                            Under Maintenance
-                                                        </span>
-                                                    )}
-                                                </div>
-
-                                                {!isDisabled && (
-                                                    <div className="flex items-center gap-3 z-10 shrink-0">
-                                                        <button
-                                                            onClick={(e) => handlePreview(e, scale)}
-                                                            className="w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-lg bg-white/10 hover:bg-slate-300/25 text-white hover:text-slate-100 border border-white/10 hover:border-slate-200/30"
-                                                        >
-                                                            {previewingScaleId === scale.id ? (
-                                                                <Volume2 size={20} className="animate-pulse" />
-                                                            ) : (
-                                                                <Play size={22} fill="currentColor" className="ml-1" />
-                                                            )}
-                                                        </button>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
                                 </div>
                             </div>
 
