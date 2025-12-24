@@ -147,9 +147,9 @@ export const useOctaveResonance = ({ getAudioContext, getMasterGain }: UseOctave
 
         // ★ [핵심] Gain Node 이중 앵커링 (Double Anchoring)
         // WebKit 보간 버그 방지: now와 startTime 양쪽에 setValueAtTime(0) 설정
-        console.log(`[Debug-Resonance] ★★★ 이중 앵커링 시작 ★★★`);
+        console.log(`[Debug-Resonance] ★★★ 이중 앵커링 + 지수 페이드 복원 ★★★`);
 
-        // 1. 즉시 0으로 고정 (현재 시점)
+        // 1. 즉시 0으로 고정 (현재 시점) - 틱 방지 핵심
         gainNode.gain.setValueAtTime(0, now);
         console.log(`[Debug-Resonance]   ① setValueAtTime(0, now=${now.toFixed(4)}) - 즉시 고정`);
 
@@ -157,10 +157,27 @@ export const useOctaveResonance = ({ getAudioContext, getMasterGain }: UseOctave
         gainNode.gain.setValueAtTime(0, startTime);
         console.log(`[Debug-Resonance]   ② setValueAtTime(0, startTime=${startTime.toFixed(4)}) - 앵커`);
 
-        // 3. 볼륨 증가 램프 (startTime 이후부터)
         const fadeEndTime = startTime + settings.fadeInDuration;
-        gainNode.gain.linearRampToValueAtTime(settings.masterGain, fadeEndTime);
-        console.log(`[Debug-Resonance]   ③ linearRamp(${settings.masterGain}, ${fadeEndTime.toFixed(4)})`);
+
+        // 3. 페이드 곡선 분기: 지수(눌림) vs 선형
+        if (settings.fadeInCurve > 1) {
+            // ★ [복원] 지수 곡선 페이드 (눌린 모양)
+            // exponentialRamp는 0에서 시작 불가 → 0.001에서 시작
+            const EPSILON = 0.001;
+            const rampStartTime = startTime + 0.001; // 1ms 오프셋 후 미세값 설정
+
+            gainNode.gain.setValueAtTime(EPSILON, rampStartTime);
+            gainNode.gain.exponentialRampToValueAtTime(settings.masterGain, fadeEndTime);
+
+            console.log(`[Debug-Resonance]   ③ 지수 페이드 복원 (curve: ${settings.fadeInCurve})`);
+            console.log(`[Debug-Resonance]      setValueAtTime(${EPSILON}, ${rampStartTime.toFixed(4)})`);
+            console.log(`[Debug-Resonance]      exponentialRamp(${settings.masterGain}, ${fadeEndTime.toFixed(4)})`);
+        } else {
+            // 선형 램프
+            gainNode.gain.linearRampToValueAtTime(settings.masterGain, fadeEndTime);
+            console.log(`[Debug-Resonance]   ③ 선형 페이드 (curve: ${settings.fadeInCurve})`);
+            console.log(`[Debug-Resonance]      linearRamp(${settings.masterGain}, ${fadeEndTime.toFixed(4)})`);
+        }
 
         // 4. 소스 재생 예약
         source.start(startTime, settings.trimStart);
