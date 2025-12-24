@@ -2182,41 +2182,16 @@ export default function ReelPanClient() {
                             exit={{ opacity: 0, y: 20 }}
                             className="absolute inset-0 z-[100] bg-black/60 backdrop-blur-[40px] flex flex-col pointer-events-auto"
                         >
-                            <div className="px-6 py-6 border-b border-white/[0.08]">
-                                {/* 탭 헤더 */}
-                                <div className="flex items-center justify-between mb-4">
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            onClick={() => setSelectorMode('scale')}
-                                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${selectorMode === 'scale'
-                                                ? 'bg-white/20 text-white'
-                                                : 'bg-white/5 text-white/60 hover:text-white/80'
-                                                }`}
-                                        >
-                                            <Type size={16} className="inline mr-2" />
-                                            스케일
-                                        </button>
-                                        <button
-                                            onClick={() => setSelectorMode('song')}
-                                            className={`hidden px-4 py-2 rounded-lg text-sm font-bold transition-all ${selectorMode === 'song'
-                                                ? 'bg-white/20 text-white'
-                                                : 'bg-white/5 text-white/60 hover:text-white/80'
-                                                }`}
-                                        >
-                                            <Music size={16} className="inline mr-2" />
-                                            곡
-                                        </button>
-                                    </div>
-                                    <button
-                                        onClick={() => setShowScaleSelector(false)}
-                                        className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all border border-white/[0.05]"
-                                    >
-                                        ✕
-                                    </button>
-                                </div>
+                            <div className="px-6 py-4 border-b border-white/[0.08] flex items-center justify-between">
                                 <h2 className="text-white font-bold text-sm tracking-[0.25em] uppercase opacity-90">
-                                    {selectorMode === 'scale' ? 'Select Scale' : 'Select Song'}
+                                    Select Scale
                                 </h2>
+                                <button
+                                    onClick={() => setShowScaleSelector(false)}
+                                    className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all border border-white/[0.05]"
+                                >
+                                    ✕
+                                </button>
                             </div>
 
                             <div className="flex-1 overflow-y-auto px-4 py-6 custom-scrollbar flex flex-col gap-4">
