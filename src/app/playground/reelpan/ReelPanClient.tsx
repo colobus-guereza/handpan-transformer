@@ -1810,12 +1810,12 @@ export default function ReelPanClient() {
                     <div className="absolute inset-0 z-20 pointer-events-none flex flex-col justify-between">
 
                         <header className="relative flex items-center justify-center px-4 py-8 bg-gradient-to-b from-black/80 to-transparent pointer-events-auto">
-                            <Link
-                                href="/playground"
+                            <a
+                                href="https://handpan.co.kr"
                                 className="absolute left-4 w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all border border-white/5 backdrop-blur-md"
                             >
                                 <ArrowLeft size={20} />
-                            </Link>
+                            </a>
 
                             {/* 악보 표시 버튼 - 선택된 곡에 악보가 있을 때만 표시 */}
                             {selectedSong?.xmlSrc && (
