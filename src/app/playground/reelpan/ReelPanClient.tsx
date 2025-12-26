@@ -1664,9 +1664,6 @@ export default function ReelPanClient() {
                     {/* 디지팬은 항상 렌더링 (로딩 중에도 뒤에서 마운트) */}
                     <motion.div
                         key={targetScale.id}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: isScaleLoading ? 0 : 1 }}
-                        transition={{ duration: 0.5, ease: 'easeOut' }}
                         className="absolute inset-0"
                     >
                         <Suspense fallback={<LoadingSkeleton2 />}>
