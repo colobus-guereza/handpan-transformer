@@ -131,6 +131,15 @@ export default function ReelPanClient() {
     // Filter & Sort State
     const [filterNoteCount, setFilterNoteCount] = useState<string>('all');
     const [sortBy, setSortBy] = useState<'name' | 'notes'>('name');
+    const [filterMode, setFilterMode] = useState<'AZ' | 'NOTES'>('AZ');
+    const [activeDingFilter, setActiveDingFilter] = useState<string>('all');
+
+    // Helper: Ding Pitch Extraction
+    const getPitchFromNote = (note: string): string => {
+        if (!note) return '';
+        const match = note.match(/^([A-G][#b]?)/);
+        return match ? match[1] : note.charAt(0);
+    };
 
     const [recordCountdown, setRecordCountdown] = useState<number | 'Touch!' | null>(null);
 
@@ -138,36 +147,51 @@ export default function ReelPanClient() {
         let result = [...SCALES];
 
         // 1. Filter
-        if (filterNoteCount !== 'all') {
-            if (filterNoteCount === 'mutant') {
-                result = result.filter(s => s.id.includes('mutant') || s.name.toLowerCase().includes('mutant'));
-            } else if (filterNoteCount === '11+') {
+        if (filterMode === 'AZ') {
+            if (activeDingFilter !== 'all') {
                 result = result.filter(s => {
-                    const count = 1 + s.notes.top.length + s.notes.bottom.length;
-                    return count >= 11;
+                    const pitch = getPitchFromNote(s.notes.ding);
+                    return pitch === activeDingFilter;
                 });
-            } else {
-                const target = parseInt(filterNoteCount);
-                result = result.filter(s => {
-                    const count = 1 + s.notes.top.length + s.notes.bottom.length;
-                    return count === target;
-                });
+            }
+        } else {
+            // NOTES Mode
+            if (filterNoteCount !== 'all') {
+                if (filterNoteCount === 'mutant') {
+                    result = result.filter(s => s.id.includes('mutant') || s.name.toLowerCase().includes('mutant'));
+                } else if (filterNoteCount === '11+') {
+                    result = result.filter(s => {
+                        const count = 1 + s.notes.top.length + s.notes.bottom.length;
+                        return count >= 11;
+                    });
+                } else {
+                    const target = parseInt(filterNoteCount);
+                    result = result.filter(s => {
+                        const count = 1 + s.notes.top.length + s.notes.bottom.length;
+                        return count === target;
+                    });
+                }
             }
         }
 
         // 2. Sort
-        if (sortBy === 'name') {
+        if (filterMode === 'AZ') {
+            // Default sort by Name for A-Z mode
             result.sort((a, b) => a.name.localeCompare(b.name));
-        } else if (sortBy === 'notes') {
-            result.sort((a, b) => {
-                const countA = 1 + a.notes.top.length + a.notes.bottom.length;
-                const countB = 1 + b.notes.top.length + b.notes.bottom.length;
-                return countA - countB;
-            });
+        } else {
+            if (sortBy === 'name') {
+                result.sort((a, b) => a.name.localeCompare(b.name));
+            } else if (sortBy === 'notes') {
+                result.sort((a, b) => {
+                    const countA = 1 + a.notes.top.length + a.notes.bottom.length;
+                    const countB = 1 + b.notes.top.length + b.notes.bottom.length;
+                    return countA - countB;
+                });
+            }
         }
 
         return result;
-    }, [filterNoteCount, sortBy]);
+    }, [filterNoteCount, sortBy, filterMode, activeDingFilter]);
 
     const digipanRef = useRef<Digipan3DHandle>(null);
     const previewTimersRef = useRef<NodeJS.Timeout[]>([]);
@@ -1645,7 +1669,7 @@ export default function ReelPanClient() {
                         transition={{ duration: 0.5, ease: 'easeOut' }}
                         className="absolute inset-0"
                     >
-                        <Suspense fallback={<div className="flex items-center justify-center h-full text-neutral-800">Initializing...</div>}>
+                        <Suspense fallback={<LoadingSkeleton2 />}>
                             {renderActiveDigipan()}
                         </Suspense>
                     </motion.div>
@@ -2121,64 +2145,119 @@ export default function ReelPanClient() {
                                 {/* Search & Filter Controls - Scale Mode Only */}
                                 {selectorMode === 'scale' && (
                                     <div className="flex flex-col gap-3 px-2">
+                                        {/* Filter Mode Toggle */}
+                                        <div className="flex p-1 bg-white/5 rounded-lg mb-1">
+                                            <button
+                                                onClick={() => { setFilterMode('AZ'); setFilterNoteCount('all'); }}
+                                                className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${filterMode === 'AZ' ? 'bg-slate-300 text-slate-900 shadow-sm' : 'text-white/40 hover:text-white/70'}`}
+                                            >
+                                                Ding
+                                            </button>
+                                            <button
+                                                onClick={() => { setFilterMode('NOTES'); setActiveDingFilter('all'); }}
+                                                className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${filterMode === 'NOTES' ? 'bg-slate-300 text-slate-900 shadow-sm' : 'text-white/40 hover:text-white/70'}`}
+                                            >
+                                                NOTES
+                                            </button>
+                                        </div>
+
                                         <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar" style={{ touchAction: 'pan-x' }}>
                                             {(() => {
-                                                // 1. Calculate available counts and stats
-                                                const stats = SCALES.reduce((acc, scale) => {
-                                                    const totalNotes = 1 + scale.notes.top.length + scale.notes.bottom.length;
+                                                if (filterMode === 'AZ') {
+                                                    // A-Z Mode: Ding Pitch Filters
+                                                    // Calculate Ding Stats
+                                                    const dingStats = SCALES.reduce((acc, scale) => {
+                                                        const pitch = getPitchFromNote(scale.notes.ding);
+                                                        // Normalize Bb if needed, but getPitchFromNote likely handles standard format.
+                                                        // Ensure 'Bb' casing if SCALES use 'BB' or similar
+                                                        const normalizedPitch = pitch === 'BB' ? 'Bb' : pitch;
+                                                        acc[normalizedPitch] = (acc[normalizedPitch] || 0) + 1;
+                                                        return acc;
+                                                    }, {} as Record<string, number>);
 
-                                                    // Count by N
-                                                    acc[totalNotes] = (acc[totalNotes] || 0) + 1;
+                                                    // Standard order for display
+                                                    const allPitches = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'];
 
-                                                    // Count Mutant
-                                                    if (scale.id.includes('mutant') || scale.tags.some(t => t.toLowerCase().includes('mutant'))) {
-                                                        acc.mutant = (acc.mutant || 0) + 1;
-                                                    }
-                                                    return acc;
-                                                }, { mutant: 0 } as Record<string, number>);
+                                                    // Filter to existing pitches
+                                                    const availablePitches = allPitches.filter(p => dingStats[p] > 0);
 
-                                                const availableCounts = Object.keys(stats)
-                                                    .filter(k => k !== 'mutant')
-                                                    .map(Number)
-                                                    .sort((a, b) => a - b);
+                                                    return (
+                                                        <>
+                                                            <button
+                                                                onClick={() => setActiveDingFilter('all')}
+                                                                className={`px-3 py-1.5 rounded-full flex items-center gap-2 transition-all border whitespace-nowrap
+                                                                    ${activeDingFilter === 'all'
+                                                                        ? 'bg-slate-300/80 border-slate-200 text-slate-900 shadow-[0_0_15px_rgba(200,200,210,0.4)]'
+                                                                        : 'bg-white/[0.03] border-white/[0.08] text-white/40 hover:text-slate-200/80 hover:bg-slate-300/10'}`}
+                                                            >
+                                                                <span className="text-[13px] font-black tracking-widest">All</span>
+                                                                <span className={`text-[13px] font-bold ${activeDingFilter === 'all' ? 'opacity-80' : 'opacity-30'}`}>
+                                                                    {SCALES.length}
+                                                                </span>
+                                                            </button>
+                                                            {availablePitches.map(pitch => (
+                                                                <button
+                                                                    key={pitch}
+                                                                    onClick={() => setActiveDingFilter(pitch)}
+                                                                    className={`px-3 py-1.5 rounded-full flex items-center gap-2 transition-all border whitespace-nowrap
+                                                                        ${activeDingFilter === pitch
+                                                                            ? 'bg-slate-300/80 border-slate-200 text-slate-900 shadow-[0_0_15px_rgba(200,200,210,0.4)]'
+                                                                            : 'bg-white/[0.03] border-white/[0.08] text-white/40 hover:text-slate-200/80 hover:bg-slate-300/10'}`}
+                                                                >
+                                                                    <span className="text-[13px] font-black tracking-widest">{pitch}</span>
+                                                                    <span className={`text-[13px] font-bold ${activeDingFilter === pitch ? 'opacity-80' : 'opacity-30'}`}>
+                                                                        {dingStats[pitch]}
+                                                                    </span>
+                                                                </button>
+                                                            ))}
+                                                        </>
+                                                    );
+                                                } else {
+                                                    // NOTES Mode: Note Count Filters
+                                                    // 1. Calculate available counts and stats
+                                                    const stats = SCALES.reduce((acc, scale) => {
+                                                        const totalNotes = 1 + scale.notes.top.length + scale.notes.bottom.length;
 
-                                                const filters = [
-                                                    { label: 'All', value: 'all', count: SCALES.length },
-                                                    ...availableCounts.map(n => ({ label: `${n}`, value: String(n), count: stats[n] })),
-                                                    { label: 'Mutant', value: 'mutant', count: stats.mutant }
-                                                ];
+                                                        // Count by N
+                                                        acc[totalNotes] = (acc[totalNotes] || 0) + 1;
 
-                                                return filters.map(filter => (
-                                                    <button
-                                                        key={filter.value}
-                                                        onClick={() => setFilterNoteCount(filter.value)}
-                                                        className={`px-3 py-1.5 rounded-full flex items-center gap-2 transition-all border whitespace-nowrap
-                                                            ${filterNoteCount === filter.value
-                                                                ? 'bg-slate-300/80 border-slate-200 text-slate-900 shadow-[0_0_15px_rgba(200,200,210,0.4)]'
-                                                                : 'bg-white/[0.03] border-white/[0.08] text-white/40 hover:text-slate-200/80 hover:bg-slate-300/10'}`}
-                                                    >
-                                                        <span className="text-[13px] font-black uppercase tracking-widest">{filter.label}</span>
-                                                        <span className={`text-[13px] font-bold ${filterNoteCount === filter.value ? 'opacity-80' : 'opacity-30'}`}>
-                                                            {filter.count}
-                                                        </span>
-                                                    </button>
-                                                ));
+                                                        // Count Mutant
+                                                        if (scale.id.includes('mutant') || scale.tags.some(t => t.toLowerCase().includes('mutant'))) {
+                                                            acc.mutant = (acc.mutant || 0) + 1;
+                                                        }
+                                                        return acc;
+                                                    }, { mutant: 0 } as Record<string, number>);
+
+                                                    const availableCounts = Object.keys(stats)
+                                                        .filter(k => k !== 'mutant')
+                                                        .map(Number)
+                                                        .sort((a, b) => a - b);
+
+                                                    const filters = [
+                                                        { label: 'All', value: 'all', count: SCALES.length },
+                                                        ...availableCounts.map(n => ({ label: `${n}`, value: String(n), count: stats[n] })),
+                                                        { label: 'Mutant', value: 'mutant', count: stats.mutant }
+                                                    ];
+
+                                                    return filters.map(filter => (
+                                                        <button
+                                                            key={filter.value}
+                                                            onClick={() => setFilterNoteCount(filter.value)}
+                                                            className={`px-3 py-1.5 rounded-full flex items-center gap-2 transition-all border whitespace-nowrap
+                                                                ${filterNoteCount === filter.value
+                                                                    ? 'bg-slate-300/80 border-slate-200 text-slate-900 shadow-[0_0_15px_rgba(200,200,210,0.4)]'
+                                                                    : 'bg-white/[0.03] border-white/[0.08] text-white/40 hover:text-slate-200/80 hover:bg-slate-300/10'}`}
+                                                        >
+                                                            <span className="text-[13px] font-black tracking-widest">{filter.label}</span>
+                                                            <span className={`text-[13px] font-bold ${filterNoteCount === filter.value ? 'opacity-80' : 'opacity-30'}`}>
+                                                                {filter.count}
+                                                            </span>
+                                                        </button>
+                                                    ));
+                                                }
                                             })()}
                                         </div>
-                                        <div className="flex justify-end gap-5 px-1 pt-1">
-                                            <button
-                                                onClick={() => setSortBy('name')}
-                                                className={`text-[12px] font-black uppercase tracking-[0.2em] transition-all ${sortBy === 'name' ? 'text-slate-200' : 'text-white/20 hover:text-slate-200/60'}`}
-                                            >
-                                                A-Z
-                                            </button>
-                                            <button
-                                                onClick={() => setSortBy('notes')}
-                                                className={`text-[12px] font-black uppercase tracking-[0.2em] transition-all ${sortBy === 'notes' ? 'text-slate-200' : 'text-white/20 hover:text-slate-200/60'}`}
-                                            >
-                                                Notes
-                                            </button>
-                                        </div>
+
                                     </div>
                                 )}
 
