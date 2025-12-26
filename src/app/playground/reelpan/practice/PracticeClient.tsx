@@ -1273,9 +1273,7 @@ export default function ReelPanPage() {
 
                 {/* === Layer 0: Initial Page Loading Skeleton === */}
                 <AnimatePresence>
-                    {!isPageReady && (
-                        <PracticeSkeleton />
-                    )}
+                    {!isPageReady && <LoadingSkeleton2 key="page-skeleton-2" />}
                 </AnimatePresence>
 
                 {/* === Layer 1: 3D Scene (Instrument Area - below score area) === */}
@@ -1299,33 +1297,7 @@ export default function ReelPanPage() {
                     {/* 스케일 전환 시 로딩 스켈레톤 (오버레이) */}
                     <AnimatePresence>
                         {isScaleLoading && (
-                            <motion.div
-                                key="skeleton-overlay"
-                                initial={{ opacity: 1 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                transition={{ duration: 0.5, ease: 'easeOut' }}
-                                className="absolute inset-0 flex items-center justify-center z-10 bg-white"
-                            >
-                                {/* Skeleton Circle - matches actual digipan size and position */}
-                                <div className="relative w-full h-full">
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                        <div className="w-[85vw] max-w-[360px] aspect-square rounded-full bg-gradient-to-br from-white/10 to-white/5 animate-pulse" />
-                                    </div>
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                        <div className="w-[85vw] max-w-[360px] aspect-square flex items-center justify-center">
-                                            <div className="w-[30%] h-[30%] rounded-full bg-white/10 animate-pulse" />
-                                        </div>
-                                    </div>
-                                    {/* Orbiting dots */}
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                        <div className="w-[85vw] max-w-[360px] aspect-square relative animate-spin" style={{ animationDuration: '3s' }}>
-                                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-white/20" />
-                                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-white/20" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </motion.div>
+                            <LoadingSkeleton2 key="skeleton-overlay-2" />
                         )}
                     </AnimatePresence>
 
@@ -1782,5 +1754,64 @@ function ControlButton({ label, icon, onClick }: { label: string; icon: React.Re
                 {label}
             </span>
         </div>
+    );
+}
+
+// =========================================================================================
+// Loading Skeletons
+// =========================================================================================
+
+/**
+ * LoadingSkeletonLegacy (Legacy/Detailed)
+ * - 기존에 사용하던 상세한 로딩 스켈레톤 (헤더, 푸터, 중앙 원형 애니메이션 포함)
+ * - 현재 비활성화됨 (LoadingSkeleton2 사용 중)
+ */
+function LoadingSkeletonLegacy() {
+    return (
+        <motion.div
+            key="skeleton-overlay"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+            className="absolute inset-0 flex items-center justify-center z-10 bg-white"
+        >
+            {/* Skeleton Circle - matches actual digipan size and position */}
+            <div className="relative w-full h-full">
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-[85vw] max-w-[360px] aspect-square rounded-full bg-gradient-to-br from-white/10 to-white/5 animate-pulse" />
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-[85vw] max-w-[360px] aspect-square flex items-center justify-center">
+                        <div className="w-[30%] h-[30%] rounded-full bg-white/10 animate-pulse" />
+                    </div>
+                </div>
+                {/* Orbiting dots */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-[85vw] max-w-[360px] aspect-square relative animate-spin" style={{ animationDuration: '3s' }}>
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-white/20" />
+                        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-white/20" />
+                    </div>
+                </div>
+            </div>
+        </motion.div>
+    );
+}
+
+/**
+ * LoadingSkeleton2 (Blank Screen)
+ * - 단순 빈 화면 (bg-white) - Practice 모드는 배경이 흰색임
+ * - 깔끔한 전환을 위해 사용
+ */
+function LoadingSkeleton2() {
+    return (
+        <motion.div
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+            className="absolute inset-0 z-[999] bg-white flex items-center justify-center"
+        >
+            {/* 아무 내용 없는 빈 화면 */}
+        </motion.div>
     );
 }
