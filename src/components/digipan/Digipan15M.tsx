@@ -38,6 +38,7 @@ interface Digipan15MProps {
     disableJamSession?: boolean; // ★ Mobile Optimization
     backgroundColor?: string;
     bottomTextColor?: string;
+    bottomTextOpacity?: number;
 }
 
 // Composite Background Component for Digipan 15M (Mutant image + 4 visual tonefields)

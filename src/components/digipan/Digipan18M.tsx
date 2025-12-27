@@ -38,6 +38,7 @@ interface Digipan18MProps {
     disableJamSession?: boolean; // ★ Mobile Optimization
     backgroundColor?: string;
     bottomTextColor?: string;
+    bottomTextOpacity?: number;
 }
 
 // Composite Background Component for Digipan 18M (Currently same as 15M: Mutant image)

@@ -38,6 +38,7 @@ interface Digipan14Props {
     disableJamSession?: boolean; // ★ Mobile Optimization
     backgroundColor?: string;
     bottomTextColor?: string;
+    bottomTextOpacity?: number;
 }
 
 // Composite Background Component for Digipan 14 (10 notes image + 4 visual tonefields)
