@@ -37,6 +37,7 @@ interface Digipan14Props {
     showTouchText?: boolean;
     disableJamSession?: boolean; // ★ Mobile Optimization
     backgroundColor?: string;
+    bottomTextColor?: string;
 }
 
 // Composite Background Component for Digipan 14 (10 notes image + 4 visual tonefields)
@@ -124,6 +125,8 @@ const Digipan14 = React.forwardRef<Digipan3DHandle, Digipan14Props>(({
     showTouchText,
     disableJamSession = false,
     backgroundColor,
+    bottomTextColor,
+    bottomTextOpacity,
 }, ref) => {
 
     // 10-Note Base Coordinates (from Digipan10.tsx)
@@ -375,6 +378,8 @@ const Digipan14 = React.forwardRef<Digipan3DHandle, Digipan14Props>(({
             showTouchText={showTouchText}
             disableJamSession={disableJamSession}
             backgroundColor={backgroundColor}
+            bottomTextColor={bottomTextColor}
+            bottomTextOpacity={bottomTextOpacity}
         />
     );
 });

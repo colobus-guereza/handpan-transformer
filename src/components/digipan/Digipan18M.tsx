@@ -37,6 +37,7 @@ interface Digipan18MProps {
     showTouchText?: boolean;
     disableJamSession?: boolean; // ★ Mobile Optimization
     backgroundColor?: string;
+    bottomTextColor?: string;
 }
 
 // Composite Background Component for Digipan 18M (Currently same as 15M: Mutant image)
@@ -124,6 +125,8 @@ const Digipan18M = React.forwardRef<Digipan3DHandle, Digipan18MProps>(({
     showTouchText,
     disableJamSession = false,
     backgroundColor,
+    bottomTextColor,
+    bottomTextOpacity,
 }, ref) => {
 
     // 15-Note Base Coordinates (COPIED FROM 15M AS STARTING POINT)
@@ -411,6 +414,8 @@ const Digipan18M = React.forwardRef<Digipan3DHandle, Digipan18MProps>(({
             showTouchText={showTouchText}
             disableJamSession={disableJamSession}
             backgroundColor={backgroundColor}
+            bottomTextColor={bottomTextColor}
+            bottomTextOpacity={bottomTextOpacity}
         />
     );
 });

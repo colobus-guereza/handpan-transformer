@@ -1629,6 +1629,8 @@ export default function ReelPanClient() {
             enablePan: false, // 카메라 이동(Pan) 비활성화
             disableJamSession: true, // ★ 방해꾼 제거: 내부 오디오 엔진 비활성화
             backgroundColor: bgColor,
+            bottomTextColor: "#FFFFFF",
+            bottomTextOpacity: 0.7, // 70% Opacity requested
         };
 
         if (totalNotes === 18) return <Digipan18M {...commonProps} />;

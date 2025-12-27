@@ -96,6 +96,8 @@ interface Digipan11Props {
     showTouchText?: boolean;
     disableJamSession?: boolean; // ★ Mobile Optimization
     backgroundColor?: string;
+    bottomTextColor?: string;
+    bottomTextOpacity?: number;
 }
 
 const Digipan11 = React.forwardRef<Digipan3DHandle, Digipan11Props>(({
@@ -124,6 +126,8 @@ const Digipan11 = React.forwardRef<Digipan3DHandle, Digipan11Props>(({
     showTouchText,
     disableJamSession = false,
     backgroundColor,
+    bottomTextColor,
+    bottomTextOpacity,
 }, ref) => {
 
     // Internal Note Generation (C# Pygmy 11 Layout)
@@ -335,6 +339,8 @@ const Digipan11 = React.forwardRef<Digipan3DHandle, Digipan11Props>(({
             showTouchText={showTouchText}
             disableJamSession={disableJamSession}
             backgroundColor={backgroundColor}
+            bottomTextColor={bottomTextColor}
+            bottomTextOpacity={bottomTextOpacity}
         />
     );
 });

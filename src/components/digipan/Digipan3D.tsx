@@ -141,6 +141,8 @@ interface Digipan3DProps {
     disableJamSession?: boolean; // NEW: Disable internal useJamSession audio engine
     useCountdownText?: boolean; // NEW: Use lightweight CountdownText instead of TouchText
     backgroundColor?: string;
+    bottomTextColor?: string; // Optional: Override color for bottom note text
+    bottomTextOpacity?: number; // Optional: Override opacity for bottom note text
 }
 
 export interface Digipan3DHandle {
@@ -244,7 +246,9 @@ const ToneFieldMesh = React.memo(({
     viewMode = 0, // 0: All, 1: No Labels, 2: No Mesh inside, 3: Interaction Only
     demoActive = false,
     playNote,
-    offset
+    offset,
+    bottomTextColor,
+    bottomTextOpacity
 }: {
     note: NoteData;
     centerX?: number;
@@ -254,6 +258,8 @@ const ToneFieldMesh = React.memo(({
     demoActive?: boolean;
     playNote?: (noteName: string, volume?: number) => void;
     offset?: [number, number, number];
+    bottomTextColor?: string;
+    bottomTextOpacity?: number;
 }) => {
     const [hovered, setHovered] = useState(false);
     const [pulsing, setPulsing] = useState(false);
@@ -682,19 +688,37 @@ const ToneFieldMesh = React.memo(({
                             {/* Pitch Label (Center) - Remains at 0,0 but upright */}
                             {(() => {
                                 // Use black color for bottom position notes (white background outside pan)
-                                const pitchLabelColor = note.textColor || (note.position === 'bottom' ? '#333333' : '#FFFFFF');
+                                // If bottomTextColor is provided, use it. Otherwise default to #333333 for bottom notes.
+                                let pitchLabelColor = note.textColor;
+                                if (!pitchLabelColor) {
+                                    if (note.position === 'bottom') {
+                                        pitchLabelColor = bottomTextColor || '#333333';
+                                    } else {
+                                        pitchLabelColor = '#FFFFFF';
+                                    }
+                                }
+
+                                // Determine opacity
+                                let textOpacity = 1;
+                                if (note.position === 'bottom' && bottomTextOpacity !== undefined) {
+                                    textOpacity = bottomTextOpacity;
+                                }
+
                                 const outlineColor = note.outlineColor || (note.position === 'bottom' ? '#CCCCCC' : '#000000');
+
                                 return (
                                     <Text
                                         visible={areLabelsVisible}
                                         position={[0, 0, 0]}
                                         fontSize={3.0}
                                         color={pitchLabelColor}
+                                        fillOpacity={textOpacity} // Apply opacity
                                         anchorX="center"
                                         anchorY="middle"
                                         fontWeight="bold"
                                         outlineWidth={0.05}
                                         outlineColor={outlineColor}
+                                        outlineOpacity={textOpacity} // Apply opacity to outline too
                                     >
                                         {note.label}
                                     </Text>
@@ -706,18 +730,35 @@ const ToneFieldMesh = React.memo(({
                             {(() => {
                                 const displayText = note.subLabel ? note.subLabel : (note.id + 1).toString();
                                 // Use black color for bottom position notes (white background outside pan)
-                                const labelColor = note.textColor || (note.position === 'bottom' ? '#333333' : '#FFFFFF');
+                                // If bottomTextColor is provided, use it. Otherwise default to #333333 for bottom notes.
+                                let labelColor = note.textColor;
+                                if (!labelColor) {
+                                    if (note.position === 'bottom') {
+                                        labelColor = bottomTextColor || '#333333';
+                                    } else {
+                                        labelColor = '#FFFFFF';
+                                    }
+                                }
+
+                                // Determine opacity
+                                let textOpacity = 1;
+                                if (note.position === 'bottom' && bottomTextOpacity !== undefined) {
+                                    textOpacity = bottomTextOpacity;
+                                }
+
                                 return (
                                     <Text
                                         visible={areLabelsVisible}
                                         position={[bottomPos.x, bottomPos.y - 0.05, 0]}
                                         fontSize={2.0}
                                         color={labelColor}
+                                        fillOpacity={textOpacity} // Apply opacity
                                         anchorX="center"
                                         anchorY="top"
                                         fontWeight="bold"
                                         outlineWidth={0.05} // Added outline to subLabel for consistency if needed, strictly requested for Pitch but let's see
                                         outlineColor={note.outlineColor || (note.position === 'bottom' ? '#CCCCCC' : '#000000')}
+                                        outlineOpacity={textOpacity} // Apply opacity to outline too
                                     >
                                         {displayText}
                                     </Text>
@@ -774,6 +815,8 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
     disableJamSession = false, // Default: enabled (false = NOT disabled)
     useCountdownText = false, // Default: use TouchText
     backgroundColor, // New Prop
+    bottomTextColor, // New Prop for customizing bottom note text color
+    bottomTextOpacity, // New Prop for customizing bottom note text opacity
 }, ref) => {
     const pathname = usePathname();
     // ScaleInfoPanel은 /digipan-3d-test 경로에서만 표시
@@ -1588,6 +1631,8 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
                             demoActive={demoNoteId === note.id}
                             playNote={playNote}
                             offset={Array.isArray(note.offset) ? note.offset : typeof note.offset === 'number' ? [0, 0, note.offset] : tonefieldOffset}
+                            bottomTextColor={bottomTextColor}
+                            bottomTextOpacity={bottomTextOpacity}
                         />
                     ))}
                 </group>

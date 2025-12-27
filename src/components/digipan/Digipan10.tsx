@@ -35,6 +35,8 @@ interface Digipan10Props {
     showTouchText?: boolean;
     disableJamSession?: boolean; // ★ Mobile Optimization
     backgroundColor?: string;
+    bottomTextColor?: string;
+    bottomTextOpacity?: number;
 }
 
 const Digipan10 = React.forwardRef<Digipan3DHandle, Digipan10Props>(({
@@ -64,6 +66,8 @@ const Digipan10 = React.forwardRef<Digipan3DHandle, Digipan10Props>(({
     showTouchText,
     disableJamSession = false,
     backgroundColor,
+    bottomTextColor,
+    bottomTextOpacity,
 }, ref) => {
 
     // 10-Note Specific Layout (Coordinates for 10notes.png)
@@ -282,6 +286,8 @@ const Digipan10 = React.forwardRef<Digipan3DHandle, Digipan10Props>(({
             cameraTargetY={DIGIPAN_VIEW_CONFIG['10'].targetY}
             disableJamSession={disableJamSession}
             backgroundColor={backgroundColor}
+            bottomTextColor={bottomTextColor}
+            bottomTextOpacity={bottomTextOpacity}
         />
     );
 });

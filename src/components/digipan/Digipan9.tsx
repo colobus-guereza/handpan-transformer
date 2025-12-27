@@ -33,6 +33,8 @@ export interface Digipan9Props {
     showTouchText?: boolean;
     disableJamSession?: boolean; // ★ Mobile Optimization: Disable JamSession audio
     backgroundColor?: string;
+    bottomTextColor?: string;
+    bottomTextOpacity?: number;
 }
 
 const Digipan9 = React.forwardRef<Digipan3DHandle, Digipan9Props>(({
@@ -61,6 +63,8 @@ const Digipan9 = React.forwardRef<Digipan3DHandle, Digipan9Props>(({
     showTouchText,
     disableJamSession = false, // ★ Default: enabled
     backgroundColor,
+    bottomTextColor,
+    bottomTextOpacity,
 }, ref) => {
 
     // Internal Note Generation (Standard 9-Note D Kurd Layout)
@@ -162,6 +166,8 @@ const Digipan9 = React.forwardRef<Digipan3DHandle, Digipan9Props>(({
             showTouchText={showTouchText}
             disableJamSession={disableJamSession}
             backgroundColor={backgroundColor}
+            bottomTextColor={bottomTextColor}
+            bottomTextOpacity={bottomTextOpacity}
         />
     );
 });
