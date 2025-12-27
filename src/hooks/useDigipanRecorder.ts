@@ -86,17 +86,19 @@ export const useDigipanRecorder = ({
 
             let videoStream: MediaStream;
 
-            const MAX_RESOLUTION = 1080;
-
-            // 모바일 기기 감지 (이미 Line 232에서 정의되어 있지만, 이 시점에서 필요)
+            // 모바일 기기 감지
             const isMobileDevice = typeof navigator !== 'undefined' &&
                 /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+            // 해상도 제한 설정
+            // 모바일: 1080p (메모리 보호), 데스크톱: 4K (고화질 유지)
+            const MAX_RESOLUTION = isMobileDevice ? 1080 : 2160;
 
             // FPS 설정: 모바일/데스크톱 모두 60fps (터치 애니메이션 부드러움)
             const targetFPS = 60;
 
             console.log(`[RecorderDebug] ${Date.now()} Canvas dimensions: ${canvas.width}x${canvas.height}`);
-            console.log(`[RecorderDebug] ${Date.now()} cropMode: ${cropModeRef.current}, isMobile: ${isMobileDevice}`);
+            console.log(`[RecorderDebug] ${Date.now()} cropMode: ${cropModeRef.current}, isMobile: ${isMobileDevice}, MaxRes: ${MAX_RESOLUTION}`);
 
             if (cropModeRef.current === 'square') {
                 // ============================================
@@ -305,19 +307,19 @@ export const useDigipanRecorder = ({
                 console.warn('[Recorder] No supported mimeType found, trying default constructor.');
             }
 
-            // 모바일 기기 감지 (메모리 제약 대응)
-            const isMobile = typeof navigator !== 'undefined' &&
-                /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            // Video Bitrate Configuration
+            // Mobile: 30 Mbps (Safe for iOS/Android memory & processing)
+            // Desktop: 100 Mbps (Ultra Quality for big screens)
+            const targetBitrate = isMobileDevice ? 30000000 : 100000000;
 
             const options: MediaRecorderOptions = {
                 mimeType: selectedMimeType || undefined,
-                // 모바일: 30 Mbps (iOS 무시 대응), 데스크톱: 50 Mbps (고품질)
-                videoBitsPerSecond: isMobile ? 30000000 : 50000000
+                videoBitsPerSecond: targetBitrate
             };
             console.log(`[Recorder] 📹 Configuration:`);
-            console.log(`  - Device: ${isMobile ? 'Mobile' : 'Desktop'}`);
+            console.log(`  - Device: ${isMobileDevice ? 'Mobile' : 'Desktop'}`);
             console.log(`  - MIME Type: ${selectedMimeType || 'default'}`);
-            console.log(`  - Target Bitrate: ${isMobile ? '30' : '50'} Mbps`);
+            console.log(`  - Target Bitrate: ${targetBitrate / 1000000} Mbps`);
             console.log(`  - Target FPS: ${targetFPS} fps`);
 
             const recorder = new MediaRecorder(combinedStream, options);

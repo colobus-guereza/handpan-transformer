@@ -31,6 +31,7 @@ const REELPAN_SONGS = [
 ];
 import { Digipan3DHandle } from "@/components/digipan/Digipan3D";
 import { useHandpanAudio } from "@/hooks/useHandpanAudio";
+import SilentAudioUnlocker from '@/components/utils/SilentAudioUnlocker';
 import { getNoteFrequency } from "@/constants/noteFrequencies";
 import * as Tone from 'tone';
 
@@ -1652,6 +1653,8 @@ export default function ReelPanClient() {
 
     return (
         <div className="flex items-center justify-center min-h-dvh bg-black overflow-hidden touch-none overscroll-none">
+            {/* iOS Silent Mode Unlocker */}
+            <SilentAudioUnlocker />
 
             <main className="relative w-full max-w-[480px] h-dvh shadow-2xl overflow-hidden flex flex-col items-center justify-center" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)', backgroundColor: bgColor }}>
 
@@ -1752,8 +1755,8 @@ export default function ReelPanClient() {
                 {/* === Layer 3: System UI (Controls) - 리뷰 모드가 아닐 때만 표시 === */}
                 {recordState !== 'reviewing' && (
                     <div className="absolute inset-0 z-20 pointer-events-none flex flex-col justify-between">
-
-                        <header className="relative flex items-center justify-center px-4 py-8 bg-gradient-to-b from-black/80 to-transparent pointer-events-auto">
+                        {/* Header: 녹화 중일 때 흐리게 처리 */}
+                        <header className={`relative flex items-center justify-center px-4 py-8 bg-gradient-to-b from-black/80 to-transparent pointer-events-auto transition-all duration-500 ${recordState === 'recording' ? 'opacity-10 pointer-events-none' : 'opacity-100'}`}>
                             <a
                                 href="https://handpan.co.kr"
                                 className="absolute left-4 p-2 text-white/50 hover:text-white transition-all"
@@ -1880,7 +1883,10 @@ export default function ReelPanClient() {
                                 {/* 1. Label Toggle */}
                                 <button
                                     onClick={() => setViewMode(prev => prev === 2 ? 3 : 2)}
-                                    className={`w-12 h-12 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center hover:bg-white/20 transition-all active:scale-95 ${viewMode === 2 ? 'bg-white/20' : 'bg-white/10'}`}
+                                    className={`w-12 h-12 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center hover:bg-white/20 transition-all active:scale-95 duration-500
+                                    ${viewMode === 2 ? 'bg-white/20' : 'bg-white/10'}
+                                    ${recordState === 'recording' ? 'opacity-50' : 'opacity-100'}
+                                    `}
                                 >
                                     <Type size={18} className={`${viewMode === 2 ? 'text-white' : 'text-white/40'}`} />
                                 </button>
@@ -1888,12 +1894,13 @@ export default function ReelPanClient() {
                                 {/* 2. Layout Mode (Disabled during recording) */}
                                 <button
                                     onClick={toggleLayout}
-                                    disabled={isRecording || !!recordCountdown}
-                                    className={`w-12 h-12 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center transition-all active:scale-95
-                                    ${isRecording || !!recordCountdown
+                                    disabled={isRecording}
+                                    className={`w-12 h-12 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center transition-all active:scale-95 duration-500
+                                    ${isRecording
                                             ? 'bg-white/5 opacity-30 cursor-not-allowed'
                                             : 'bg-white/10 hover:bg-white/20'
-                                        }`}
+                                        }
+                                    `}
                                 >
                                     <span className="text-[10px] font-bold text-white tracking-widest">{layoutMode === 'reel' ? "9:16" : "1:1"}</span>
                                 </button>
@@ -1944,13 +1951,14 @@ export default function ReelPanClient() {
                                     onPointerDown={handleDrumDown}
                                     onPointerUp={handleDrumUp}
                                     disabled={!isDrumSynthReady}
-                                    className={`w-12 h-12 rounded-full backdrop-blur-md border border-white/10 flex flex-col items-center justify-center transition-all active:scale-90 relative overflow-hidden group
+                                    className={`w-12 h-12 rounded-full backdrop-blur-md border border-white/10 flex flex-col items-center justify-center transition-all active:scale-90 relative overflow-hidden group duration-500
                                          ${!isDrumSynthReady
                                             ? 'bg-white/5 opacity-50 cursor-not-allowed'
                                             : isDrumPlaying
                                                 ? 'bg-orange-500/40 border-orange-500/50'
                                                 : 'bg-white/10 hover:bg-white/20'
                                         }
+                                        ${recordState === 'recording' ? 'opacity-50' : 'opacity-100'}
                                      `}
                                     title={!isDrumSynthReady ? '초기화 중...' : '드럼 반주 토글 (길게 누르면 설정)'}
                                 >
@@ -1973,12 +1981,16 @@ export default function ReelPanClient() {
                                     onPointerDown={handleChordDown}
                                     onPointerUp={handleChordUp}
                                     disabled={!isChordSynthReady}
-                                    className={`w-12 h-12 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center transition-all active:scale-95 relative overflow-hidden group ${!isChordSynthReady
-                                        ? 'bg-white/5 opacity-50 cursor-not-allowed'
-                                        : isChordPlaying
-                                            ? 'bg-purple-500/30 border-purple-500/50'
-                                            : 'bg-white/10 hover:bg-white/20'
-                                        }`}
+                                    className={`w-12 h-12 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center transition-all active:scale-95 relative overflow-hidden group duration-500
+                                        ${!isChordSynthReady
+                                            ? 'bg-white/5 opacity-50 cursor-not-allowed'
+                                            : isChordPlaying
+                                                ? 'bg-purple-500/30 border-purple-500/50'
+
+                                                : 'bg-white/10 hover:bg-white/20'
+                                        }
+                                        ${recordState === 'recording' ? 'opacity-50' : 'opacity-100'}
+                                    }`}
                                     title={!isChordSynthReady ? '초기화 중...' : '화음 반주 토글 (길게 누르면 설정)'}
                                 >
                                     <Music2 size={18} className={!isChordSynthReady ? 'text-white/20' : isChordPlaying ? 'text-purple-300' : 'text-white/40'} />
