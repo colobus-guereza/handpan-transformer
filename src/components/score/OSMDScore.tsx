@@ -206,17 +206,38 @@ const OSMDScore = forwardRef<OSMDScoreHandle, OSMDScoreProps>(({
                             console.warn("[OSMD] Smart scale warning:", e);
                         }
 
-                        for (const measure of gSheet.MeasureList[0]) {
-                            for (const staffEntry of measure.staffEntries) {
-                                const sourceEntry = (staffEntry as any).sourceStaffEntry;
-                                if (sourceEntry && sourceEntry.Timestamp) {
-                                    const timestamp = sourceEntry.Timestamp.RealValue;
-                                    const timeInSeconds = timestamp * secondsPerWholeNote;
-                                    const xPos = (staffEntry.PositionAndShape.AbsolutePosition.x * conversionFactor) + X_SHIFT_CORRECTION;
-                                    map.push({ time: timeInSeconds, x: xPos });
+
+                        const GLOBAL_OFFSET = 0.0; // Adjustable audio latency offset (positive = audio leads)
+
+                        let rawMap: { time: number, x: number }[] = [];
+
+                        // Use VerticalGraphicalStaffEntryContainers for precise event columns
+                        // This corresponds to all vertically aligned musical events (notes, rests)
+                        const containers = osmd.GraphicSheet.VerticalGraphicalStaffEntryContainers;
+
+                        for (const container of containers) {
+                            if (container && container.StaffEntries && container.StaffEntries.length > 0) {
+                                const timestamp = container.AbsoluteTimestamp.RealValue;
+                                const timeInSeconds = timestamp * secondsPerWholeNote;
+
+                                // Get the X position from the first staff entry in this vertical column
+                                const firstEntry = container.StaffEntries[0];
+                                if (firstEntry) {
+                                    // We trust OSMD's calculated AbsolutePosition for the note/rest
+                                    let xPos = firstEntry.PositionAndShape.AbsolutePosition.x * conversionFactor;
+
+                                    // OPTIONAL: Correction for Note Head centering if needed relative to the slice line
+                                    // Typically, the slice line is at the left of the head. 
+                                    // If we want center, we might need a small dynamic calculation or Box check.
+                                    // For now, removing the hardcoded +18px and using raw slice X as baseline.
+                                    // Use 0 offset first to see "Raw" alignment.
+
+                                    rawMap.push({ time: Math.max(0, timeInSeconds + GLOBAL_OFFSET), x: xPos });
                                 }
                             }
                         }
+
+                        map.push(...rawMap);
                     }
 
                     const sortedMap = map.sort((a, b) => a.time - b.time);
