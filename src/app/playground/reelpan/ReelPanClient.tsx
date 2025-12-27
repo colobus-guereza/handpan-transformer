@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { motion, AnimatePresence } from "framer-motion";
 import { SCALES } from '@/data/handpanScales';
-import { Layout, Check, Square, Circle, Smartphone, Keyboard, Play, Pause, Volume2, Download, Trash2, X, Type, ChevronDown, Share2, RefreshCcw, Drum, SlidersHorizontal, Settings2, Sparkles, ArrowLeft, Music2, Music, FileText, Palette, MoreVertical } from 'lucide-react';
+import { Layout, Check, Square, Circle, Smartphone, Keyboard, Play, Pause, Volume2, Download, Trash2, X, Type, ChevronDown, Share2, RefreshCcw, Drum, SlidersHorizontal, Settings2, Sparkles, ArrowLeft, Music2, Music, FileText, Palette, MoreVertical, Moon, Sun, Flame } from 'lucide-react';
 
 // MIDI parsing utilities
 import { parseMidi, findBestMatchScale } from '@/lib/midiUtils';
@@ -132,8 +132,23 @@ export default function ReelPanClient() {
     // Filter & Sort State
     const [filterNoteCount, setFilterNoteCount] = useState<string>('all');
     const [sortBy, setSortBy] = useState<'name' | 'notes'>('name');
-    const [filterMode, setFilterMode] = useState<'AZ' | 'NOTES'>('AZ');
+    const [filterMode, setFilterMode] = useState<'AZ' | 'NOTES' | 'CATEGORY'>('CATEGORY');
     const [activeDingFilter, setActiveDingFilter] = useState<string>('all');
+    const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>('all');
+
+    const CATEGORIES = [
+        { id: 'beginner', label: 'Beginner', tags: ['대중적', '입문추천', '국내인기', 'Bestseller', '기본', '표준', '표준확장', 'Popular', 'Recommended for Beginners', 'Domestic Popular', 'Basic', 'Standard', 'Standard Extended'], icon: <Sparkles className="w-3 h-3 text-current opacity-70" /> },
+        { id: 'healing', label: 'Healing', tags: ['명상', '힐링', '치유', '차분한', '평화', 'Deep', '피그미', '트랜스', '몽환적', '깊음', '깊은울림', '아마라', '켈틱마이너', 'Meditation', 'Healing', 'Calm', 'Peace', 'Pygmy', 'Trance', 'Dreamy', 'Deep Resonance', 'Amara', 'Celtic Minor'], icon: <Moon className="w-3 h-3 text-current opacity-70" /> },
+        { id: 'bright', label: 'Bright', tags: ['메이저', 'D메이저', 'Eb메이저', '밝음', '상쾌함', '희망적', '행복한', '윤슬', '사파이어', '청량함', '에너지', 'Major', 'D Major', 'Eb Major', 'Bright', 'Refreshing', 'Hopeful', 'Happy', 'Yunsl', 'Sapphire', 'Energy'], icon: <Sun className="w-3 h-3 text-current opacity-70" /> },
+        { id: 'ethnic', label: 'Deep Ethnic', tags: ['이국적', '집시', '아라비안', '중동풍', '독특함', '인도풍', '동양적', '하이브리드', '도리안', '블루스', '신비', '매니아', '라사발리', '딥아시아', '신비로움', '메이저마이너', '에퀴녹스', 'Exotic', 'Gypsy', 'Arabian', 'Middle Eastern', 'Unique', 'Indian Style', 'Oriental', 'Hybrid', 'Dorian', 'Blues', 'Mysterious', 'Mania', 'Rasavali', 'Deep Asia', 'Major-Minor', 'Equinox'], icon: <Flame className="w-3 h-3 text-current opacity-70" /> }
+    ];
+
+    const matchesCategory = (scale: any, categoryId: string) => {
+        const category = CATEGORIES.find(c => c.id === categoryId);
+        if (!category) return true;
+        const allScaleTags = [...(scale.tags || []), ...(scale.tagsEn || [])];
+        return allScaleTags.some((tag: string) => category.tags.includes(tag));
+    };
 
     // Helper: Ding Pitch Extraction
     const getPitchFromNote = (note: string): string => {
@@ -159,6 +174,10 @@ export default function ReelPanClient() {
                     const pitch = getPitchFromNote(s.notes.ding);
                     return pitch === activeDingFilter;
                 });
+            }
+        } else if (filterMode === 'CATEGORY') {
+            if (activeCategoryFilter !== 'all') {
+                result = result.filter(s => matchesCategory(s, activeCategoryFilter));
             }
         } else {
             // NOTES Mode
@@ -197,7 +216,7 @@ export default function ReelPanClient() {
         }
 
         return result;
-    }, [filterNoteCount, sortBy, filterMode, activeDingFilter]);
+    }, [filterNoteCount, sortBy, filterMode, activeDingFilter, activeCategoryFilter]);
 
     const digipanRef = useRef<Digipan3DHandle>(null);
     const previewTimersRef = useRef<NodeJS.Timeout[]>([]);
@@ -2222,13 +2241,19 @@ export default function ReelPanClient() {
                                         {/* Filter Mode Toggle */}
                                         <div className="flex p-1 bg-white/5 rounded-lg mb-1">
                                             <button
-                                                onClick={() => { setFilterMode('AZ'); setFilterNoteCount('all'); }}
+                                                onClick={() => { setFilterMode('CATEGORY'); setActiveDingFilter('all'); setFilterNoteCount('all'); }}
+                                                className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${filterMode === 'CATEGORY' ? 'bg-slate-300 text-slate-900 shadow-sm' : 'text-white/40 hover:text-white/70'}`}
+                                            >
+                                                Category
+                                            </button>
+                                            <button
+                                                onClick={() => { setFilterMode('AZ'); setFilterNoteCount('all'); setActiveCategoryFilter('all'); }}
                                                 className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${filterMode === 'AZ' ? 'bg-slate-300 text-slate-900 shadow-sm' : 'text-white/40 hover:text-white/70'}`}
                                             >
                                                 Ding
                                             </button>
                                             <button
-                                                onClick={() => { setFilterMode('NOTES'); setActiveDingFilter('all'); }}
+                                                onClick={() => { setFilterMode('NOTES'); setActiveDingFilter('all'); setActiveCategoryFilter('all'); }}
                                                 className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${filterMode === 'NOTES' ? 'bg-slate-300 text-slate-900 shadow-sm' : 'text-white/40 hover:text-white/70'}`}
                                             >
                                                 NOTES
@@ -2237,6 +2262,51 @@ export default function ReelPanClient() {
 
                                         <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar" style={{ touchAction: 'pan-x' }}>
                                             {(() => {
+                                                if (filterMode === 'CATEGORY') {
+                                                    // CATEGORY Mode: Custom Tags
+                                                    // Count matches for each category
+                                                    const categoryStats = CATEGORIES.reduce((acc, cat) => {
+                                                        const count = SCALES.filter(s => matchesCategory(s, cat.id)).length;
+                                                        acc[cat.id] = count;
+                                                        return acc;
+                                                    }, {} as Record<string, number>);
+
+                                                    return (
+                                                        <>
+                                                            <button
+                                                                onClick={() => setActiveCategoryFilter('all')}
+                                                                className={`px-3 py-1.5 rounded-full flex items-center gap-2 transition-all border whitespace-nowrap
+                                                                    ${activeCategoryFilter === 'all'
+                                                                        ? 'bg-slate-300/80 border-slate-200 text-slate-900 shadow-[0_0_15px_rgba(200,200,210,0.4)]'
+                                                                        : 'bg-white/[0.03] border-white/[0.08] text-white/40 hover:text-slate-200/80 hover:bg-slate-300/10'}`}
+                                                            >
+                                                                <span className="text-[13px] font-black tracking-widest">All</span>
+                                                                <span className={`text-[13px] font-bold ${activeCategoryFilter === 'all' ? 'opacity-80' : 'opacity-30'}`}>
+                                                                    {SCALES.length}
+                                                                </span>
+                                                            </button>
+                                                            {CATEGORIES.map(cat => (
+                                                                <button
+                                                                    key={cat.id}
+                                                                    onClick={() => setActiveCategoryFilter(cat.id)}
+                                                                    className={`px-3 py-1.5 rounded-full flex items-center gap-2 transition-all border whitespace-nowrap
+                                                                        ${activeCategoryFilter === cat.id
+                                                                            ? 'bg-slate-300/80 border-slate-200 text-slate-900 shadow-[0_0_15px_rgba(200,200,210,0.4)]'
+                                                                            : 'bg-white/[0.03] border-white/[0.08] text-white/40 hover:text-slate-200/80 hover:bg-slate-300/10'}`}
+                                                                >
+                                                                    {/* Icon */}
+                                                                    <span className={`${activeCategoryFilter === cat.id ? 'text-slate-900' : 'text-inherit'}`}>
+                                                                        {cat.icon}
+                                                                    </span>
+                                                                    <span className="text-[13px] font-black tracking-widest">{cat.label}</span>
+                                                                    <span className={`text-[13px] font-bold ${activeCategoryFilter === cat.id ? 'opacity-80' : 'opacity-30'}`}>
+                                                                        {categoryStats[cat.id]}
+                                                                    </span>
+                                                                </button>
+                                                            ))}
+                                                        </>
+                                                    );
+                                                }
                                                 if (filterMode === 'AZ') {
                                                     // A-Z Mode: Ding Pitch Filters
                                                     // Calculate Ding Stats

@@ -1296,8 +1296,8 @@ export const SCALES: Scale[] = [
             bottom: []
         },
         vector: { minorMajor: 1.0, pureSpicy: 0.0, rarePopular: 0.6 },
-        tags: ["메이저", "기본", "밝음", "동요"],
-        tagsEn: ["Major", "Basic", "Bright", "Nursery Rhymes"],
+        tags: ["메이저", "밝음", "동요"],
+        tagsEn: ["Major", "Bright", "Nursery Rhymes"],
         description: "가장 기본적이고 순수한 메이저 스케일인 C Major입니다. 밝고 명랑하며, 동요와 같이 누구나 아는 멜로디를 연주하기에 좋습니다.",
         descriptionEn: "C Major, the most basic and pure major scale. It is bright and cheerful, great for playing familiar melodies like nursery rhymes.",
         videoUrl: "https://youtu.be/2peCXnJP2U0?si=bVePs8DvAlPEwI7v",
@@ -1422,8 +1422,8 @@ export const SCALES: Scale[] = [
             bottom: ["D#3", "F3"]
         },
         vector: { minorMajor: -0.5, pureSpicy: 0.5, rarePopular: 0.4 },
-        tags: ["딥아시아", "동양적", "확장형", "깊음"],
-        tagsEn: ["Deep Asia", "Oriental", "Extended", "Deep"],
+        tags: ["확장형", "청량함"],
+        tagsEn: ["Extended", "Refreshing"],
         description: "딥아시아 스케일로, 동양적인 깊은 울림을 가진 확장형 모델입니다. 14개의 노트로 확장되어 더욱 풍성하고 명상적인 연주가 가능합니다.",
         descriptionEn: "A Deep Asia scale, an extended model with deep oriental resonance. Expanded to 14 notes, it allows for richer and more meditative performances.",
         videoUrl: "https://youtu.be/pMKoFUicrFw?si=5HPgyOp8NM0qXMNU",
@@ -1863,8 +1863,8 @@ export const SCALES: Scale[] = [
             bottom: []
         },
         vector: { minorMajor: -0.7, pureSpicy: 0.2, rarePopular: 0.9 },
-        tags: ["웰니스", "요가", "명상", "힐링", "켈틱마이너", "Malte Marten"],
-        tagsEn: ["Wellness", "Yoga", "Meditation", "Healing", "Celtic Minor", "Malte Marten"],
+        tags: ["웰니스", "요가", "켈틱마이너", "Malte Marten", "입문추천"],
+        tagsEn: ["Wellness", "Yoga", "Celtic Minor", "Malte Marten", "Recommended for Beginners"],
         description: "웰니스 3대장(Pygmy, Aegean, Amara)의 일원이자 ‘Celtic Minor’로도 불리는 C# Amara 9는, Malte Marten의 명연주로 유명세를 타며 전 세계 요가, 명상, 힐링 커뮤니티에서 독보적인 위치를 차지하고 있습니다. 많은 사랑을 받는 E Amara 18의 입문용 버전이기도 한 이 스케일은, 특유의 신비롭고 스피리추얼한 울림 덕분에 동서양을 막론하고 내면의 평화를 찾는 이들에게 깊은 사랑을 받고 있습니다.",
         descriptionEn: "C# Amara 9, also known as 'Celtic Minor' and a member of the Wellness Trio (Pygmy, Aegean, Amara), holds a unique position in the global yoga, meditation, and healing communities, made famous by Malte Marten's renowned performances. Also an introductory version of the beloved E Amara 18, this scale is deeply loved by those seeking inner peace in both East and West, thanks to its unique mysterious and spiritual resonance.",
         videoUrl: "https://youtu.be/W9QAtyTDrTM?si=Cy7YMKhp-MY2Bv7r",
