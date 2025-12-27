@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { motion, AnimatePresence } from "framer-motion";
 import { SCALES } from '@/data/handpanScales';
-import { Layout, Check, Square, Circle, Smartphone, Keyboard, Play, Pause, Volume2, Download, Trash2, X, Type, ChevronDown, Share2, RefreshCcw, Drum, SlidersHorizontal, Settings2, Sparkles, ArrowLeft, Music2, Music, FileText } from 'lucide-react';
+import { Layout, Check, Square, Circle, Smartphone, Keyboard, Play, Pause, Volume2, Download, Trash2, X, Type, ChevronDown, Share2, RefreshCcw, Drum, SlidersHorizontal, Settings2, Sparkles, ArrowLeft, Music2, Music, FileText, Palette, MoreVertical } from 'lucide-react';
 
 // MIDI parsing utilities
 import { parseMidi, findBestMatchScale } from '@/lib/midiUtils';
@@ -140,6 +140,11 @@ export default function ReelPanClient() {
         const match = note.match(/^([A-G][#b]?)/);
         return match ? match[1] : note.charAt(0);
     };
+
+    // Background Color State
+    const [bgColor, setBgColor] = useState('#0A0000');
+    const colorInputRef = useRef<HTMLInputElement>(null);
+    const [showSettingsMenu, setShowSettingsMenu] = useState(false); // 더보기 메뉴 상태
 
     const [recordCountdown, setRecordCountdown] = useState<number | 'Touch!' | null>(null);
 
@@ -1622,6 +1627,7 @@ export default function ReelPanClient() {
             enableZoom: false, // 마우스 휠 줌인/줌아웃 비활성화
             enablePan: false, // 카메라 이동(Pan) 비활성화
             disableJamSession: true, // ★ 방해꾼 제거: 내부 오디오 엔진 비활성화
+            backgroundColor: bgColor,
         };
 
         if (totalNotes === 18) return <Digipan18M {...commonProps} />;
@@ -1647,7 +1653,7 @@ export default function ReelPanClient() {
     return (
         <div className="flex items-center justify-center min-h-dvh bg-black overflow-hidden touch-none overscroll-none">
 
-            <main className="relative w-full max-w-[480px] h-dvh bg-black shadow-2xl overflow-hidden flex flex-col items-center justify-center" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+            <main className="relative w-full max-w-[480px] h-dvh shadow-2xl overflow-hidden flex flex-col items-center justify-center" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)', backgroundColor: bgColor }}>
 
                 {/* === Layer 0: Initial Page Loading Skeleton === */}
                 {/* === Layer 0: Initial Page Loading Skeleton === */}
@@ -1750,21 +1756,76 @@ export default function ReelPanClient() {
                         <header className="relative flex items-center justify-center px-4 py-8 bg-gradient-to-b from-black/80 to-transparent pointer-events-auto">
                             <a
                                 href="https://handpan.co.kr"
-                                className="absolute left-4 w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all border border-white/5 backdrop-blur-md"
+                                className="absolute left-4 p-2 text-white/50 hover:text-white transition-all"
                             >
                                 <ArrowLeft size={20} />
                             </a>
 
-                            {/* 악보 표시 버튼 - 선택된 곡에 악보가 있을 때만 표시 */}
-                            {selectedSong?.xmlSrc && (
-                                <button
-                                    onClick={() => setShowScore(!showScore)}
-                                    className={`absolute right-4 w-10 h-10 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center transition-all hover:bg-white/20 ${showScore ? 'bg-white/20' : 'bg-white/10'
-                                        }`}
-                                >
-                                    <FileText size={18} className={showScore ? 'text-white' : 'text-white/60'} />
-                                </button>
-                            )}
+                            {/* 우측 상단 컨트롤 그룹 (악보, 더보기) */}
+                            <div className="absolute right-4 flex items-center gap-2 z-50">
+                                {/* 악보 표시 버튼 - 선택된 곡에 악보가 있을 때만 표시 */}
+                                {selectedSong?.xmlSrc && (
+                                    <button
+                                        onClick={() => setShowScore(!showScore)}
+                                        className={`w-10 h-10 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center transition-all hover:bg-white/20 ${showScore ? 'bg-white/20' : 'bg-white/10'
+                                            }`}
+                                    >
+                                        <FileText size={18} className={showScore ? 'text-white' : 'text-white/60'} />
+                                    </button>
+                                )}
+
+                                {/* 더보기 메뉴 버튼 */}
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setShowSettingsMenu(!showSettingsMenu)}
+                                        className="p-2 text-white/60 hover:text-white transition-all"
+                                    >
+                                        <MoreVertical size={20} />
+                                    </button>
+
+                                    {/* 드롭다운 메뉴 & Backdrop */}
+                                    <AnimatePresence>
+                                        {showSettingsMenu && (
+                                            <>
+                                                {/* Backdrop for closing menu */}
+                                                <div
+                                                    className="fixed inset-0 z-40"
+                                                    onClick={() => setShowSettingsMenu(false)}
+                                                />
+
+                                                {/* Menu */}
+                                                <motion.div
+                                                    initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                    exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                                    className="absolute right-0 top-full mt-2 min-w-[200px] bg-black/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl overflow-hidden p-2 flex flex-col gap-2 z-50"
+                                                >
+                                                    {/* 배경색 변경 항목 */}
+                                                    <div className="flex items-center justify-between p-2 rounded-xl hover:bg-white/10 transition-colors">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="relative w-8 h-8 rounded-full overflow-hidden border border-white/20">
+                                                                <div className="absolute inset-0" style={{ backgroundColor: bgColor }} />
+                                                                <input
+                                                                    type="color"
+                                                                    value={bgColor}
+                                                                    onChange={(e) => setBgColor(e.target.value)}
+                                                                    className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                                                                />
+                                                            </div>
+                                                            <div className="flex flex-col">
+                                                                <span className="text-sm font-medium text-white">Background</span>
+                                                                <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-white/50 font-mono self-start uppercase">
+                                                                    {bgColor}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            </>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+                            </div>
 
                             <motion.button
                                 onClick={() => setShowScaleSelector(true)}
@@ -1779,7 +1840,7 @@ export default function ReelPanClient() {
                                             animate={{ opacity: 1 }}
                                             exit={{ opacity: 0 }}
                                             transition={{ duration: 0.2 }}
-                                            className="text-white font-normal text-xl tracking-normal drop-shadow-md group-hover:text-white/80 transition-colors"
+                                            className="text-white/60 font-normal text-xl tracking-normal drop-shadow-md group-hover:text-white/80 transition-colors"
                                         >
                                             {selectedSong ? selectedSong.title : targetScale.name}
                                         </motion.h1>
@@ -1814,6 +1875,8 @@ export default function ReelPanClient() {
 
                             {/* 하단 버튼 그룹 */}
                             <div className="w-full flex items-center justify-between max-w-[380px] relative">
+
+
                                 {/* 1. Label Toggle */}
                                 <button
                                     onClick={() => setViewMode(prev => prev === 2 ? 3 : 2)}
@@ -2624,7 +2687,7 @@ function LoadingSkeleton2() {
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5, ease: 'easeOut' }}
-            className="absolute inset-0 z-[999] bg-white flex items-center justify-center"
+            className="absolute inset-0 z-[999] bg-[#0A0000] flex items-center justify-center"
         >
             {/* 아무 내용 없는 빈 화면 */}
         </motion.div>

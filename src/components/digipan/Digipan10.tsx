@@ -34,6 +34,7 @@ interface Digipan10Props {
     externalTouchText?: string | null;
     showTouchText?: boolean;
     disableJamSession?: boolean; // ★ Mobile Optimization
+    backgroundColor?: string;
 }
 
 const Digipan10 = React.forwardRef<Digipan3DHandle, Digipan10Props>(({
@@ -62,6 +63,7 @@ const Digipan10 = React.forwardRef<Digipan3DHandle, Digipan10Props>(({
     externalTouchText = null,
     showTouchText,
     disableJamSession = false,
+    backgroundColor,
 }, ref) => {
 
     // 10-Note Specific Layout (Coordinates for 10notes.png)
@@ -279,6 +281,7 @@ const Digipan10 = React.forwardRef<Digipan3DHandle, Digipan10Props>(({
             cameraZoom={DIGIPAN_VIEW_CONFIG['10'].zoom}
             cameraTargetY={DIGIPAN_VIEW_CONFIG['10'].targetY}
             disableJamSession={disableJamSession}
+            backgroundColor={backgroundColor}
         />
     );
 });

@@ -140,6 +140,7 @@ interface Digipan3DProps {
     showTouchText?: boolean; // New: Toggle for idle Ready/Set/Touch cycle
     disableJamSession?: boolean; // NEW: Disable internal useJamSession audio engine
     useCountdownText?: boolean; // NEW: Use lightweight CountdownText instead of TouchText
+    backgroundColor?: string;
 }
 
 export interface Digipan3DHandle {
@@ -772,6 +773,7 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
     showTouchText: showTouchTextProp,
     disableJamSession = false, // Default: enabled (false = NOT disabled)
     useCountdownText = false, // Default: use TouchText
+    backgroundColor, // New Prop
 }, ref) => {
     const pathname = usePathname();
     // ScaleInfoPanel은 /digipan-3d-test 경로에서만 표시
@@ -1375,8 +1377,8 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
         <div
             ref={containerRef}
             className="w-full h-full relative"
-            style={{ background: '#FFFFFF', touchAction: isCameraLockedState ? 'none' : 'pan-y' }}
-        > {/* White Background, Allow vertical scroll */}
+            style={{ background: backgroundColor || '#FFFFFF', touchAction: isCameraLockedState ? 'none' : 'pan-y' }}
+        > {/* Background Color, Allow vertical scroll */}
 
             {/* Mobile Layout: Bottom Corner Buttons */}
             {isMobileButtonLayout && (
@@ -1457,8 +1459,8 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
                     far: 2000
                 }}
             >
-                {/* Fixed White Background for Recording */}
-                <color attach="background" args={['#ffffff']} />
+                {/* Fixed Background for Recording */}
+                <color attach="background" args={[backgroundColor || '#ffffff']} />
 
                 {/* Lighting - Adjusted for Blueprint look */}
                 <ambientLight intensity={1.0} /> {/* Bright ambient for flat look */}
