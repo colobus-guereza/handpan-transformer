@@ -137,10 +137,10 @@ export default function ReelPanClient() {
     const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>('all');
 
     const CATEGORIES = [
-        { id: 'beginner', label: 'Beginner', tags: ['대중적', '입문추천', '국내인기', 'Bestseller', '기본', '표준', '표준확장', 'Popular', 'Recommended for Beginners', 'Domestic Popular', 'Basic', 'Standard', 'Standard Extended'], icon: <Sparkles className="w-3 h-3 text-current opacity-70" /> },
-        { id: 'healing', label: 'Healing', tags: ['명상', '힐링', '치유', '차분한', '평화', 'Deep', '피그미', '트랜스', '몽환적', '깊음', '깊은울림', '아마라', '켈틱마이너', 'Meditation', 'Healing', 'Calm', 'Peace', 'Pygmy', 'Trance', 'Dreamy', 'Deep Resonance', 'Amara', 'Celtic Minor'], icon: <Moon className="w-3 h-3 text-current opacity-70" /> },
-        { id: 'bright', label: 'Bright', tags: ['메이저', 'D메이저', 'Eb메이저', '밝음', '상쾌함', '희망적', '행복한', '윤슬', '사파이어', '청량함', '에너지', 'Major', 'D Major', 'Eb Major', 'Bright', 'Refreshing', 'Hopeful', 'Happy', 'Yunsl', 'Sapphire', 'Energy'], icon: <Sun className="w-3 h-3 text-current opacity-70" /> },
-        { id: 'ethnic', label: 'Deep Ethnic', tags: ['이국적', '집시', '아라비안', '중동풍', '독특함', '인도풍', '동양적', '하이브리드', '도리안', '블루스', '신비', '매니아', '라사발리', '딥아시아', '신비로움', '메이저마이너', '에퀴녹스', 'Exotic', 'Gypsy', 'Arabian', 'Middle Eastern', 'Unique', 'Indian Style', 'Oriental', 'Hybrid', 'Dorian', 'Blues', 'Mysterious', 'Mania', 'Rasavali', 'Deep Asia', 'Major-Minor', 'Equinox'], icon: <Flame className="w-3 h-3 text-current opacity-70" /> }
+        { id: 'beginner', label: 'Beginner', tags: ['대중적', '입문추천', '국내인기', 'Bestseller', '기본', '표준', '표준확장', 'Popular', 'Recommended for Beginners', 'Domestic Popular', 'Basic', 'Standard', 'Standard Extended'] },
+        { id: 'healing', label: 'Healing', tags: ['명상', '힐링', '치유', '차분한', '평화', 'Deep', '피그미', '트랜스', '몽환적', '깊음', '깊은울림', '아마라', '켈틱마이너', 'Meditation', 'Healing', 'Calm', 'Peace', 'Pygmy', 'Trance', 'Dreamy', 'Deep Resonance', 'Amara', 'Celtic Minor'] },
+        { id: 'bright', label: 'Bright', tags: ['메이저', 'D메이저', 'Eb메이저', '밝음', '상쾌함', '희망적', '행복한', '윤슬', '사파이어', '청량함', '에너지', 'Major', 'D Major', 'Eb Major', 'Bright', 'Refreshing', 'Hopeful', 'Happy', 'Yunsl', 'Sapphire', 'Energy'] },
+        { id: 'ethnic', label: 'Deep Ethnic', tags: ['이국적', '집시', '아라비안', '중동풍', '독특함', '인도풍', '동양적', '하이브리드', '도리안', '블루스', '신비', '매니아', '라사발리', '딥아시아', '신비로움', '메이저마이너', '에퀴녹스', 'Exotic', 'Gypsy', 'Arabian', 'Middle Eastern', 'Unique', 'Indian Style', 'Oriental', 'Hybrid', 'Dorian', 'Blues', 'Mysterious', 'Mania', 'Rasavali', 'Deep Asia', 'Major-Minor', 'Equinox'] }
     ];
 
     const matchesCategory = (scale: any, categoryId: string) => {
@@ -1382,19 +1382,43 @@ export default function ReelPanClient() {
         setShowScaleSelector(false);
         setIsScaleLoading(true);
 
-        // 짧은 딜레이 후 스케일 변경 (fade-out 애니메이션 시간)
-        setTimeout(() => {
-            setTargetScale(scale);
-            // 로딩 완료 시뮬레이션 (실제 3D 컴포넌트 마운트 시간 고려)
+        // --- 이미지 사전 로딩 로직 ---
+        const bottomCount = scale.notes.bottom ? scale.notes.bottom.length : 0;
+        const totalNotes = 1 + scale.notes.top.length + bottomCount;
+        let imagePath = "/images/digipan/10notes.png"; // 기본값
+
+        if (totalNotes === 9 || totalNotes === 11) {
+            imagePath = "/images/digipan/9notes.png";
+        } else if (totalNotes === 12 || totalNotes === 14) {
+            imagePath = "/images/digipan/10notes.png";
+        } else if (totalNotes === 15 || totalNotes === 18 || scale.id.includes('mutant')) {
+            imagePath = "/images/digipan/12notes_mutant.png";
+        }
+
+        const img = new Image();
+        img.src = imagePath;
+
+        const proceedWithScaleChange = () => {
+            // 짧은 딜레이 후 스케일 변경 (fade-out 애니메이션 시간)
             setTimeout(() => {
-                setIsScaleLoading(false);
-                // 곡 선택 모드에서 스케일이 변경되면 곡 선택 해제
-                if (selectedSong) {
-                    setSelectedSong(null);
-                    setIsSongPlaying(false);
-                }
-            }, 400);
-        }, 200);
+                setTargetScale(scale);
+                // 로딩 완료 시뮬레이션
+                setTimeout(() => {
+                    setIsScaleLoading(false);
+                    if (selectedSong) {
+                        setSelectedSong(null);
+                        setIsSongPlaying(false);
+                    }
+                }, 400);
+            }, 200);
+        };
+
+        if (img.complete) {
+            proceedWithScaleChange();
+        } else {
+            img.onload = proceedWithScaleChange;
+            img.onerror = proceedWithScaleChange; // 에러 시에도 일단 진행
+        }
     };
 
     const handleSongSelect = async (song: any) => {
@@ -2294,10 +2318,6 @@ export default function ReelPanClient() {
                                                                             ? 'bg-slate-300/80 border-slate-200 text-slate-900 shadow-[0_0_15px_rgba(200,200,210,0.4)]'
                                                                             : 'bg-white/[0.03] border-white/[0.08] text-white/40 hover:text-slate-200/80 hover:bg-slate-300/10'}`}
                                                                 >
-                                                                    {/* Icon */}
-                                                                    <span className={`${activeCategoryFilter === cat.id ? 'text-slate-900' : 'text-inherit'}`}>
-                                                                        {cat.icon}
-                                                                    </span>
                                                                     <span className="text-[13px] font-black tracking-widest">{cat.label}</span>
                                                                     <span className={`text-[13px] font-bold ${activeCategoryFilter === cat.id ? 'opacity-80' : 'opacity-30'}`}>
                                                                         {categoryStats[cat.id]}

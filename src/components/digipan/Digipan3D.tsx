@@ -1644,36 +1644,38 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
             {/* ScaleInfoPanel removed */}
 
             {/* Recording Finished Overlay - Only show if NOT mobile (Mobile auto-saves) */}
-            {currentBlob && !isMobileButtonLayout && (
-                <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-2xl p-6 shadow-2xl flex flex-col items-center gap-4 max-w-[90%] w-[320px]">
-                        <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600 mb-2">
-                            <Check size={24} />
-                        </div>
-                        <h3 className="text-xl font-bold text-gray-900">Recording Finished</h3>
-                        <p className="text-gray-500 text-center text-sm mb-4">
-                            Your performance is ready. <br />Save it to your device or share it.
-                        </p>
+            {
+                currentBlob && !isMobileButtonLayout && (
+                    <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                        <div className="bg-white rounded-2xl p-6 shadow-2xl flex flex-col items-center gap-4 max-w-[90%] w-[320px]">
+                            <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600 mb-2">
+                                <Check size={24} />
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900">Recording Finished</h3>
+                            <p className="text-gray-500 text-center text-sm mb-4">
+                                Your performance is ready. <br />Save it to your device or share it.
+                            </p>
 
-                        <div className="flex flex-row gap-3 w-full">
-                            <button
-                                onClick={handleDiscardAction}
-                                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-red-100 text-red-600 font-semibold hover:bg-red-200 transition-colors whitespace-nowrap"
-                            >
-                                <Trash2 size={18} />
-                                Remove
-                            </button>
-                            <button
-                                onClick={handleSaveAction}
-                                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 whitespace-nowrap"
-                            >
-                                <Download size={18} />
-                                Save in Album
-                            </button>
+                            <div className="flex flex-row gap-3 w-full">
+                                <button
+                                    onClick={handleDiscardAction}
+                                    className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-red-100 text-red-600 font-semibold hover:bg-red-200 transition-colors whitespace-nowrap"
+                                >
+                                    <Trash2 size={18} />
+                                    Remove
+                                </button>
+                                <button
+                                    onClick={handleSaveAction}
+                                    className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 whitespace-nowrap"
+                                >
+                                    <Download size={18} />
+                                    Save in Album
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
         </div>
     );
