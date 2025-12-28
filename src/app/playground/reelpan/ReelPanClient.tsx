@@ -1717,7 +1717,6 @@ export default function ReelPanClient() {
                 >
                     {/* 디지팬은 항상 렌더링 (로딩 중에도 뒤에서 마운트) */}
                     <motion.div
-                        key={targetScale.id}
                         className="absolute inset-0"
                     >
                         <Suspense fallback={<LoadingSkeleton2 />}>
@@ -1744,18 +1743,18 @@ export default function ReelPanClient() {
                     <motion.div
                         initial={false}
                         animate={{
-                            borderRadius: layoutMode === 'reel' ? 0 : 48,
+                            borderRadius: layoutMode === 'reel' ? 0 : 0,
                             boxShadow: layoutMode === 'reel'
                                 ? "0 0 0 0px rgba(0,0,0,0)"
                                 : "0 0 0 2000px rgba(0,0,0,1)",
                             scale: layoutMode === 'reel' ? 1.05 : 1,
                         }}
                         transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
-                        className={`relative w-full aspect-square z-20 border-white/40 ${layoutMode === 'square' ? 'border-[2px]' : 'border-0'}`}
+                        className={`relative w-full aspect-square z-20 border-white/40 ${layoutMode === 'square' ? 'border-[0.6px]' : 'border-0'}`}
                     >
                         <motion.div
                             animate={{ opacity: layoutMode === 'square' ? 1 : 0 }}
-                            className="absolute inset-0 rounded-[48px] ring-2 ring-inset ring-white/40"
+                            className="absolute inset-0 rounded-[0px] ring-[0.6px] ring-inset ring-white/40"
                         />
                     </motion.div>
                 </div>
