@@ -239,7 +239,7 @@ const OSMDScore = forwardRef<OSMDScoreHandle, OSMDScoreProps>(({
                                 const pixelX = unitX * conversionFactor;
 
                                 // Safe access to MeasureNumber
-                                const measureNumber = container.ParentMeasure?.MeasureNumber ?? -1;
+                                const measureNumber = firstEntry.parentMeasure?.MeasureNumber ?? -1;
 
                                 rawAnchors.push({
                                     seconds: Math.max(0, timeInSeconds + OFFSET_SECONDS),
