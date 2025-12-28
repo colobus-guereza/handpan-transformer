@@ -1804,7 +1804,7 @@ export default function ReelPanClient() {
                         <header className={`relative flex items-center justify-center px-4 py-8 bg-gradient-to-b from-black/80 to-transparent pointer-events-auto transition-all duration-500 ${recordState === 'recording' ? 'opacity-10 pointer-events-none' : 'opacity-100'}`}>
                             <a
                                 href="https://handpan.co.kr"
-                                className="absolute left-4 p-2 text-white/50 hover:text-white transition-all"
+                                className="absolute left-4 p-2 text-white/30 hover:text-white transition-all"
                             >
                                 <ArrowLeft size={20} />
                             </a>
@@ -1823,56 +1823,8 @@ export default function ReelPanClient() {
                                 )}
 
                                 {/* 더보기 메뉴 버튼 */}
-                                <div className="relative">
-                                    <button
-                                        onClick={() => setShowSettingsMenu(!showSettingsMenu)}
-                                        className="p-2 text-white/60 hover:text-white transition-all"
-                                    >
-                                        <MoreVertical size={20} />
-                                    </button>
-
-                                    {/* 드롭다운 메뉴 & Backdrop */}
-                                    <AnimatePresence>
-                                        {showSettingsMenu && (
-                                            <>
-                                                {/* Backdrop for closing menu */}
-                                                <div
-                                                    className="fixed inset-0 z-40"
-                                                    onClick={() => setShowSettingsMenu(false)}
-                                                />
-
-                                                {/* Menu */}
-                                                <motion.div
-                                                    initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                                                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                                                    exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                                                    className="absolute right-0 top-full mt-2 min-w-[200px] bg-black/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl overflow-hidden p-2 flex flex-col gap-2 z-50"
-                                                >
-                                                    {/* 배경색 변경 항목 */}
-                                                    <div className="flex items-center justify-between p-2 rounded-xl hover:bg-white/10 transition-colors">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="relative w-8 h-8 rounded-full overflow-hidden border border-white/20">
-                                                                <div className="absolute inset-0" style={{ backgroundColor: bgColor }} />
-                                                                <input
-                                                                    type="color"
-                                                                    value={bgColor}
-                                                                    onChange={(e) => setBgColor(e.target.value)}
-                                                                    className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
-                                                                />
-                                                            </div>
-                                                            <div className="flex flex-col">
-                                                                <span className="text-sm font-medium text-white">Background</span>
-                                                                <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-white/50 font-mono self-start uppercase">
-                                                                    {bgColor}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </motion.div>
-                                            </>
-                                        )}
-                                    </AnimatePresence>
-                                </div>
+                                {/* 더보기 메뉴 Hidden */}
+                                {/* <div className="relative"> ... </div> */}
                             </div>
 
                             <motion.button
@@ -1888,12 +1840,12 @@ export default function ReelPanClient() {
                                             animate={{ opacity: 1 }}
                                             exit={{ opacity: 0 }}
                                             transition={{ duration: 0.2 }}
-                                            className="text-white/60 font-normal text-xl tracking-normal drop-shadow-md group-hover:text-white/80 transition-colors"
+                                            className="text-white/30 font-normal text-xl tracking-normal drop-shadow-md group-hover:text-white/80 transition-colors"
                                         >
                                             {selectedSong ? selectedSong.title : targetScale.name}
                                         </motion.h1>
                                     </AnimatePresence>
-                                    <ChevronDown size={18} className="text-white/60 group-hover:text-white/80 transition-colors mt-0.5" />
+                                    <ChevronDown size={18} className="text-white/30 group-hover:text-white/80 transition-colors mt-0.5" />
                                 </div>
                             </motion.button>
                         </header>
