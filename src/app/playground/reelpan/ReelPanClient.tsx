@@ -164,6 +164,15 @@ export default function ReelPanClient() {
 
     const [recordCountdown, setRecordCountdown] = useState<number | 'Touch!' | null>(null);
 
+    // [Fix] 모바일 상단 노치 영역 배경색 통일감을 위해 body 배경색 동기화
+    useEffect(() => {
+        const originalColor = document.body.style.backgroundColor;
+        document.body.style.backgroundColor = bgColor;
+        return () => {
+            document.body.style.backgroundColor = originalColor;
+        };
+    }, [bgColor]);
+
     const processedScales = useMemo(() => {
         let result = [...SCALES];
 
@@ -1697,7 +1706,7 @@ export default function ReelPanClient() {
     }, []);
 
     return (
-        <div className="flex items-center justify-center min-h-dvh bg-black overflow-hidden touch-none overscroll-none">
+        <div className="flex items-center justify-center min-h-dvh overflow-hidden touch-none overscroll-none" style={{ backgroundColor: bgColor }}>
             {/* iOS Silent Mode Unlocker */}
             <SilentAudioUnlocker />
 
