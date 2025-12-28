@@ -430,6 +430,8 @@ export const parseMidi = async (arrayBuffer: ArrayBuffer, fileName: string, mode
         duration: midi.duration,
         tracks: processedTracks,
         suggestedScale,
-        matchResult: { ...matchResult!, originalKey: detectedKey } as MatchResult
+        matchResult: { ...matchResult!, originalKey: detectedKey } as MatchResult,
+        tempos: midi.header.tempos,
+        ppq: midi.header.ppq
     };
 };

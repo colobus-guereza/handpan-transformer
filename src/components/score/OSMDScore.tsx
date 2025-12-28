@@ -9,7 +9,7 @@ interface OSMDScoreProps {
     drawTitle?: boolean;
     drawCredits?: boolean;
     autoResize?: boolean;
-    externalBpm?: number; // External BPM from MIDI file (takes priority)
+    externalBpm?: number; // Fallback BPM
     loopStartTime?: number | null; // A point in seconds (for visual marker)
     loopEndTime?: number | null;   // B point in seconds (for visual marker)
     onScoreLoaded?: (firstNoteTime: number) => void; // Callback with the time of the first note
@@ -22,6 +22,13 @@ export interface OSMDScoreHandle {
     hideCursor: () => void;
     getTimeAtScrollPosition: () => number; // Get time (seconds) at current scroll position
     getXPositionForTime: (seconds: number) => number; // Get X pixel position for a given time
+}
+
+// Data structure for synchronization anchors
+interface TimeAnchor {
+    seconds: number;       // Musical time in seconds
+    x: number;            // Pixel X position in the scroll container
+    measureNumber?: number; // Optional debug info
 }
 
 const OSMDScore = forwardRef<OSMDScoreHandle, OSMDScoreProps>(({
@@ -41,45 +48,52 @@ const OSMDScore = forwardRef<OSMDScoreHandle, OSMDScoreProps>(({
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Map of musical time (seconds) to horizontal X pixel position
-    const [timeMap, setTimeMap] = useState<{ time: number, x: number }[]>([]);
+    // Manual Speed Correction to fix drift (User reported 2 notes fast at end)
+    // 1.0 = Theoretical perfection
+    // 0.95 = 5% Slower (Visual distance is compressed, so cursor takes longer to traverse)
+    const VISUAL_SPEED_CORRECTION = 0.95;
 
-    // VISUAL CORRECTION: Shift the score slightly Left (Scroll Right) to Center the Note Head on the Red Line.
-    // OSMD X Usually points to the left edge of the note bbox.
-    const X_SHIFT_CORRECTION = 18;
+    // Map of musical time (seconds) to horizontal X pixel position (Anchors)
+    const [anchors, setAnchors] = useState<TimeAnchor[]>([]);
 
     // Expose cursor methods
     useImperativeHandle(ref, () => ({
         updateTime: (seconds: number) => {
-            if (!scrollContainerRef.current || timeMap.length === 0) return;
+            if (!scrollContainerRef.current || anchors.length === 0) return;
 
-            // Find the segment [prev, next] for interpolation
-            let prev = timeMap[0];
-            let next = timeMap[timeMap.length - 1];
+            // Anchor Point Interpolation
+            // Find the segment [prev, next] where 'seconds' falls
+            // Binary search could be used for optimization, but linear is fine for N < 1000
+            let prev = anchors[0];
+            let next = anchors[anchors.length - 1];
 
-            for (let i = 0; i < timeMap.length - 1; i++) {
-                if (seconds >= timeMap[i].time && seconds <= timeMap[i + 1].time) {
-                    prev = timeMap[i];
-                    next = timeMap[i + 1];
+            // 1. Find immediate neighbors
+            for (let i = 0; i < anchors.length - 1; i++) {
+                if (seconds >= anchors[i].seconds && seconds <= anchors[i + 1].seconds) {
+                    prev = anchors[i];
+                    next = anchors[i + 1];
                     break;
                 }
             }
 
+            // 2. Linear Interpolation
             let targetX = prev.x;
-            if (next.time > prev.time) {
-                const ratio = (seconds - prev.time) / (next.time - prev.time);
+            if (next.x > prev.x && next.seconds > prev.seconds) {
+                const ratio = (seconds - prev.seconds) / (next.seconds - prev.seconds);
                 targetX = prev.x + (next.x - prev.x) * ratio;
-            } else if (seconds > next.time) {
+            } else if (seconds > next.seconds) {
+                // Extrapolate at the end if needed, or clamp
                 targetX = next.x;
             }
 
+            // Apply scroll
             scrollContainerRef.current.scrollLeft = targetX;
         },
         resetCursor: () => {
             if (osmdRef.current && osmdRef.current.cursor) {
                 osmdRef.current.cursor.reset();
-                if (scrollContainerRef.current && timeMap.length > 0) {
-                    scrollContainerRef.current.scrollLeft = timeMap[0].x;
+                if (scrollContainerRef.current && anchors.length > 0) {
+                    scrollContainerRef.current.scrollLeft = anchors[0].x;
                 }
             }
         },
@@ -94,50 +108,41 @@ const OSMDScore = forwardRef<OSMDScoreHandle, OSMDScoreProps>(({
             }
         },
         getTimeAtScrollPosition: () => {
-            if (!scrollContainerRef.current || timeMap.length === 0) return 0;
-
+            if (!scrollContainerRef.current || anchors.length === 0) return 0;
             const targetX = scrollContainerRef.current.scrollLeft;
-
-            let prev = timeMap[0];
-            let next = timeMap[timeMap.length - 1];
-
-            for (let i = 0; i < timeMap.length - 1; i++) {
-                if (targetX >= timeMap[i].x && targetX <= timeMap[i + 1].x) {
-                    prev = timeMap[i];
-                    next = timeMap[i + 1];
+            let prev = anchors[0];
+            let next = anchors[anchors.length - 1];
+            for (let i = 0; i < anchors.length - 1; i++) {
+                if (targetX >= anchors[i].x && targetX <= anchors[i + 1].x) {
+                    prev = anchors[i];
+                    next = anchors[i + 1];
                     break;
                 }
             }
-
             if (next.x > prev.x) {
                 const ratio = (targetX - prev.x) / (next.x - prev.x);
-                return prev.time + (next.time - prev.time) * ratio;
+                return prev.seconds + (next.seconds - prev.seconds) * ratio;
             }
-
-            return prev.time;
+            return prev.seconds;
         },
         getXPositionForTime: (seconds: number) => {
-            if (timeMap.length === 0) return 0;
-
-            let prev = timeMap[0];
-            let next = timeMap[timeMap.length - 1];
-
-            for (let i = 0; i < timeMap.length - 1; i++) {
-                if (seconds >= timeMap[i].time && seconds <= timeMap[i + 1].time) {
-                    prev = timeMap[i];
-                    next = timeMap[i + 1];
+            if (anchors.length === 0) return 0;
+            let prev = anchors[0];
+            let next = anchors[anchors.length - 1];
+            for (let i = 0; i < anchors.length - 1; i++) {
+                if (seconds >= anchors[i].seconds && seconds <= anchors[i + 1].seconds) {
+                    prev = anchors[i];
+                    next = anchors[i + 1];
                     break;
                 }
             }
-
-            if (next.time > prev.time) {
-                const ratio = (seconds - prev.time) / (next.time - prev.time);
+            if (next.seconds > prev.seconds) {
+                const ratio = (seconds - prev.seconds) / (next.seconds - prev.seconds);
                 return prev.x + (next.x - prev.x) * ratio;
             }
-
             return prev.x;
         }
-    }), [timeMap]);
+    }), [anchors]);
 
     const onScoreLoadedRef = useRef(onScoreLoaded);
     useEffect(() => {
@@ -176,94 +181,100 @@ const OSMDScore = forwardRef<OSMDScoreHandle, OSMDScoreProps>(({
                 if (isMounted) {
                     osmd.render();
 
-                    const map: { time: number, x: number }[] = [];
-                    const gSheet = osmd.GraphicSheet;
+                    // --- Anchor Generation Logic ---
+                    const rawAnchors: TimeAnchor[] = [];
+
+                    // 1. Calculate precise conversion factor (Units -> Pixels)
+                    let conversionFactor = 1.0;
+                    try {
+                        if (containerRef.current) {
+                            const containerWidth = containerRef.current.clientWidth;
+                            const page = (osmd.GraphicSheet as any).MusicPages?.[0];
+                            if (page) {
+                                const pageWidthInUnits = page.PositionAndShape.Size.width;
+                                if (pageWidthInUnits > 0) {
+                                    // With renderSingleHorizontalStaffline, PageWidth corresponds to the full width
+                                    // ContainerWidth is the rendered SVG width in pixels
+                                    conversionFactor = containerWidth / pageWidthInUnits;
+                                    console.log(`[OSMD] Anchor System: 1 Unit = ${conversionFactor.toFixed(4)} Pixels`);
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        console.warn("[OSMD] Conversion factor calc failed, fallback to defaults", e);
+                        const defaultUnit = (osmd.EngravingRules as any).UnitInPixels || 10.0;
+                        conversionFactor = defaultUnit * zoom;
+                    }
+
+                    // APPLY VISUAL SPEED CORRECTION
+                    conversionFactor *= VISUAL_SPEED_CORRECTION;
+
+                    // 2. Setup Time Conversion (Constant BPM Fallback)
+                    // Reverted Tempo Map logic as user reported worse sync.
+                    console.log('[OSMD] Sync Strategy: ConstantBPM with Anchor Interpolation');
 
                     let bpm = externalBpm || 120;
                     if (!externalBpm && (osmd.Sheet as any).DefaultBpm) {
                         bpm = (osmd.Sheet as any).DefaultBpm;
                     }
                     const secondsPerWholeNote = (60 / bpm) * 4;
+                    console.log(`[OSMD] BPM: ${bpm}, Sec/Whole: ${secondsPerWholeNote}`);
 
-                    if (gSheet.MeasureList && gSheet.MeasureList[0]) {
-                        const defaultUnit = (osmd.EngravingRules as any).UnitInPixels || 10.0;
-                        const SPEED_CORRECTION = 0.82;
-                        let conversionFactor = defaultUnit * zoom * SPEED_CORRECTION;
+                    // 3. Extract Anchors from Vertical Containers
+                    const containers = osmd.GraphicSheet.VerticalGraphicalStaffEntryContainers;
+                    const OFFSET_SECONDS = 0.0;
 
-                        try {
-                            if (containerRef.current) {
-                                const containerWidth = containerRef.current.clientWidth;
-                                const page = (osmd.GraphicSheet as any).MusicPages?.[0];
-                                if (page) {
-                                    const pageWidthInUnits = page.PositionAndShape.Size.width;
-                                    if (pageWidthInUnits > 0) {
-                                        conversionFactor = (containerWidth / pageWidthInUnits) * SPEED_CORRECTION;
-                                        console.log(`[OSMD] Smart Scale set to ${conversionFactor.toFixed(3)}`);
-                                    }
-                                }
+                    for (const container of containers) {
+                        if (container && container.StaffEntries && container.StaffEntries.length > 0) {
+
+                            // A. Get Timestamp (Whole Notes from OSMD)
+                            const wholeNotes = container.AbsoluteTimestamp.RealValue;
+                            const timeInSeconds = wholeNotes * secondsPerWholeNote;
+
+                            // B. Get X Position
+                            const firstEntry = container.StaffEntries[0];
+                            if (firstEntry) {
+                                // AbsolutePosition.x is relative to the Page (which implies the whole staff in SingleLine mode)
+                                const unitX = firstEntry.PositionAndShape.AbsolutePosition.x;
+                                const pixelX = unitX * conversionFactor;
+
+                                // Safe access to MeasureNumber
+                                const measureNumber = container.ParentMeasure?.MeasureNumber ?? -1;
+
+                                rawAnchors.push({
+                                    seconds: Math.max(0, timeInSeconds + OFFSET_SECONDS),
+                                    x: pixelX,
+                                    measureNumber: measureNumber
+                                });
                             }
-                        } catch (e) {
-                            console.warn("[OSMD] Smart scale warning:", e);
-                        }
-
-
-                        const GLOBAL_OFFSET = 0.0; // Adjustable audio latency offset (positive = audio leads)
-
-                        let rawMap: { time: number, x: number }[] = [];
-
-                        // Use VerticalGraphicalStaffEntryContainers for precise event columns
-                        // This corresponds to all vertically aligned musical events (notes, rests)
-                        const containers = osmd.GraphicSheet.VerticalGraphicalStaffEntryContainers;
-
-                        for (const container of containers) {
-                            if (container && container.StaffEntries && container.StaffEntries.length > 0) {
-                                const timestamp = container.AbsoluteTimestamp.RealValue;
-                                const timeInSeconds = timestamp * secondsPerWholeNote;
-
-                                // Get the X position from the first staff entry in this vertical column
-                                const firstEntry = container.StaffEntries[0];
-                                if (firstEntry) {
-                                    // We trust OSMD's calculated AbsolutePosition for the note/rest
-                                    let xPos = firstEntry.PositionAndShape.AbsolutePosition.x * conversionFactor;
-
-                                    // OPTIONAL: Correction for Note Head centering if needed relative to the slice line
-                                    // Typically, the slice line is at the left of the head. 
-                                    // If we want center, we might need a small dynamic calculation or Box check.
-                                    // For now, removing the hardcoded +18px and using raw slice X as baseline.
-                                    // Use 0 offset first to see "Raw" alignment.
-
-                                    rawMap.push({ time: Math.max(0, timeInSeconds + GLOBAL_OFFSET), x: xPos });
-                                }
-                            }
-                        }
-
-                        map.push(...rawMap);
-                    }
-
-                    const sortedMap = map.sort((a, b) => a.time - b.time);
-                    const filteredMap: { time: number, x: number }[] = [];
-                    for (const entry of sortedMap) {
-                        if (filteredMap.length > 0 && Math.abs(entry.time - filteredMap[filteredMap.length - 1].time) < 0.001) {
-                            filteredMap[filteredMap.length - 1].x = Math.max(filteredMap[filteredMap.length - 1].x, entry.x);
-                        } else {
-                            filteredMap.push(entry);
                         }
                     }
 
-                    setTimeMap(filteredMap);
+                    // Sort and Deduplicate
+                    const sortedAnchors = rawAnchors.sort((a, b) => a.seconds - b.seconds);
 
-                    if (filteredMap.length > 0 && onScoreLoadedRef.current) {
-                        onScoreLoadedRef.current(filteredMap[0].time);
-                        const initialX = filteredMap[0].x;
-                        if (scrollContainerRef.current) {
-                            // STABLE INITIAL SYNC: Use a small delay to ensure layout is ready and smooth scroll is ignored.
-                            setTimeout(() => {
-                                if (scrollContainerRef.current) {
-                                    scrollContainerRef.current.scrollLeft = initialX;
-                                    console.log(`[OSMD] Initial Scroll set to ${initialX}`);
-                                }
-                            }, 50);
+                    const filteredAnchors: TimeAnchor[] = [];
+
+                    for (const anchor of sortedAnchors) {
+                        // Filter out duplicates (same time) - keep the one with max X (most rightward, just in case)
+                        if (filteredAnchors.length === 0 || Math.abs(anchor.seconds - filteredAnchors[filteredAnchors.length - 1].seconds) > 0.001) {
+                            filteredAnchors.push(anchor);
                         }
+                    }
+
+                    console.log(`[OSMD] Generated ${filteredAnchors.length} synchronization anchors.`);
+                    setAnchors(filteredAnchors);
+
+                    if (filteredAnchors.length > 0 && onScoreLoadedRef.current) {
+                        onScoreLoadedRef.current(filteredAnchors[0].seconds);
+
+                        // Initial Scroll
+                        const initialX = filteredAnchors[0].x;
+                        setTimeout(() => {
+                            if (scrollContainerRef.current) {
+                                scrollContainerRef.current.scrollLeft = initialX;
+                            }
+                        }, 50);
                     }
 
                     osmd.cursor.reset();
@@ -290,24 +301,23 @@ const OSMDScore = forwardRef<OSMDScoreHandle, OSMDScoreProps>(({
     }, [musicXmlUrl, zoom, drawTitle, drawCredits, autoResize, externalBpm]);
 
     const getMarkerXPosition = (seconds: number | null | undefined): number | null => {
-        if (seconds === null || seconds === undefined || timeMap.length === 0) return null;
+        if (seconds === null || seconds === undefined || anchors.length === 0) return null;
 
-        let prev = timeMap[0];
-        let next = timeMap[timeMap.length - 1];
+        // Re-use logic or helper
+        let prev = anchors[0];
+        let next = anchors[anchors.length - 1];
 
-        for (let i = 0; i < timeMap.length - 1; i++) {
-            if (seconds >= timeMap[i].time && seconds <= timeMap[i + 1].time) {
-                prev = timeMap[i];
-                next = timeMap[i + 1];
+        for (let i = 0; i < anchors.length - 1; i++) {
+            if (seconds >= anchors[i].seconds && seconds <= anchors[i + 1].seconds) {
+                prev = anchors[i];
+                next = anchors[i + 1];
                 break;
             }
         }
-
-        if (next.time > prev.time) {
-            const ratio = (seconds - prev.time) / (next.time - prev.time);
+        if (next.seconds > prev.seconds) {
+            const ratio = (seconds - prev.seconds) / (next.seconds - prev.seconds);
             return prev.x + (next.x - prev.x) * ratio;
         }
-
         return prev.x;
     };
 

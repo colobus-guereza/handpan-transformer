@@ -46,6 +46,9 @@ export interface ProcessedSong {
     tracks: ProcessedTrack[];
     suggestedScale?: string;
     matchResult?: MatchResult;
+    // For precise sync
+    tempos?: { bpm: number; ticks: number; time?: number }[];
+    ppq?: number;
 }
 
 interface MidiState {

@@ -86,6 +86,15 @@ export default function ReelPanPage() {
     const scoreFirstNoteTimeRef = useRef<number>(0);
     const midiFirstNoteTimeRef = useRef<number>(0);
 
+    // Mapped Notes Memoization (Lifted for Render Access)
+    const mappedNotes = useMemo(() => {
+        if (!midiData) return [];
+        const melodyTrack = midiData.tracks.find(t => t.role === 'melody');
+        if (!melodyTrack) return [];
+        const transposition = midiData.matchResult?.transposition || 0;
+        return mapMidiToDigipan(melodyTrack.notes, transposition, targetScale);
+    }, [midiData, targetScale]);
+
     // Drum State
     const [isDrumPlaying, setIsDrumPlaying] = useState(false);
     const [showDrumSettings, setShowDrumSettings] = useState(false);
@@ -269,8 +278,8 @@ export default function ReelPanPage() {
                 return;
             }
 
-            const transposition = midiData.matchResult?.transposition || 0;
-            const mappedNotes = mapMidiToDigipan(melodyTrack.notes, transposition, targetScale);
+            // const transposition = midiData.matchResult?.transposition || 0;
+            // mappedNotes is now from component scope
             console.log('[Play] Mapped notes:', mappedNotes.length);
 
             if (mappedNotes.length === 0) {
@@ -347,9 +356,7 @@ export default function ReelPanPage() {
         }
 
         // Common Tick Loop Initiation (for Start and Resume)
-        const melodyTrack = midiData.tracks.find(t => t.role === 'melody')!;
-        const transposition = midiData.matchResult?.transposition || 0;
-        const mappedNotes = mapMidiToDigipan(melodyTrack.notes, transposition, targetScale);
+        // mappedNotes is from component scope
 
         const tick = () => {
             const now = Date.now();
