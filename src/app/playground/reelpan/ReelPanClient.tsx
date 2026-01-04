@@ -135,12 +135,13 @@ export default function ReelPanClient() {
     const [filterMode, setFilterMode] = useState<'AZ' | 'NOTES' | 'CATEGORY'>('CATEGORY');
     const [activeDingFilter, setActiveDingFilter] = useState<string>('all');
     const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>('all');
+    const [scalePanelLang, setScalePanelLang] = useState<'ko' | 'en'>('ko');
 
     const CATEGORIES = [
-        { id: 'beginner', label: 'Beginner', tags: ['대중적', '입문추천', '국내인기', 'Bestseller', '기본', '표준', '표준확장', 'Popular', 'Recommended for Beginners', 'Domestic Popular', 'Basic', 'Standard', 'Standard Extended'] },
-        { id: 'healing', label: 'Healing', tags: ['명상', '힐링', '치유', '차분한', '평화', 'Deep', '피그미', '트랜스', '몽환적', '깊음', '깊은울림', '아마라', '켈틱마이너', 'Meditation', 'Healing', 'Calm', 'Peace', 'Pygmy', 'Trance', 'Dreamy', 'Deep Resonance', 'Amara', 'Celtic Minor'] },
-        { id: 'bright', label: 'Bright', tags: ['메이저', 'D메이저', 'Eb메이저', '밝음', '상쾌함', '희망적', '행복한', '윤슬', '사파이어', '청량함', '에너지', 'Major', 'D Major', 'Eb Major', 'Bright', 'Refreshing', 'Hopeful', 'Happy', 'Yunsl', 'Sapphire', 'Energy'] },
-        { id: 'ethnic', label: 'Deep Ethnic', tags: ['이국적', '집시', '아라비안', '중동풍', '독특함', '인도풍', '동양적', '하이브리드', '도리안', '블루스', '신비', '매니아', '라사발리', '딥아시아', '신비로움', '메이저마이너', '에퀴녹스', 'Exotic', 'Gypsy', 'Arabian', 'Middle Eastern', 'Unique', 'Indian Style', 'Oriental', 'Hybrid', 'Dorian', 'Blues', 'Mysterious', 'Mania', 'Rasavali', 'Deep Asia', 'Major-Minor', 'Equinox'] }
+        { id: 'beginner', label: 'Beginner', labelKo: '입문용', tags: ['대중적', '입문추천', '국내인기', 'Bestseller', '기본', '표준', '표준확장', 'Popular', 'Recommended for Beginners', 'Domestic Popular', 'Basic', 'Standard', 'Standard Extended'] },
+        { id: 'healing', label: 'Healing', labelKo: '요가명상힐링', tags: ['명상', '힐링', '치유', '차분한', '평화', 'Deep', '피그미', '트랜스', '몽환적', '깊음', '깊은울림', '아마라', '켈틱마이너', 'Meditation', 'Healing', 'Calm', 'Peace', 'Pygmy', 'Trance', 'Dreamy', 'Deep Resonance', 'Amara', 'Celtic Minor'] },
+        { id: 'bright', label: 'Bright', labelKo: '메이저', tags: ['메이저', 'D메이저', 'Eb메이저', '밝음', '상쾌함', '희망적', '행복한', '윤슬', '사파이어', '청량함', '에너지', 'Major', 'D Major', 'Eb Major', 'Bright', 'Refreshing', 'Hopeful', 'Happy', 'Yunsl', 'Sapphire', 'Energy'] },
+        { id: 'ethnic', label: 'Deep Ethnic', labelKo: '딥 에스닉', tags: ['이국적', '집시', '아라비안', '중동풍', '독특함', '인도풍', '동양적', '하이브리드', '도리안', '블루스', '신비', '매니아', '라사발리', '딥아시아', '신비로움', '메이저마이너', '에퀴녹스', 'Exotic', 'Gypsy', 'Arabian', 'Middle Eastern', 'Unique', 'Indian Style', 'Oriental', 'Hybrid', 'Dorian', 'Blues', 'Mysterious', 'Mania', 'Rasavali', 'Deep Asia', 'Major-Minor', 'Equinox'] }
     ];
 
     const matchesCategory = (scale: any, categoryId: string) => {
@@ -2207,9 +2208,17 @@ export default function ReelPanClient() {
                             className="absolute inset-0 z-[100] bg-black/60 backdrop-blur-[40px] flex flex-col pointer-events-auto"
                         >
                             <div className="px-6 py-4 border-b border-white/[0.08] flex items-center justify-between">
-                                <h2 className="text-white font-bold text-sm tracking-[0.25em] uppercase opacity-90">
-                                    Select Scale
-                                </h2>
+                                <div className="flex items-center gap-3">
+                                    <h2 className="text-white font-bold text-sm tracking-[0.25em] uppercase opacity-90">
+                                        {scalePanelLang === 'ko' ? '스케일 선택' : 'Select Scale'}
+                                    </h2>
+                                    <button
+                                        onClick={() => setScalePanelLang(scalePanelLang === 'ko' ? 'en' : 'ko')}
+                                        className="px-2 py-1 text-[10px] font-bold rounded-full bg-white/10 text-white/70 hover:bg-white/20 hover:text-white transition-all border border-white/10"
+                                    >
+                                        {scalePanelLang === 'ko' ? 'EN' : '한'}
+                                    </button>
+                                </div>
                                 <button
                                     onClick={() => setShowScaleSelector(false)}
                                     className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all border border-white/[0.05]"
@@ -2228,19 +2237,19 @@ export default function ReelPanClient() {
                                                 onClick={() => { setFilterMode('CATEGORY'); setActiveDingFilter('all'); setFilterNoteCount('all'); }}
                                                 className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${filterMode === 'CATEGORY' ? 'bg-slate-300 text-slate-900 shadow-sm' : 'text-white/40 hover:text-white/70'}`}
                                             >
-                                                Category
+                                                {scalePanelLang === 'ko' ? '카테고리' : 'Category'}
                                             </button>
                                             <button
                                                 onClick={() => { setFilterMode('AZ'); setFilterNoteCount('all'); setActiveCategoryFilter('all'); }}
                                                 className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${filterMode === 'AZ' ? 'bg-slate-300 text-slate-900 shadow-sm' : 'text-white/40 hover:text-white/70'}`}
                                             >
-                                                Ding
+                                                {scalePanelLang === 'ko' ? '딩 피치' : 'Ding'}
                                             </button>
                                             <button
                                                 onClick={() => { setFilterMode('NOTES'); setActiveDingFilter('all'); setActiveCategoryFilter('all'); }}
                                                 className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${filterMode === 'NOTES' ? 'bg-slate-300 text-slate-900 shadow-sm' : 'text-white/40 hover:text-white/70'}`}
                                             >
-                                                NOTES
+                                                {scalePanelLang === 'ko' ? '음 개수' : 'Notes'}
                                             </button>
                                         </div>
 
@@ -2264,7 +2273,7 @@ export default function ReelPanClient() {
                                                                         ? 'bg-slate-300/80 border-slate-200 text-slate-900 shadow-[0_0_15px_rgba(200,200,210,0.4)]'
                                                                         : 'bg-white/[0.03] border-white/[0.08] text-white/40 hover:text-slate-200/80 hover:bg-slate-300/10'}`}
                                                             >
-                                                                <span className="text-[13px] font-black tracking-widest">All</span>
+                                                                <span className="text-[13px] font-black tracking-widest">{scalePanelLang === 'ko' ? '전체' : 'All'}</span>
                                                                 <span className={`text-[13px] font-bold ${activeCategoryFilter === 'all' ? 'opacity-80' : 'opacity-30'}`}>
                                                                     {SCALES.length}
                                                                 </span>
@@ -2278,7 +2287,7 @@ export default function ReelPanClient() {
                                                                             ? 'bg-slate-300/80 border-slate-200 text-slate-900 shadow-[0_0_15px_rgba(200,200,210,0.4)]'
                                                                             : 'bg-white/[0.03] border-white/[0.08] text-white/40 hover:text-slate-200/80 hover:bg-slate-300/10'}`}
                                                                 >
-                                                                    <span className="text-[13px] font-black tracking-widest">{cat.label}</span>
+                                                                    <span className="text-[13px] font-black tracking-widest">{scalePanelLang === 'ko' ? cat.labelKo : cat.label}</span>
                                                                     <span className={`text-[13px] font-bold ${activeCategoryFilter === cat.id ? 'opacity-80' : 'opacity-30'}`}>
                                                                         {categoryStats[cat.id]}
                                                                     </span>
@@ -2397,7 +2406,7 @@ export default function ReelPanClient() {
 
                                                 return (
                                                     <div key={currentScale.id} className="mb-2">
-                                                        <div className="text-[12px] font-black uppercase tracking-[0.3em] text-white/30 mb-2 px-2">CURRENT SELECTED</div>
+                                                        <div className="text-[12px] font-black uppercase tracking-[0.3em] text-white/30 mb-2 px-2">{scalePanelLang === 'ko' ? '현재 선택됨' : 'CURRENT SELECTED'}</div>
                                                         <div
                                                             role="button"
                                                             tabIndex={isDisabled ? -1 : 0}
@@ -2414,7 +2423,7 @@ export default function ReelPanClient() {
                                                                 </span>
                                                                 {!isDisabled && currentScale.tags && currentScale.tags.length > 0 && (
                                                                     <div className="flex gap-1.5 flex-wrap">
-                                                                        {currentScale.tags.slice(0, 2).map((tag: string, idx: number) => (
+                                                                        {(scalePanelLang === 'en' && currentScale.tagsEn ? currentScale.tagsEn : currentScale.tags).slice(0, 5).map((tag: string, idx: number) => (
                                                                             <span key={idx} className="px-2 py-0.5 text-[10px] font-medium bg-white/10 text-white/60 rounded-full whitespace-nowrap">
                                                                                 {tag}
                                                                             </span>
@@ -2468,7 +2477,7 @@ export default function ReelPanClient() {
                                                             </span>
                                                             {!isDisabled && scale.tags && scale.tags.length > 0 && (
                                                                 <div className="flex gap-1.5 flex-wrap">
-                                                                    {scale.tags.slice(0, 2).map((tag: string, idx: number) => (
+                                                                    {(scalePanelLang === 'en' && scale.tagsEn ? scale.tagsEn : scale.tags).slice(0, 5).map((tag: string, idx: number) => (
                                                                         <span key={idx} className="px-2 py-0.5 text-[10px] font-medium bg-white/10 text-white/60 rounded-full whitespace-nowrap">
                                                                             {tag}
                                                                         </span>
