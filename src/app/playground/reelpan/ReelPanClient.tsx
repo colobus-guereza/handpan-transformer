@@ -2408,12 +2408,21 @@ export default function ReelPanClient() {
                                                                 : 'cursor-pointer bg-slate-300/[0.06] backdrop-blur-md border-slate-300/30 hover:bg-slate-300/10 hover:border-slate-200/50'
                                                                 }`}
                                                         >
-                                                            <div className="flex items-center z-10 flex-1 min-w-0 pr-4">
+                                                            <div className="flex flex-col z-10 flex-1 min-w-0 pr-4 gap-1.5">
                                                                 <span className={`font-black text-xl tracking-tight truncate ${isDisabled ? 'text-white/40' : 'text-white'}`}>
                                                                     {currentScale.name}
                                                                 </span>
+                                                                {!isDisabled && currentScale.tags && currentScale.tags.length > 0 && (
+                                                                    <div className="flex gap-1.5 flex-wrap">
+                                                                        {currentScale.tags.slice(0, 2).map((tag: string, idx: number) => (
+                                                                            <span key={idx} className="px-2 py-0.5 text-[10px] font-medium bg-white/10 text-white/60 rounded-full whitespace-nowrap">
+                                                                                {tag}
+                                                                            </span>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
                                                                 {isDisabled && (
-                                                                    <span className="ml-3 text-xs font-medium text-white/30 uppercase tracking-wider">
+                                                                    <span className="text-xs font-medium text-white/30 uppercase tracking-wider">
                                                                         Under Maintenance
                                                                     </span>
                                                                 )}
@@ -2453,12 +2462,21 @@ export default function ReelPanClient() {
                                                             : 'cursor-pointer bg-white/[0.02] border-white/[0.05] text-white hover:bg-slate-300/[0.08] hover:border-slate-300/30'
                                                             }`}
                                                     >
-                                                        <div className="flex items-center z-10 flex-1 min-w-0 pr-4">
+                                                        <div className="flex flex-col z-10 flex-1 min-w-0 pr-4 gap-1.5">
                                                             <span className={`font-black text-xl tracking-tight truncate ${isDisabled ? 'text-white/40' : 'text-white/90'}`}>
                                                                 {scale.name}
                                                             </span>
+                                                            {!isDisabled && scale.tags && scale.tags.length > 0 && (
+                                                                <div className="flex gap-1.5 flex-wrap">
+                                                                    {scale.tags.slice(0, 2).map((tag: string, idx: number) => (
+                                                                        <span key={idx} className="px-2 py-0.5 text-[10px] font-medium bg-white/10 text-white/60 rounded-full whitespace-nowrap">
+                                                                            {tag}
+                                                                        </span>
+                                                                    ))}
+                                                                </div>
+                                                            )}
                                                             {isDisabled && (
-                                                                <span className="ml-3 text-xs font-medium text-white/30 uppercase tracking-wider">
+                                                                <span className="text-xs font-medium text-white/30 uppercase tracking-wider">
                                                                     Under Maintenance
                                                                 </span>
                                                             )}
