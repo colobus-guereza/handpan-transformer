@@ -1863,8 +1863,8 @@ export const SCALES: Scale[] = [
             bottom: []
         },
         vector: { minorMajor: -0.7, pureSpicy: 0.2, rarePopular: 0.9 },
-        tags: ["웰니스", "켈틱마이너", "클래식", "입문추천"],
-        tagsEn: ["Wellness", "Celtic Minor", "Classic", "Beginners"],
+        tags: ["아마라", "켈틱마이너", "클래식", "입문추천"],
+        tagsEn: ["Amara", "Celtic Minor", "Classic", "Beginners"],
         description: "웰니스 3대장(Pygmy, Aegean, Amara)의 일원이자 ‘Celtic Minor’로도 불리는 C# Amara 9는, Malte Marten의 명연주로 유명세를 타며 전 세계 요가, 명상, 힐링 커뮤니티에서 독보적인 위치를 차지하고 있습니다. 많은 사랑을 받는 E Amara 18의 입문용 버전이기도 한 이 스케일은, 특유의 신비롭고 스피리추얼한 울림 덕분에 동서양을 막론하고 내면의 평화를 찾는 이들에게 깊은 사랑을 받고 있습니다.",
         descriptionEn: "C# Amara 9, also known as 'Celtic Minor' and a member of the Wellness Trio (Pygmy, Aegean, Amara), holds a unique position in the global yoga, meditation, and healing communities, made famous by Malte Marten's renowned performances. Also an introductory version of the beloved E Amara 18, this scale is deeply loved by those seeking inner peace in both East and West, thanks to its unique mysterious and spiritual resonance.",
         videoUrl: "https://youtu.be/W9QAtyTDrTM?si=Cy7YMKhp-MY2Bv7r",
@@ -1926,8 +1926,8 @@ export const SCALES: Scale[] = [
             bottom: ["D3", "E3"]
         },
         vector: { minorMajor: -0.7, pureSpicy: 0.2, rarePopular: 0.7 },
-        tags: ["피그미", "저음", "몽환적", "치유"],
-        tagsEn: ["Pygmy", "Deep Bass", "Dreamy", "Healing"],
+        tags: ["피그미", "저음보강", "몽환적", "치유"],
+        tagsEn: ["Pygmy", "Bass Boost", "Dreamy", "Healing"],
         description: "깊고 풍성한 저음이 특징인 F# Low Pygmy 스케일의 12노트 버전입니다. 몽환적이고 신비로운 울림으로 내면의 평화와 치유를 선사하며, 확장된 음역대로 더욱 다채로운 연주가 가능합니다.",
         descriptionEn: "A 12-note version of the F# Low Pygmy scale, characterized by deep and rich bass. Its dreamy and mysterious resonance offers inner peace and healing, while the extended range allows for more diverse performance.",
         videoUrl: "https://youtu.be/pRuQQDSMUY0?si=9TJIit8W9P9VZnqi",

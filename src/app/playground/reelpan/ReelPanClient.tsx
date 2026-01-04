@@ -2216,7 +2216,7 @@ export default function ReelPanClient() {
                                         onClick={() => setScalePanelLang(scalePanelLang === 'ko' ? 'en' : 'ko')}
                                         className="px-2 py-1 text-[10px] font-bold rounded-full bg-white/10 text-white/70 hover:bg-white/20 hover:text-white transition-all border border-white/10"
                                     >
-                                        {scalePanelLang === 'ko' ? 'EN' : '한'}
+                                        {scalePanelLang === 'ko' ? 'EN' : '한글'}
                                     </button>
                                 </div>
                                 <button
