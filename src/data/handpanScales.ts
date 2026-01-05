@@ -292,8 +292,8 @@ export const SCALES: Scale[] = [
             bottom: ["E5", "F#5"] // E3 -> F#5
         },
         vector: { minorMajor: -0.6, pureSpicy: 0.25, rarePopular: 0.95 },
-        tags: ["Malte Marten 스타일", "웰니스감성", "유튜브트렌드", "요가강사인기"],
-        tagsEn: ["Malte Marten Style", "Wellness Emotion", "Youtube Trend"],
+        tags: ["피그미", "Malte Marten 스타일", "웰니스감성", "유튜브트렌드", "요가강사인기"],
+        tagsEn: ["Pygmy", "Malte Marten Style", "Wellness Emotion", "Youtube Trend"],
         description: "전 세계적으로 가장 인기 있는 베스트셀러 스케일입니다. 낮은 저음 노트들이 조화로운 이야기를 만들어내는 스토리텔링이 특징이며, 깊은 울림을 자랑합니다. Malte Marten 같은 연주자들에 의해 널리 알려진 스타일입니다.",
         descriptionEn: "The world's most popular bestseller scale. Characterized by storytelling where low bass notes create harmonious stories, it boasts deep resonance. A style widely known by players like Malte Marten.",
         videoUrl: "https://youtu.be/SthKlH686Pc?si=_YG050uZwcbIoP0X",
@@ -796,8 +796,8 @@ export const SCALES: Scale[] = [
             bottom: ["D3", "C3"]
         },
         vector: { minorMajor: -0.3, pureSpicy: 0.3, rarePopular: 0.6 },
-        tags: ["메이저+마이너", "저음보강", "미묘한감성", "중급자용"],
-        tagsEn: ["Major+Minor", "Bass Boost", "Subtle Feeling", "Intermediate"],
+        tags: ["에퀴녹스", "메이저+마이너", "저음보강", "미묘한감성", "중급자용"],
+        tagsEn: ["Equinox", "Major+Minor", "Bass Boost", "Subtle Feeling", "Intermediate"],
         description: "하이브리드 스케일인 기존 Equinox에 저음(C3, D3)을 보강하여 더욱 풍성한 울림을 제공합니다. 감성적인 연주에 최적화된 완벽한 밸런스를 자랑합니다.",
         descriptionEn: "Adds bass notes (C3, D3) to the hybrid Equinox scale for a richer resonance. Boasts perfect balance optimized for emotional performance.",
         videoUrl: "https://youtu.be/OcQ64DyA9xM?si=40_8I1KnB_rxCNQO",
@@ -859,8 +859,8 @@ export const SCALES: Scale[] = [
             bottom: []
         },
         vector: { minorMajor: -0.3, pureSpicy: 0.3, rarePopular: 0.7 },
-        tags: ["메이저+마이너", "그사이어딘가", "미묘한느낌", "색다른감성추천"],
-        tagsEn: ["Major+Minor", "Somewhere In Between", "Subtle Feeling", "Unique Emotion"],
+        tags: ["에퀴녹스", "메이저+마이너", "그사이어딘가", "미묘한느낌", "색다른감성추천"],
+        tagsEn: ["Equinox", "Major+Minor", "Somewhere In Between", "Subtle Feeling", "Unique Emotion"],
         description: "Equinox 스케일의 표준 모델로, 메이저와 마이너 그 사이 어딘가의 미묘한 느낌이 특징입니다. 색다른 감성을 추구하는 분들에게 추천되며, 적절한 음역대와 감성적인 멜로디 라인으로 입문자부터 숙련자까지 모두에게 적합합니다.",
         descriptionEn: "The standard model of the Equinox scale, characterized by a subtle feeling somewhere between major and minor. Recommended for those seeking unique emotions, it is suitable for everyone from beginners to experts with its appropriate range and emotional melody lines.",
         videoUrl: "https://youtu.be/8t8MqTelD9k?si=4gbYwCubpVxb_URT",
@@ -1111,8 +1111,8 @@ export const SCALES: Scale[] = [
             bottom: ["F3", "G3"]
         },
         vector: { minorMajor: -0.8, pureSpicy: 0.1, rarePopular: 0.95 },
-        tags: ["마이너", "저음보강", "화음반주강화", "모던감성"],
-        tagsEn: ["Minor", "Bass Boost", "Harmonic Play Boost", "Modern Emotion"],
+        tags: ["대중적", "마이너", "저음보강", "화음반주강화", "모던감성"],
+        tagsEn: ["Popular", "Minor", "Bass Boost", "Harmonic Play Boost", "Modern Emotion"],
         description: "마이너 스케일인 D Kurd 10 악기에 바텀 업그레이드 한 표준확장형으로, 저음을 보강하여 하단 두개의 딩 베이스로 화성 연주가 가능한 모델입니다.",
         descriptionEn: "A standard extended version of the D Kurd 10 minor scale with bottom upgrades. Reinforced with bass notes, it allows for harmonic play with two bottom ding basses.",
         videoUrl: "https://youtu.be/KXDSbCdPjTM?si=3GD2eOil-5WsmVHa",
@@ -1674,7 +1674,7 @@ export const SCALES: Scale[] = [
             bottom: []
         },
         vector: { minorMajor: -0.2, pureSpicy: 0.4, rarePopular: 0.4 },
-        tags: ["사파이어", "장3도/단7도", "믹솔리디안", "뻔하지않은재미"],  
+        tags: ["사파이어", "장3도/단7도", "믹솔리디안", "뻔하지않은재미"],
         tagsEn: ["Sapphire", "Major 3rd/Minor 7th", "Mixolydian", "Uncommon"],
         description: "사파이어 스케일로, 사파이어 보석처럼 청량하고 세련된 울림을 줍니다. 깔끔하고 모던한 느낌의 연주를 선호하는 분들께 추천합니다.",
         descriptionEn: "Sapphire scale, giving a refreshing and sophisticated resonance like a sapphire gem. Recommended for those who prefer clean and modern performances.",
