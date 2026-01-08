@@ -1955,6 +1955,36 @@ export const SCALES: Scale[] = [
         productUrl: "https://smartstore.naver.com/sndhandpan/products/12070371584",
         ownUrl: "https://handpan.co.kr/shop/?idx=105",
         ownUrlEn: "https://handpanen.imweb.me/21/?idx=105"
+    },
+    // 31. C# Amara 10 (Added)
+    {
+        id: "cs_amara_10",
+        name: "C# Amara 10",
+        nameEn: "C# Amara 10",
+        notes: {
+            ding: "C#3",
+            top: ["G#3", "B3", "C#4", "D#4", "E4", "F#4", "G#4", "B4", "C#5"],
+            bottom: []
+        },
+        vector: { minorMajor: -0.7, pureSpicy: 0.15, rarePopular: 0.95 },
+        tags: ["마이너", "대중적", "입문추천", "Amara"],
+        tagsEn: ["Minor", "Popular", "Beginner Recommended", "Amara"],
+        description: "C# Amara 9의 확장형 모델로, 총 10개의 노트를 통해 더욱 풍성한 표현이 가능합니다. 입문자에게 가장 추천하는 모델 중 하나로, 켈틱 마이너 특유의 신비로운 감성을 담고 있습니다.",
+        descriptionEn: "An extended model of C# Amara 9, allowing for richer expression with a total of 10 notes. It is one of the most recommended models for beginners, containing the unique mysterious sensibility of Celtic Minor.",
+        videoUrl: "https://youtu.be/W9QAtyTDrTM?si=Cy7YMKhp-MY2Bv7r",
+        productUrl: "https://smartstore.naver.com/sndhandpan/products/12800221630",
+        ownUrl: "https://handpan.co.kr/shop/?idx=103",
+        ownUrlEn: "https://handpanen.imweb.me/shop/?idx=103",
+        i18n: {
+            ja: {
+                name: "C# Amara 10",
+                description: "C# Amara 9 の拡張モデルで、10 音の構成によりさらに豊かな表現が可能です。入門者に最もおすすめのモデルの一つで、ケルティック・マイナー特有の神秘的な感性を備えています。"
+            },
+            zh: {
+                name: "C# Amara 10",
+                description: "C# Amara 9 的扩展型号，通过 10 个音符实现更丰富的表达。是初学者最推荐的型号之一，蕴含着凯尔特小调特有的神秘感。"
+            }
+        }
     }
 ];
 
