@@ -2205,7 +2205,7 @@ export default function ReelPanClient() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 20 }}
-                            className="absolute inset-0 z-[100] bg-black/60 backdrop-blur-[40px] flex flex-col pointer-events-auto"
+                            className="absolute inset-0 z-[100] bg-black/60 backdrop-blur-[40px] overflow-y-auto custom-scrollbar pointer-events-auto"
                         >
                             <div className="px-6 py-4 border-b border-white/[0.08] flex items-center justify-between">
                                 <div className="flex items-center gap-3">
@@ -2227,7 +2227,7 @@ export default function ReelPanClient() {
                                 </button>
                             </div>
 
-                            <div className="flex-1 overflow-y-auto px-4 py-6 custom-scrollbar flex flex-col gap-4">
+                            <div className="px-4 py-6 flex flex-col gap-4">
                                 {/* Search & Filter Controls - Scale Mode Only */}
                                 {selectorMode === 'scale' && (
                                     <div className="flex flex-col gap-3 px-2">
