@@ -2210,7 +2210,7 @@ export default function ReelPanClient() {
                             <div className="px-6 py-4 border-b border-white/[0.08] flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <h2 className="text-white font-bold text-sm tracking-[0.25em] uppercase opacity-90">
-                                        {scalePanelLang === 'ko' ? '스케일 선택' : 'Select Scale'}
+                                        {scalePanelLang === 'ko' ? 'snd 디지털 핸드팬' : 'snd digital handpan'}
                                     </h2>
                                     <button
                                         onClick={() => setScalePanelLang(scalePanelLang === 'ko' ? 'en' : 'ko')}
