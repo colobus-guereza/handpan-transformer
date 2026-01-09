@@ -2022,7 +2022,7 @@ export const SCALES: Scale[] = [
         notes: {
             ding: "F3",
             top: ["Ab3", "Bb3", "C4", "Db4", "Eb4", "F4", "G4", "Ab4", "C5"],
-            bottom: ["Db3", "Eb3"]
+            bottom: ["Eb3", "Db3"]
         },
         vector: { minorMajor: -0.7, pureSpicy: 0.0, rarePopular: 0.5 },
         tags: ["마이너", "바텀업그레이드", "메이저느낌추가", "한국전통감성"],
