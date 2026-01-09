@@ -1850,7 +1850,7 @@ export default function ReelPanClient() {
                                 <img
                                     src="/images/logo_icon.png"
                                     alt="Home"
-                                    className="w-[45px] h-[45px] object-contain opacity-80 hover:opacity-100 hover:scale-[1.125] hover:brightness-125 hover:drop-shadow-lg active:opacity-100 active:scale-[1.125] active:brightness-125 transition-all duration-300"
+                                    className="w-[45px] h-[45px] object-contain opacity-80 transition-transform duration-200 ease-out will-change-transform transform-gpu backface-hidden hover:opacity-100 hover:scale-[1.125] hover:brightness-110 active:opacity-100 active:scale-[1.125] active:brightness-110"
                                 />
                             </a>
 
