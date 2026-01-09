@@ -186,66 +186,45 @@ export const useHandpanAudio = (): UseHandpanAudioReturn => {
         }
     }, []);
 
+    // Global Ref to track if we've already tried to resume context on this interaction
+    // (This helps avoid repeated calls to resume() which can be expensive)
+    const contextResumedRef = useRef(false);
+
     const playNote = useCallback((noteName: string, volume: number = 0.6) => {
-        // ★ [디버그] 모바일 환경 특화 메인 음원 재생 디버깅
-        const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        const t0 = performance.now();
-        const isFirstTouch = IS_FIRST_TOUCH;
-
-        console.log(`[Debug-MainAudio] ===== 메인 음원 재생: ${noteName} =====`);
-        console.log(`[Debug-MainAudio] 환경: ${isMobileDevice ? '📱 모바일' : '💻 데스크톱'}`);
-        console.log(`[Debug-MainAudio] Howler AudioContext 상태: ${GLOBAL_HOWLER?.ctx?.state || 'N/A'}`);
-        console.log(`[Debug-MainAudio] Howler sampleRate: ${GLOBAL_HOWLER?.ctx?.sampleRate || 'N/A'}Hz`);
-
-        if (IS_FIRST_TOUCH) {
-            console.log('[Perf] ===== FIRST TOUCH DETECTED =====');
-            IS_FIRST_TOUCH = false;
-        }
-
-        // Optimistic resume (fire and forget)
-        const ctxStateBefore = GLOBAL_HOWLER?.ctx?.state;
-        const t1 = performance.now();
-        if (GLOBAL_HOWLER?.ctx?.state === 'suspended') {
+        // --- [Latency Optimization] ---
+        // 1. Resume AudioContext optimistically only once per interaction cycle if needed
+        if (GLOBAL_HOWLER?.ctx?.state === 'suspended' && !contextResumedRef.current) {
             GLOBAL_HOWLER.ctx.resume();
-            console.log(`[Debug-MainAudio] AudioContext.resume() 호출됨 (was: ${ctxStateBefore})`);
-        }
-        const t2 = performance.now();
-        if (isFirstTouch) {
-            console.log(`[Perf] AudioContext check: ${(t2 - t1).toFixed(1)}ms (state: ${ctxStateBefore})`);
+            contextResumedRef.current = true;
+            // Reset ref after a short delay to allow re-checking in future independent interactions
+            setTimeout(() => { contextResumedRef.current = false; }, 100);
         }
 
-        // Normalize Note Name (e.g. A# -> Bb)
-        const normalized = normalizeNote(noteName);
-        const sound = GLOBAL_SOUND_CACHE[normalized];
+        // 2. Fast Cache Lookup (Try direct access first)
+        let sound = GLOBAL_SOUND_CACHE[noteName];
 
-        if (sound) {
-            try {
-                const t3 = performance.now();
-                sound.volume(volume);
-                sound.play();
-                const t4 = performance.now();
+        // 3. Normalize if miss (A# -> Bb)
+        if (!sound) {
+            const normalized = normalizeNote(noteName);
+            sound = GLOBAL_SOUND_CACHE[normalized];
 
-                console.log(`[Debug-MainAudio] 재생 완료: ${(t4 - t0).toFixed(1)}ms (sound.play: ${(t4 - t3).toFixed(1)}ms)`);
-                console.log(`[Debug-MainAudio] ===== 메인 음원 끝 =====`);
-
-                if (isFirstTouch) {
-                    console.log(`[Perf] sound.play(): ${(t4 - t3).toFixed(1)}ms`);
-                    console.log(`[Perf] TOTAL playNote: ${(t4 - t0).toFixed(1)}ms`);
-                    console.log('[Perf] ===== END FIRST TOUCH =====');
-                }
+            // 4. Fallback (rare)
+            if (!sound) {
+                // Determine filename (handle # for URL)
+                const filename = normalized.replace('#', '%23');
+                const audio = new Audio(`/sounds/${filename}.mp3`);
+                audio.volume = volume;
+                audio.play().catch(() => { }); // Silent catch
                 return;
-            } catch (e) {
-                console.error(`[Debug-MainAudio] ⚠️ 재생 실패:`, e);
             }
         }
-        else {
-            console.warn(`[Debug-MainAudio] ⚠️ 캐시 미스: ${noteName} -> ${normalized}. Audio tag fallback.`);
 
-            // Fallback Logic (Only if cache missing)
-            const filename = normalized.replace('#', '%23');
-            const audio = new Audio(`/sounds/${filename}.mp3`);
-            audio.volume = volume;
-            audio.play().catch(e => console.error(e));
+        // 5. Play with Howler (Optimized path)
+        try {
+            sound.volume(volume);
+            sound.play();
+        } catch (e) {
+            // Silent catch to prevent main thread blocking on logging
         }
     }, []);
 
