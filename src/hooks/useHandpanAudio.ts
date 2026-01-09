@@ -153,6 +153,7 @@ export const useHandpanAudio = (): UseHandpanAudioReturn => {
                         preload: true,
                         html5: false,
                         volume: 0.6,
+                        pool: 10, // 동시 재생 인스턴스 10개 확보 (빠른 연타 대응)
                         onload: () => {
                             loadedCount++;
                             GLOBAL_LOADING_PROGRESS = Math.round((loadedCount / totalSounds) * 100);
