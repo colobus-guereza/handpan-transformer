@@ -1847,7 +1847,11 @@ export default function ReelPanClient() {
                                 href="https://handpan.co.kr"
                                 className="absolute left-4 p-2 text-white/30 hover:text-white transition-all"
                             >
-                                <ArrowLeft size={20} />
+                                <img
+                                    src="/images/logo_icon.png"
+                                    alt="Home"
+                                    className="w-[45px] h-[45px] object-contain opacity-80 hover:opacity-100 hover:scale-[1.125] hover:brightness-125 hover:drop-shadow-lg active:opacity-100 active:scale-[1.125] active:brightness-125 transition-all duration-300"
+                                />
                             </a>
 
                             {/* 우측 상단 컨트롤 그룹 (악보, 더보기) */}
