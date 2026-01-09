@@ -1985,6 +1985,33 @@ export const SCALES: Scale[] = [
                 description: "C# Amara 9 的扩展型号，通过 10 个音符实现更丰富的表达。是初学者最推荐的型号之一，蕴含着凯尔特小调特有的神秘感。"
             }
         }
+    },
+
+    // 32. C Agean 10
+    {
+        id: "c_agean_10",
+        name: "C Agean 10",
+        nameEn: "C Agean 10",
+        notes: {
+            ding: "C3",
+            top: ["E3", "G3", "B3", "C4", "E4", "F#4", "G4", "B4", "E5"],
+            bottom: []
+        },
+        vector: { minorMajor: -0.3, pureSpicy: 0.1, rarePopular: 0.6 },
+        tags: ["요가명상힐링", "에지안", "웰니스감성", "트렌디", "메이저마이너중간"],
+        tagsEn: ["Healing", "Agean", "Wellness", "Trendy", "Mixed Mode"],
+        description: "단조와 장조의 경계를 넘나드는 묘한 매력의 에지안 스케일입니다. 웰니스와 명상에 최적화된 편안한 울림을 제공합니다.",
+        descriptionEn: "The Agean scale, with its unique charm crossing the boundary between minor and major. It provides a comfortable resonance optimized for wellness and meditation.",
+        i18n: {
+            ja: {
+                name: "C Agean 10",
+                description: "短調と長調の境界を越える不思議な魅力のエイジアン・スケールです。ウェルネスや瞑想に最適化された心地よい響きを提供します。"
+            },
+            zh: {
+                name: "C Agean 10",
+                description: "游走于大调与小调边界、具有独特爱琴海魅力的音阶。提供最适合健康和冥想的舒适共鸣。"
+            }
+        }
     }
 ];
 
