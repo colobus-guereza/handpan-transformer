@@ -2012,6 +2012,33 @@ export const SCALES: Scale[] = [
                 description: "游走于大调与小调边界、具有独特爱琴海魅力的音阶。提供最适合健康和冥想的舒适共鸣。"
             }
         }
+    },
+
+    // 33. F Aeolian 12 (F Low Pygmy 12 Layout)
+    {
+        id: "f_aeolian_12",
+        name: "F Aeolian 12",
+        nameEn: "F Aeolian 12",
+        notes: {
+            ding: "F3",
+            top: ["Ab3", "Bb3", "C4", "Db4", "Eb4", "F4", "G4", "Ab4", "C5"],
+            bottom: ["Db3", "Eb3"]
+        },
+        vector: { minorMajor: -0.7, pureSpicy: 0.0, rarePopular: 0.5 },
+        tags: ["요가명상힐링", "마이너", "바텀업그레이드", "메이저느낌추가", "한국전통감성"],
+        tagsEn: ["Healing", "Minor", "Bottom Upgrade", "Major Touch", "Korean Traditional"],
+        description: "바텀 노트 2개가 추가되어 더욱 깊고 풍성한 울림을 가진 에올리안 스케일입니다. 한국적인 애잔함과 현대적인 세련미가 공존하는 모델입니다.",
+        descriptionEn: "The Aeolian scale with 2 additional bottom notes for a deeper and richer resonance. A model where Korean traditional sadness and modern sophistication coexist.",
+        i18n: {
+            ja: {
+                name: "F Aeolian 12",
+                description: "2つのボトムノートが追加され、より深く豊かな響きを持つエオリアン・スケールです。韓国的な哀愁と現代的な洗練さが共存するモデルです。"
+            },
+            zh: {
+                name: "F Aeolian 12",
+                description: "增加了 2 个底部音符，具有更深沉、更丰富共鸣的爱奥尼亚音阶。这是一款将韩国传统哀愁与现代精致感共存的模型。"
+            }
+        }
     }
 ];
 
