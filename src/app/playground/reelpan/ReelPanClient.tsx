@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { motion, AnimatePresence } from "framer-motion";
 import { SCALES } from '@/data/handpanScales';
-import { Layout, Check, Square, Circle, Smartphone, Keyboard, Play, Pause, Volume2, Download, Trash2, X, Type, ChevronDown, Share2, RefreshCcw, Drum, SlidersHorizontal, Settings2, Sparkles, ArrowLeft, Music2, Music, FileText, Palette, MoreVertical, Moon, Sun, Flame } from 'lucide-react';
+import { Layout, Check, Square, Circle, Smartphone, Keyboard, Play, Pause, Volume2, Download, Trash2, X, Type, Search, ChevronDown, Share2, RefreshCcw, Drum, SlidersHorizontal, Settings2, Sparkles, ArrowLeft, Music2, Music, FileText, Palette, MoreVertical, Moon, Sun, Flame } from 'lucide-react';
 
 // MIDI parsing utilities
 import { parseMidi, findBestMatchScale } from '@/lib/midiUtils';
@@ -136,6 +136,8 @@ export default function ReelPanClient() {
     const [activeDingFilter, setActiveDingFilter] = useState<string>('all');
     const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>('all');
     const [scalePanelLang, setScalePanelLang] = useState<'ko' | 'en'>('ko');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
     const CATEGORIES = [
         { id: 'beginner', label: 'Beginner', labelKo: '입문용', tags: ['대중적', '입문추천', '국내인기', 'Bestseller', '기본', '표준', '표준확장', 'Popular', 'Recommended for Beginners', 'Domestic Popular', 'Basic', 'Standard', 'Standard Extended'] },
@@ -176,6 +178,16 @@ export default function ReelPanClient() {
 
     const processedScales = useMemo(() => {
         let result = [...SCALES];
+
+        // 0. Search Filter
+        if (searchTerm.trim()) {
+            const query = searchTerm.toLowerCase().trim();
+            result = result.filter(s => {
+                const nameMatch = s.name.toLowerCase().includes(query) || (s as any).nameEn?.toLowerCase().includes(query);
+                const tagMatch = s.tags.some(t => t.toLowerCase().includes(query)) || (s as any).tagsEn?.some((t: string) => t.toLowerCase().includes(query));
+                return nameMatch || tagMatch;
+            });
+        }
 
         // 1. Filter
         if (filterMode === 'AZ') {
@@ -226,7 +238,7 @@ export default function ReelPanClient() {
         }
 
         return result;
-    }, [filterNoteCount, sortBy, filterMode, activeDingFilter, activeCategoryFilter]);
+    }, [filterNoteCount, sortBy, filterMode, activeDingFilter, activeCategoryFilter, searchTerm]);
 
     const digipanRef = useRef<Digipan3DHandle>(null);
     const previewTimersRef = useRef<NodeJS.Timeout[]>([]);
@@ -2232,171 +2244,188 @@ export default function ReelPanClient() {
                             </div>
 
                             <div className="px-4 py-6 flex flex-col gap-4">
-                                {/* Search & Filter Controls - Scale Mode Only */}
-                                {selectorMode === 'scale' && (
-                                    <div className="flex flex-col gap-3 px-2">
-                                        {/* Filter Mode Toggle */}
-                                        <div className="flex p-1 bg-white/5 rounded-lg mb-1">
-                                            <button
-                                                onClick={() => { setFilterMode('CATEGORY'); setActiveDingFilter('all'); setFilterNoteCount('all'); }}
-                                                className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${filterMode === 'CATEGORY' ? 'bg-slate-300 text-slate-900 shadow-sm' : 'text-white/40 hover:text-white/70'}`}
-                                            >
-                                                {scalePanelLang === 'ko' ? '카테고리' : 'Category'}
-                                            </button>
-                                            <button
-                                                onClick={() => { setFilterMode('AZ'); setFilterNoteCount('all'); setActiveCategoryFilter('all'); }}
-                                                className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${filterMode === 'AZ' ? 'bg-slate-300 text-slate-900 shadow-sm' : 'text-white/40 hover:text-white/70'}`}
-                                            >
-                                                {scalePanelLang === 'ko' ? '딩 피치' : 'Ding'}
-                                            </button>
-                                            <button
-                                                onClick={() => { setFilterMode('NOTES'); setActiveDingFilter('all'); setActiveCategoryFilter('all'); }}
-                                                className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${filterMode === 'NOTES' ? 'bg-slate-300 text-slate-900 shadow-sm' : 'text-white/40 hover:text-white/70'}`}
-                                            >
-                                                {scalePanelLang === 'ko' ? '음 개수' : 'Notes'}
-                                            </button>
+                                {/* Search Bar */}
+                                <div className="px-2 relative flex items-center gap-2">
+                                    <div className="relative flex-1">
+                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30">
+                                            <Search size={16} />
                                         </div>
-
-                                        <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar" style={{ touchAction: 'pan-x' }}>
-                                            {(() => {
-                                                if (filterMode === 'CATEGORY') {
-                                                    // CATEGORY Mode: Custom Tags
-                                                    // Count matches for each category
-                                                    const categoryStats = CATEGORIES.reduce((acc, cat) => {
-                                                        const count = SCALES.filter(s => matchesCategory(s, cat.id)).length;
-                                                        acc[cat.id] = count;
-                                                        return acc;
-                                                    }, {} as Record<string, number>);
-
-                                                    return (
-                                                        <>
-                                                            <button
-                                                                onClick={() => setActiveCategoryFilter('all')}
-                                                                className={`px-3 py-1.5 rounded-full flex items-center gap-2 transition-all border whitespace-nowrap
-                                                                    ${activeCategoryFilter === 'all'
-                                                                        ? 'bg-slate-300/80 border-slate-200 text-slate-900 shadow-[0_0_15px_rgba(200,200,210,0.4)]'
-                                                                        : 'bg-white/[0.03] border-white/[0.08] text-white/40 hover:text-slate-200/80 hover:bg-slate-300/10'}`}
-                                                            >
-                                                                <span className="text-[13px] font-black tracking-widest">{scalePanelLang === 'ko' ? '전체' : 'All'}</span>
-                                                                <span className={`text-[13px] font-bold ${activeCategoryFilter === 'all' ? 'opacity-80' : 'opacity-30'}`}>
-                                                                    {SCALES.length}
-                                                                </span>
-                                                            </button>
-                                                            {CATEGORIES.map(cat => (
-                                                                <button
-                                                                    key={cat.id}
-                                                                    onClick={() => setActiveCategoryFilter(cat.id)}
-                                                                    className={`px-3 py-1.5 rounded-full flex items-center gap-2 transition-all border whitespace-nowrap
-                                                                        ${activeCategoryFilter === cat.id
-                                                                            ? 'bg-slate-300/80 border-slate-200 text-slate-900 shadow-[0_0_15px_rgba(200,200,210,0.4)]'
-                                                                            : 'bg-white/[0.03] border-white/[0.08] text-white/40 hover:text-slate-200/80 hover:bg-slate-300/10'}`}
-                                                                >
-                                                                    <span className="text-[13px] font-black tracking-widest">{scalePanelLang === 'ko' ? cat.labelKo : cat.label}</span>
-                                                                    <span className={`text-[13px] font-bold ${activeCategoryFilter === cat.id ? 'opacity-80' : 'opacity-30'}`}>
-                                                                        {categoryStats[cat.id]}
-                                                                    </span>
-                                                                </button>
-                                                            ))}
-                                                        </>
-                                                    );
-                                                }
-                                                if (filterMode === 'AZ') {
-                                                    // A-Z Mode: Ding Pitch Filters
-                                                    // Calculate Ding Stats
-                                                    const dingStats = SCALES.reduce((acc, scale) => {
-                                                        const pitch = getPitchFromNote(scale.notes.ding);
-                                                        // Normalize Bb if needed, but getPitchFromNote likely handles standard format.
-                                                        // Ensure 'Bb' casing if SCALES use 'BB' or similar
-                                                        const normalizedPitch = pitch === 'BB' ? 'Bb' : pitch;
-                                                        acc[normalizedPitch] = (acc[normalizedPitch] || 0) + 1;
-                                                        return acc;
-                                                    }, {} as Record<string, number>);
-
-                                                    // Standard order for display
-                                                    const allPitches = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'];
-
-                                                    // Filter to existing pitches
-                                                    const availablePitches = allPitches.filter(p => dingStats[p] > 0);
-
-                                                    return (
-                                                        <>
-                                                            <button
-                                                                onClick={() => setActiveDingFilter('all')}
-                                                                className={`px-3 py-1.5 rounded-full flex items-center gap-2 transition-all border whitespace-nowrap
-                                                                    ${activeDingFilter === 'all'
-                                                                        ? 'bg-slate-300/80 border-slate-200 text-slate-900 shadow-[0_0_15px_rgba(200,200,210,0.4)]'
-                                                                        : 'bg-white/[0.03] border-white/[0.08] text-white/40 hover:text-slate-200/80 hover:bg-slate-300/10'}`}
-                                                            >
-                                                                <span className="text-[13px] font-black tracking-widest">All</span>
-                                                                <span className={`text-[13px] font-bold ${activeDingFilter === 'all' ? 'opacity-80' : 'opacity-30'}`}>
-                                                                    {SCALES.length}
-                                                                </span>
-                                                            </button>
-                                                            {availablePitches.map(pitch => (
-                                                                <button
-                                                                    key={pitch}
-                                                                    onClick={() => setActiveDingFilter(pitch)}
-                                                                    className={`px-3 py-1.5 rounded-full flex items-center gap-2 transition-all border whitespace-nowrap
-                                                                        ${activeDingFilter === pitch
-                                                                            ? 'bg-slate-300/80 border-slate-200 text-slate-900 shadow-[0_0_15px_rgba(200,200,210,0.4)]'
-                                                                            : 'bg-white/[0.03] border-white/[0.08] text-white/40 hover:text-slate-200/80 hover:bg-slate-300/10'}`}
-                                                                >
-                                                                    <span className="text-[13px] font-black tracking-widest">{pitch}</span>
-                                                                    <span className={`text-[13px] font-bold ${activeDingFilter === pitch ? 'opacity-80' : 'opacity-30'}`}>
-                                                                        {dingStats[pitch]}
-                                                                    </span>
-                                                                </button>
-                                                            ))}
-                                                        </>
-                                                    );
-                                                } else {
-                                                    // NOTES Mode: Note Count Filters
-                                                    // 1. Calculate available counts and stats
-                                                    const stats = SCALES.reduce((acc, scale) => {
-                                                        const totalNotes = 1 + scale.notes.top.length + scale.notes.bottom.length;
-
-                                                        // Count by N
-                                                        acc[totalNotes] = (acc[totalNotes] || 0) + 1;
-
-                                                        // Count Mutant
-                                                        if (scale.id.includes('mutant') || scale.tags.some(t => t.toLowerCase().includes('mutant'))) {
-                                                            acc.mutant = (acc.mutant || 0) + 1;
-                                                        }
-                                                        return acc;
-                                                    }, { mutant: 0 } as Record<string, number>);
-
-                                                    const availableCounts = Object.keys(stats)
-                                                        .filter(k => k !== 'mutant')
-                                                        .map(Number)
-                                                        .sort((a, b) => a - b);
-
-                                                    const filters = [
-                                                        { label: 'All', value: 'all', count: SCALES.length },
-                                                        ...availableCounts.map(n => ({ label: `${n}`, value: String(n), count: stats[n] })),
-                                                        { label: 'Mutant', value: 'mutant', count: stats.mutant }
-                                                    ];
-
-                                                    return filters.map(filter => (
-                                                        <button
-                                                            key={filter.value}
-                                                            onClick={() => setFilterNoteCount(filter.value)}
-                                                            className={`px-3 py-1.5 rounded-full flex items-center gap-2 transition-all border whitespace-nowrap
-                                                                ${filterNoteCount === filter.value
-                                                                    ? 'bg-slate-300/80 border-slate-200 text-slate-900 shadow-[0_0_15px_rgba(200,200,210,0.4)]'
-                                                                    : 'bg-white/[0.03] border-white/[0.08] text-white/40 hover:text-slate-200/80 hover:bg-slate-300/10'}`}
-                                                        >
-                                                            <span className="text-[13px] font-black tracking-widest">{filter.label}</span>
-                                                            <span className={`text-[13px] font-bold ${filterNoteCount === filter.value ? 'opacity-80' : 'opacity-30'}`}>
-                                                                {filter.count}
-                                                            </span>
-                                                        </button>
-                                                    ));
-                                                }
-                                            })()}
-                                        </div>
-
+                                        <input
+                                            type="text"
+                                            placeholder={scalePanelLang === 'ko' ? '스케일 이름이나 태그로 검색...' : 'Search scales or tags...'}
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                            onFocus={() => setShowAdvancedFilters(true)}
+                                            className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pl-10 pr-10 text-sm text-white focus:outline-none focus:border-slate-300/50 focus:bg-white/[0.08] transition-all"
+                                        />
+                                        {searchTerm && (
+                                            <button
+                                                onClick={() => setSearchTerm('')}
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white"
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        )}
                                     </div>
-                                )}
+                                    <button
+                                        onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all border ${showAdvancedFilters ? 'bg-slate-300 text-slate-900 border-slate-200' : 'bg-white/5 text-white/40 border-white/10'}`}
+                                    >
+                                        <SlidersHorizontal size={18} />
+                                    </button>
+                                </div>
+
+                                {/* Advanced Filter Controls - Scale Mode Only */}
+                                <AnimatePresence>
+                                    {selectorMode === 'scale' && showAdvancedFilters && (
+                                        <motion.div
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: 'auto', opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            transition={{ duration: 0.2 }}
+                                            className="flex flex-col gap-3 px-2 overflow-hidden"
+                                        >
+                                            {/* Filter Mode Toggle */}
+                                            <div className="flex p-1 bg-white/5 rounded-lg mb-1">
+                                                <button
+                                                    onClick={() => { setFilterMode('CATEGORY'); setActiveDingFilter('all'); setFilterNoteCount('all'); }}
+                                                    className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${filterMode === 'CATEGORY' ? 'bg-slate-300 text-slate-900 shadow-sm' : 'text-white/40 hover:text-white/70'}`}
+                                                >
+                                                    {scalePanelLang === 'ko' ? '카테고리' : 'Category'}
+                                                </button>
+                                                <button
+                                                    onClick={() => { setFilterMode('AZ'); setFilterNoteCount('all'); setActiveCategoryFilter('all'); }}
+                                                    className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${filterMode === 'AZ' ? 'bg-slate-300 text-slate-900 shadow-sm' : 'text-white/40 hover:text-white/70'}`}
+                                                >
+                                                    {scalePanelLang === 'ko' ? '딩 피치' : 'Ding'}
+                                                </button>
+                                                <button
+                                                    onClick={() => { setFilterMode('NOTES'); setActiveDingFilter('all'); setActiveCategoryFilter('all'); }}
+                                                    className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${filterMode === 'NOTES' ? 'bg-slate-300 text-slate-900 shadow-sm' : 'text-white/40 hover:text-white/70'}`}
+                                                >
+                                                    {scalePanelLang === 'ko' ? '음 개수' : 'Notes'}
+                                                </button>
+                                            </div>
+
+                                            <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar" style={{ touchAction: 'pan-x' }}>
+                                                {(() => {
+                                                    if (filterMode === 'CATEGORY') {
+                                                        const categoryStats = CATEGORIES.reduce((acc, cat) => {
+                                                            const count = SCALES.filter(s => matchesCategory(s, cat.id)).length;
+                                                            acc[cat.id] = count;
+                                                            return acc;
+                                                        }, {} as Record<string, number>);
+
+                                                        return (
+                                                            <>
+                                                                <button
+                                                                    onClick={() => setActiveCategoryFilter('all')}
+                                                                    className={`px-3 py-1.5 rounded-full flex items-center gap-2 transition-all border whitespace-nowrap
+                                                                        ${activeCategoryFilter === 'all'
+                                                                            ? 'bg-slate-300/80 border-slate-200 text-slate-900 shadow-[0_0_15px_rgba(200,200,210,0.4)]'
+                                                                            : 'bg-white/[0.03] border-white/[0.08] text-white/40 hover:text-slate-200/80 hover:bg-slate-300/10'}`}
+                                                                >
+                                                                    <span className="text-[13px] font-black tracking-widest">{scalePanelLang === 'ko' ? '전체' : 'All'}</span>
+                                                                    <span className={`text-[13px] font-bold ${activeCategoryFilter === 'all' ? 'opacity-80' : 'opacity-30'}`}>
+                                                                        {SCALES.length}
+                                                                    </span>
+                                                                </button>
+                                                                {CATEGORIES.map(cat => (
+                                                                    <button
+                                                                        key={cat.id}
+                                                                        onClick={() => setActiveCategoryFilter(cat.id)}
+                                                                        className={`px-3 py-1.5 rounded-full flex items-center gap-2 transition-all border whitespace-nowrap
+                                                                            ${activeCategoryFilter === cat.id
+                                                                                ? 'bg-slate-300/80 border-slate-200 text-slate-900 shadow-[0_0_15px_rgba(200,200,210,0.4)]'
+                                                                                : 'bg-white/[0.03] border-white/[0.08] text-white/40 hover:text-slate-200/80 hover:bg-slate-300/10'}`}
+                                                                    >
+                                                                        <span className="text-[13px] font-black tracking-widest">{scalePanelLang === 'ko' ? cat.labelKo : cat.label}</span>
+                                                                        <span className={`text-[13px] font-bold ${activeCategoryFilter === cat.id ? 'opacity-80' : 'opacity-30'}`}>
+                                                                            {categoryStats[cat.id]}
+                                                                        </span>
+                                                                    </button>
+                                                                ))}
+                                                            </>
+                                                        );
+                                                    }
+                                                    if (filterMode === 'AZ') {
+                                                        const dingStats = SCALES.reduce((acc, scale) => {
+                                                            const pitch = getPitchFromNote(scale.notes.ding);
+                                                            const normalizedPitch = pitch === 'BB' ? 'Bb' : pitch;
+                                                            acc[normalizedPitch] = (acc[normalizedPitch] || 0) + 1;
+                                                            return acc;
+                                                        }, {} as Record<string, number>);
+                                                        const allPitches = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'];
+                                                        const availablePitches = allPitches.filter(p => dingStats[p] > 0);
+
+                                                        return (
+                                                            <>
+                                                                <button
+                                                                    onClick={() => setActiveDingFilter('all')}
+                                                                    className={`px-3 py-1.5 rounded-full flex items-center gap-2 transition-all border whitespace-nowrap
+                                                                        ${activeDingFilter === 'all'
+                                                                            ? 'bg-slate-300/80 border-slate-200 text-slate-900 shadow-[0_0_15px_rgba(200,200,210,0.4)]'
+                                                                            : 'bg-white/[0.03] border-white/[0.08] text-white/40 hover:text-slate-200/80 hover:bg-slate-300/10'}`}
+                                                                >
+                                                                    <span className="text-[13px] font-black tracking-widest">All</span>
+                                                                    <span className={`text-[13px] font-bold ${activeDingFilter === 'all' ? 'opacity-80' : 'opacity-30'}`}>
+                                                                        {SCALES.length}
+                                                                    </span>
+                                                                </button>
+                                                                {availablePitches.map(pitch => (
+                                                                    <button
+                                                                        key={pitch}
+                                                                        onClick={() => setActiveDingFilter(pitch)}
+                                                                        className={`px-3 py-1.5 rounded-full flex items-center gap-2 transition-all border whitespace-nowrap
+                                                                            ${activeDingFilter === pitch
+                                                                                ? 'bg-slate-300/80 border-slate-200 text-slate-900 shadow-[0_0_15px_rgba(200,200,210,0.4)]'
+                                                                                : 'bg-white/[0.03] border-white/[0.08] text-white/40 hover:text-slate-200/80 hover:bg-slate-300/10'}`}
+                                                                    >
+                                                                        <span className="text-[13px] font-black tracking-widest">{pitch}</span>
+                                                                        <span className={`text-[13px] font-bold ${activeDingFilter === pitch ? 'opacity-80' : 'opacity-30'}`}>
+                                                                            {dingStats[pitch]}
+                                                                        </span>
+                                                                    </button>
+                                                                ))}
+                                                            </>
+                                                        );
+                                                    } else {
+                                                        const stats = SCALES.reduce((acc, scale) => {
+                                                            const totalNotes = 1 + scale.notes.top.length + scale.notes.bottom.length;
+                                                            acc[totalNotes] = (acc[totalNotes] || 0) + 1;
+                                                            if (scale.id.includes('mutant') || scale.tags.some(t => t.toLowerCase().includes('mutant'))) {
+                                                                acc.mutant = (acc.mutant || 0) + 1;
+                                                            }
+                                                            return acc;
+                                                        }, { mutant: 0 } as Record<string, number>);
+                                                        const availableCounts = Object.keys(stats).filter(k => k !== 'mutant').map(Number).sort((a, b) => a - b);
+                                                        const filters = [
+                                                            { label: 'All', value: 'all', count: SCALES.length },
+                                                            ...availableCounts.map(n => ({ label: `${n}`, value: String(n), count: stats[n] })),
+                                                            { label: 'Mutant', value: 'mutant', count: stats.mutant }
+                                                        ];
+
+                                                        return filters.map(filter => (
+                                                            <button
+                                                                key={filter.value}
+                                                                onClick={() => setFilterNoteCount(filter.value)}
+                                                                className={`px-3 py-1.5 rounded-full flex items-center gap-2 transition-all border whitespace-nowrap
+                                                                    ${filterNoteCount === filter.value
+                                                                        ? 'bg-slate-300/80 border-slate-200 text-slate-900 shadow-[0_0_15px_rgba(200,200,210,0.4)]'
+                                                                        : 'bg-white/[0.03] border-white/[0.08] text-white/40 hover:text-slate-200/80 hover:bg-slate-300/10'}`}
+                                                            >
+                                                                <span className="text-[13px] font-black tracking-widest">{filter.label}</span>
+                                                                <span className={`text-[13px] font-bold ${filterNoteCount === filter.value ? 'opacity-80' : 'opacity-30'}`}>
+                                                                    {filter.count}
+                                                                </span>
+                                                            </button>
+                                                        ));
+                                                    }
+                                                })()}
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
 
                                 {/* Scales or Songs List */}
                                 <div className="grid grid-cols-1 gap-3 pb-20">
