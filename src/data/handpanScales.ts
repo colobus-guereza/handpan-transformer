@@ -1998,8 +1998,8 @@ export const SCALES: Scale[] = [
             bottom: []
         },
         vector: { minorMajor: -0.3, pureSpicy: 0.1, rarePopular: 0.6 },
-        tags: ["요가명상힐링", "에지안", "웰니스감성", "트렌디", "메이저마이너중간"],
-        tagsEn: ["Healing", "Agean", "Wellness", "Trendy", "Mixed Mode"],
+        tags: ["에지안", "웰니스감성", "트렌디", "Malte Marten"],
+        tagsEn: ["Agean", "Wellness", "Trendy", "Malte Marten"],
         description: "단조와 장조의 경계를 넘나드는 묘한 매력의 에지안 스케일입니다. 웰니스와 명상에 최적화된 편안한 울림을 제공합니다.",
         descriptionEn: "The Agean scale, with its unique charm crossing the boundary between minor and major. It provides a comfortable resonance optimized for wellness and meditation.",
         i18n: {
