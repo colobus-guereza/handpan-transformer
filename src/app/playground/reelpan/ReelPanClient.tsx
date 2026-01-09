@@ -139,9 +139,17 @@ export default function ReelPanClient() {
     const [searchTerm, setSearchTerm] = useState('');
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
+    // Filter Scroll Reset
+    const filterContainerRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (filterContainerRef.current) {
+            filterContainerRef.current.scrollLeft = 0;
+        }
+    }, [filterMode]);
+
     const CATEGORIES = [
-        { id: 'beginner', label: 'Beginner', labelKo: '입문용', tags: ['대중적', '입문추천', '국내인기', 'Bestseller', '기본', '표준', '표준확장', 'Popular', 'Recommended for Beginners', 'Domestic Popular', 'Basic', 'Standard', 'Standard Extended'] },
-        { id: 'healing', label: 'Healing', labelKo: '요가명상힐링', tags: ['명상', '힐링', '치유', '차분한', '평화', 'Deep', '피그미', '트랜스', '몽환적', '깊음', '깊은울림', '아마라', '켈틱마이너', 'Meditation', 'Healing', 'Calm', 'Peace', 'Pygmy', 'Trance', 'Dreamy', 'Deep Resonance', 'Amara', 'Celtic Minor'] },
+        { id: 'beginner', label: 'Beginner', labelKo: '입문용', tags: ['대중적', '입문추천', '국내인기', 'Bestseller', '기본', '표준', '표준확장', 'Popular', 'Recommended for Beginners', 'Domestic Popular', 'Basic', 'Standard', 'Standard Extended', '입문용', 'Beginner', '가성비최고', 'Best Value'] },
+        { id: 'healing', label: 'Healing', labelKo: '요가명상힐링', tags: ['명상', '힐링', '치유', '차분한', '평화', 'Deep', '피그미', '트랜스', '몽환적', '깊음', '깊은울림', '아마라', '켈틱마이너', '에지안', 'Meditation', 'Healing', 'Calm', 'Peace', 'Pygmy', 'Trance', 'Dreamy', 'Deep Resonance', 'Amara', 'Celtic Minor', 'Agean', 'Wellness'] },
         { id: 'bright', label: 'Bright', labelKo: '메이저', tags: ['메이저', 'D메이저', 'Eb메이저', '밝음', '상쾌함', '희망적', '행복한', '윤슬', '사파이어', '청량함', '에너지', 'Major', 'D Major', 'Eb Major', 'Bright', 'Refreshing', 'Hopeful', 'Happy', 'Yunsl', 'Sapphire', 'Energy'] },
         { id: 'ethnic', label: 'Deep Ethnic', labelKo: '딥 에스닉', tags: ['이국적', '집시', '아라비안', '중동풍', '독특함', '인도풍', '동양적', '하이브리드', '도리안', '블루스', '신비', '매니아', '라사발리', '딥아시아', '신비로움', '메이저마이너', '에퀴녹스', 'Exotic', 'Gypsy', 'Arabian', 'Middle Eastern', 'Unique', 'Indian Style', 'Oriental', 'Hybrid', 'Dorian', 'Blues', 'Mysterious', 'Mania', 'Rasavali', 'Deep Asia', 'Major-Minor', 'Equinox'] }
     ];
@@ -221,21 +229,33 @@ export default function ReelPanClient() {
             }
         }
 
-        // 2. Sort
-        if (filterMode === 'AZ') {
-            // Default sort by Name for A-Z mode
-            result.sort((a, b) => a.name.localeCompare(b.name));
-        } else {
-            if (sortBy === 'name') {
-                result.sort((a, b) => a.name.localeCompare(b.name));
-            } else if (sortBy === 'notes') {
-                result.sort((a, b) => {
-                    const countA = 1 + a.notes.top.length + a.notes.bottom.length;
-                    const countB = 1 + b.notes.top.length + b.notes.bottom.length;
-                    return countA - countB;
-                });
+        // 2. Sort (User rule: Ding Pitch (C->B) -> Note Count (Asc))
+        const PITCH_ORDER = ['C', 'C#', 'Db', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'G#', 'Ab', 'A', 'A#', 'Bb', 'B'];
+
+        result.sort((a, b) => {
+            // 1. Ding Pitch Compare
+            // Extract Pitch (remove octave number)
+            const getPitch = (note: string) => note.replace(/[0-9]/g, '');
+            const pitchA = getPitch(a.notes.ding);
+            const pitchB = getPitch(b.notes.ding);
+
+            const indexA = PITCH_ORDER.indexOf(pitchA);
+            const indexB = PITCH_ORDER.indexOf(pitchB);
+
+            // Handle unknown pitches (put them at the end)
+            const safeIndexA = indexA === -1 ? 999 : indexA;
+            const safeIndexB = indexB === -1 ? 999 : indexB;
+
+            if (safeIndexA !== safeIndexB) {
+                return safeIndexA - safeIndexB;
             }
-        }
+
+            // 2. Note Count Compare (Same Ding)
+            const countA = a.notes.top.length + (a.notes.bottom?.length || 0) + 1;
+            const countB = b.notes.top.length + (b.notes.bottom?.length || 0) + 1;
+
+            return countA - countB;
+        });
 
         return result;
     }, [filterNoteCount, sortBy, filterMode, activeDingFilter, activeCategoryFilter, searchTerm]);
@@ -2307,7 +2327,7 @@ export default function ReelPanClient() {
                                                 </button>
                                             </div>
 
-                                            <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar" style={{ touchAction: 'pan-x' }}>
+                                            <div ref={filterContainerRef} className="flex gap-2 overflow-x-auto pb-4" style={{ touchAction: 'pan-x' }}>
                                                 {(() => {
                                                     if (filterMode === 'CATEGORY') {
                                                         const categoryStats = CATEGORIES.reduce((acc, cat) => {
@@ -2367,7 +2387,7 @@ export default function ReelPanClient() {
                                                                             ? 'bg-slate-300/80 border-slate-200 text-slate-900 shadow-[0_0_15px_rgba(200,200,210,0.4)]'
                                                                             : 'bg-white/[0.03] border-white/[0.08] text-white/40 hover:text-slate-200/80 hover:bg-slate-300/10'}`}
                                                                 >
-                                                                    <span className="text-[13px] font-black tracking-widest">All</span>
+                                                                    <span className="text-[13px] font-black tracking-widest">{scalePanelLang === 'ko' ? '전체' : 'All'}</span>
                                                                     <span className={`text-[13px] font-bold ${activeDingFilter === 'all' ? 'opacity-80' : 'opacity-30'}`}>
                                                                         {SCALES.length}
                                                                     </span>
@@ -2400,7 +2420,7 @@ export default function ReelPanClient() {
                                                         }, { mutant: 0 } as Record<string, number>);
                                                         const availableCounts = Object.keys(stats).filter(k => k !== 'mutant').map(Number).sort((a, b) => a - b);
                                                         const filters = [
-                                                            { label: 'All', value: 'all', count: SCALES.length },
+                                                            { label: scalePanelLang === 'ko' ? '전체' : 'All', value: 'all', count: SCALES.length },
                                                             ...availableCounts.map(n => ({ label: `${n}`, value: String(n), count: stats[n] })),
                                                             { label: 'Mutant', value: 'mutant', count: stats.mutant }
                                                         ];

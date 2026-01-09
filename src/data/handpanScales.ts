@@ -356,7 +356,7 @@ export const SCALES: Scale[] = [
         },
         vector: { minorMajor: -0.8, pureSpicy: 0.15, rarePopular: 0.7 },
         tags: ["한국감성", "마이너", "바텀업그레이드최적", "가성비최고"],
-        tagsEn: ["Minor", "Bottom Upgrade Best", "Korean emotion"],
+        tagsEn: ["Minor", "Bottom Upgrade Best", "Korean emotion", "Best Value"],
         description: "F minor와 동일한 음계이지만, Aeolian 모드의 관점에서 접근하는 자연 단조 스케일입니다. 안정적이고 우울한 감성이 특징이며, 바텀 업그레이드를 통해 다양한 분위기로 변신이 가능합니다. 가성비 최고의 모델로 추천됩니다.",
         descriptionEn: "A steady seller consistently loved in the domestic market. Characterized by stable and melancholic emotion, it can transform into various atmospheres through bottom upgrades. Recommended as the best value model.",
         videoUrl: "https://youtu.be/BH45TEboAgE?si=SLlNpG-5vTLSWAsx",
@@ -1863,8 +1863,8 @@ export const SCALES: Scale[] = [
             bottom: []
         },
         vector: { minorMajor: -0.7, pureSpicy: 0.2, rarePopular: 0.9 },
-        tags: ["아마라", "켈틱마이너", "클래식", "입문추천"],
-        tagsEn: ["Amara", "Celtic Minor", "Classic", "Beginners"],
+        tags: ["클래식", "입문추천"],
+        tagsEn: ["Classic", "Beginners"],
         description: "웰니스 3대장(Pygmy, Aegean, Amara)의 일원이자 ‘Celtic Minor’로도 불리는 C# Amara 9는, Malte Marten의 명연주로 유명세를 타며 전 세계 요가, 명상, 힐링 커뮤니티에서 독보적인 위치를 차지하고 있습니다. 많은 사랑을 받는 E Amara 18의 입문용 버전이기도 한 이 스케일은, 특유의 신비롭고 스피리추얼한 울림 덕분에 동서양을 막론하고 내면의 평화를 찾는 이들에게 깊은 사랑을 받고 있습니다.",
         descriptionEn: "C# Amara 9, also known as 'Celtic Minor' and a member of the Wellness Trio (Pygmy, Aegean, Amara), holds a unique position in the global yoga, meditation, and healing communities, made famous by Malte Marten's renowned performances. Also an introductory version of the beloved E Amara 18, this scale is deeply loved by those seeking inner peace in both East and West, thanks to its unique mysterious and spiritual resonance.",
         videoUrl: "https://youtu.be/W9QAtyTDrTM?si=Cy7YMKhp-MY2Bv7r",
@@ -1915,7 +1915,7 @@ export const SCALES: Scale[] = [
         }
     },
 
-    // 29. F# Low Pygmy 12
+    // 30. F# Low Pygmy 12
     {
         id: "fs_low_pygmy_12",
         name: "F# Low Pygmy 12",
@@ -1936,7 +1936,7 @@ export const SCALES: Scale[] = [
         ownUrlEn: "https://handpanen.imweb.me/21/?idx=104"
     },
 
-    // 30. E Amara 18
+    // 31. E Amara 18
     {
         id: "e_amara_18",
         name: "E Amara 18",
@@ -1956,7 +1956,7 @@ export const SCALES: Scale[] = [
         ownUrl: "https://handpan.co.kr/shop/?idx=105",
         ownUrlEn: "https://handpanen.imweb.me/21/?idx=105"
     },
-    // 31. C# Amara 10 (Added)
+    // 32. C# Amara 10 (Added)
     {
         id: "cs_amara_10",
         name: "C# Amara 10",
@@ -1967,8 +1967,8 @@ export const SCALES: Scale[] = [
             bottom: []
         },
         vector: { minorMajor: -0.7, pureSpicy: 0.15, rarePopular: 0.95 },
-        tags: ["마이너", "대중적", "입문추천", "Amara"],
-        tagsEn: ["Minor", "Popular", "Beginner Recommended", "Amara"],
+        tags: ["마이너", "대중적", "입문추천"],
+        tagsEn: ["Minor", "Popular", "Beginner Recommended"],
         description: "C# Amara 9의 확장형 모델로, 총 10개의 노트를 통해 더욱 풍성한 표현이 가능합니다. 입문자에게 가장 추천하는 모델 중 하나로, 켈틱 마이너 특유의 신비로운 감성을 담고 있습니다.",
         descriptionEn: "An extended model of C# Amara 9, allowing for richer expression with a total of 10 notes. It is one of the most recommended models for beginners, containing the unique mysterious sensibility of Celtic Minor.",
         videoUrl: "https://youtu.be/W9QAtyTDrTM?si=Cy7YMKhp-MY2Bv7r",
@@ -1987,7 +1987,7 @@ export const SCALES: Scale[] = [
         }
     },
 
-    // 32. C Agean 10
+    // 33. C Agean 10
     {
         id: "c_agean_10",
         name: "C Agean 10",
@@ -2014,7 +2014,7 @@ export const SCALES: Scale[] = [
         }
     },
 
-    // 33. F Aeolian 12 (F Low Pygmy 12 Layout)
+    // 34. F Aeolian 12 (F Low Pygmy 12 Layout)
     {
         id: "f_aeolian_12",
         name: "F Aeolian 12",
