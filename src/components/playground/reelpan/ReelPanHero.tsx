@@ -9,31 +9,31 @@ import { Scale } from '@/data/handpanScales';
 const COLOR_THEMES = {
     green: {
         gradient: 'linear-gradient(180deg, rgba(30, 42, 31, 0.25) 0%, rgba(20, 26, 20, 0.5) 100%)',
-        cardBg: 'rgba(45, 65, 48, 0.35)',           // High transparency for subtle look
+        cardBg: 'rgba(45, 65, 48, 0.15)',           // High transparency for subtle look
         primary: { r: 124, g: 185, b: 124 },        // #7CB97C
         primaryLight: { r: 197, g: 229, b: 197 },   // #C5E5C5
     },
     magenta: {
         gradient: 'linear-gradient(180deg, rgba(42, 30, 42, 0.25) 0%, rgba(26, 20, 26, 0.5) 100%)',
-        cardBg: 'rgba(65, 45, 65, 0.35)',           // High transparency for subtle look
+        cardBg: 'rgba(65, 45, 65, 0.15)',           // High transparency for subtle look
         primary: { r: 185, g: 124, b: 185 },        // #B97CB9
         primaryLight: { r: 229, g: 197, b: 229 },   // #E5C5E5
     },
     yellow: {
         gradient: 'linear-gradient(180deg, rgba(45, 40, 30, 0.25) 0%, rgba(26, 24, 15, 0.5) 100%)',
-        cardBg: 'rgba(65, 60, 35, 0.35)',           // High transparency for subtle look
+        cardBg: 'rgba(65, 60, 35, 0.15)',           // High transparency for subtle look
         primary: { r: 234, g: 179, b: 8 },           // #EAB308
         primaryLight: { r: 254, g: 240, b: 138 },    // #FEF08A
     },
     red: {
         gradient: 'linear-gradient(180deg, rgba(42, 30, 30, 0.25) 0%, rgba(26, 20, 20, 0.5) 100%)',
-        cardBg: 'rgba(65, 45, 45, 0.35)',           // High transparency for subtle look
+        cardBg: 'rgba(65, 45, 45, 0.15)',           // High transparency for subtle look
         primary: { r: 239, g: 68, b: 68 },           // #EF4444
         primaryLight: { r: 252, g: 165, b: 165 },    // #FCA5A5
     },
     ocean: {
         gradient: 'linear-gradient(180deg, rgba(30, 42, 50, 0.25) 0%, rgba(20, 26, 30, 0.5) 100%)',
-        cardBg: 'rgba(45, 60, 70, 0.35)',           // High transparency for subtle look
+        cardBg: 'rgba(45, 60, 70, 0.15)',           // High transparency for subtle look
         primary: { r: 56, g: 189, b: 248 },         // #38BDF8 (Sky Blue)
         primaryLight: { r: 186, g: 230, b: 253 },   // #BAE6FD
     },
