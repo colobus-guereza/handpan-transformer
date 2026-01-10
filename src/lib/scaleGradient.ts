@@ -29,62 +29,80 @@ function hashString(str: string): number {
  * - 1.0 (Popular): 밝은 22-32%
  */
 /**
+ * 제목(별명)의 핵심 단어에서 연상되는 색상을 추출하여 매핑하는 로직
+ */
+function getSemanticHue(nickname: string): number | null {
+    const keywords: Record<string, number> = {
+        '열정': 0,      // Red
+        '붉은': 5,      // Red
+        '사막': 35,     // Orange/Sand
+        '희망': 50,     // Gold/Yellow
+        '태양': 45,     // Gold
+        '숲': 110,      // Forest Green
+        '초록': 120,     // Green
+        '오로라': 170,   // Teal/Aurora
+        '인어': 190,     // Sea Blue
+        '바다': 200,     // Blue
+        '하늘': 210,     // Sky Blue
+        '밤': 240,       // Deep Blue
+        '새벽': 260,     // Dark Violet
+        '몽환': 285,     // Dreamy Purple
+        '신비': 275,     // Mystery Purple
+        '쓸쓸함': 220,    // Muted Blue
+        '우울': 230,     // Muted Blue
+    };
+
+    for (const [key, hue] of Object.entries(keywords)) {
+        if (nickname.includes(key)) return hue;
+    }
+    return null;
+}
+
+/**
  * 스케일의 vector 값을 기반으로 더욱 풍부하고 구체적인 HSL 색상 쌍을 생성
  */
 export function getScaleColors(scale: Scale): { primary: string; secondary: string } {
     const { minorMajor, pureSpicy, rarePopular } = scale.vector;
+    const nickname = scale.nickname || '';
 
-    // 1. Hue (색조): minorMajor (-1.0 ~ 1.0) 기반으로 넓은 스펙트럼 매핑
-    // -1.0 (Deep Minor): 240 (Deep Blue)
-    // -0.5 (Melancholic): 280 (Violet/Purple)
-    //  0.0 (Neutral/Hybrid): 180 (Teal/Emerald)
-    //  0.5 (Major): 120 (Soft Green)
-    //  1.0 (Bright Major): 45 (Gold/Warm Orange)
+    // 1. Base Hue: vector (minorMajor) 기반 생성
+    let vectorHue: number;
+    if (minorMajor <= -0.5) vectorHue = 240 + ((minorMajor + 1) / 0.5) * 40;
+    else if (minorMajor <= 0) vectorHue = 280 - ((minorMajor + 0.5) / 0.5) * 100;
+    else if (minorMajor <= 0.5) vectorHue = 180 - (minorMajor / 0.5) * 60;
+    else vectorHue = 120 - ((minorMajor - 0.5) / 0.5) * 75;
 
-    let hue: number;
-    if (minorMajor <= -0.5) {
-        // -1.0 to -0.5: Deep Blue to Violet
-        const t = (minorMajor + 1) / 0.5; // 0 to 1
-        hue = 240 + t * 40;
-    } else if (minorMajor <= 0) {
-        // -0.5 to 0: Violet to Teal
-        const t = (minorMajor + 0.5) / 0.5; // 0 to 1
-        hue = 280 - t * 100;
-    } else if (minorMajor <= 0.5) {
-        // 0 to 0.5: Teal to Green
-        const t = minorMajor / 0.5; // 0 to 1
-        hue = 180 - t * 60;
-    } else {
-        // 0.5 to 1.0: Green to Gold
-        const t = (minorMajor - 0.5) / 0.5; // 0 to 1
-        hue = 120 - t * 75;
+    // 2. Semantic Hue: 제목 키워드 기반 색상 추출
+    const semanticHue = getSemanticHue(nickname);
+
+    // 두 색상 결합: 키워드가 있으면 키워드 색상을 70% 반영하여 분위기 결정
+    let finalHue = vectorHue;
+    if (semanticHue !== null) {
+        finalHue = (vectorHue * 0.3) + (semanticHue * 0.7);
     }
 
-    // 2. Saturation (채도): pureSpicy (0.0 ~ 1.0) 기반 (50% ~ 95%)
-    // 소리가 화려할수록(Spicy) 더 선명한 색상
-    const saturation = 50 + pureSpicy * 45;
+    // 3. Saturation: pureSpicy 기반 (60% ~ 95%)
+    const saturation = 60 + pureSpicy * 35;
 
-    // 3. Lightness (명도): rarePopular (0.0 ~ 1.0) 기반 (40% ~ 65%)
-    // 파스텔톤에서 벗어나 색상 고유의 농도가 느껴지도록 하향 조절
-    const lightness = 40 + (1 - rarePopular) * 25;
+    // 4. Lightness: rarePopular 기반 (35% ~ 60%)
+    const lightness = 35 + (1 - rarePopular) * 25;
 
-    // Hash for consistent variation
     const hash = hashString(scale.id);
-    const hueVariation = (hash % 20) - 10; // -10 ~ +10
+    const hueVariation = (hash % 20) - 10;
 
-    const finalHue = (hue + hueVariation + 360) % 360;
-    const finalSat = Math.min(100, Math.max(30, saturation));
+    finalHue = (finalHue + hueVariation + 360) % 360;
+    const finalSat = Math.min(100, Math.max(40, saturation));
 
-    // 4. Alpha (투명도): 전체 배경이 잘 보이도록 하향 조절 (0.3 ~ 0.4)
-    const alpha = 0.35;
+    // 5. Alpha (투명도): 20% 상향 조정 (20% 상향 -> 더 투명하게)
+    const alpha = 0.15;
 
     // Primary: 기본 색상
     const primary = `hsla(${finalHue}, ${finalSat}%, ${lightness}%, ${alpha})`;
 
-    // Secondary: 색상환에서 약간 떨어진 색상 (풍부한 그라데이션을 위해)
-    const secondaryHue = (finalHue + 40 + (hash % 30)) % 360;
-    const secondarySat = Math.max(40, finalSat * 0.8);
-    const secondaryLight = Math.max(30, lightness - 15);
+    // Secondary: 색상환에서 30~50도 떨어진 보조 색상 (그라데이션용)
+    const secondaryHue = (finalHue + 40 + (hash % 20)) % 360;
+    const secondarySat = Math.max(30, finalSat * 0.7);
+    const secondaryLight = Math.max(25, lightness - 10);
     const secondary = `hsla(${secondaryHue}, ${secondarySat}%, ${secondaryLight}%, ${alpha})`;
 
     return { primary, secondary };
@@ -101,7 +119,7 @@ export function generateScaleGradient(scale: Scale): string {
         "circle at 30% 30%",
         "circle at 70% 30%",
         "circle at 50% 50%",
-        "ellipse at 50% 0%",
+        "ellipse at 50% 20%",
         "circle at 20% 80%",
     ];
     const pos = positions[hash % positions.length];
@@ -110,14 +128,13 @@ export function generateScaleGradient(scale: Scale): string {
 }
 
 /**
- * 스케일에 대한 호버 시 더욱 선명한 방사형 그라데이션 생성
+ * 호버 시 투명도를 살짝 높여 시인성 확보
  */
 export function generateScaleGradientHover(scale: Scale): string {
     const colors = getScaleColors(scale);
     const hash = hashString(scale.id);
 
-    // Hover state: increase opacity and slightly increase saturation/lightness
-    const hoverAlpha = 0.6;
+    const hoverAlpha = 0.4; // 호버 시에는 조금 더 선명하게
 
     const makeHover = (hsla: string) => hsla.replace(/[\d.]+\)$/, `${hoverAlpha})`);
 
@@ -128,7 +145,7 @@ export function generateScaleGradientHover(scale: Scale): string {
         "circle at 30% 30%",
         "circle at 70% 30%",
         "circle at 50% 50%",
-        "ellipse at 50% 0%",
+        "ellipse at 50% 20%",
         "circle at 20% 80%",
     ];
     const pos = positions[hash % positions.length];
