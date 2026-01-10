@@ -93,8 +93,8 @@ export function getScaleColors(scale: Scale): { primary: string; secondary: stri
     finalHue = (finalHue + hueVariation + 360) % 360;
     const finalSat = Math.min(100, Math.max(40, saturation));
 
-    // 5. Alpha (투명도): 20% 상향 조정 (20% 상향 -> 더 투명하게)
-    const alpha = 0.15;
+    // 5. Alpha (투명도): 35%로 상향 조정 (시인성 확보)
+    const alpha = 0.35;
 
     // Primary: 기본 색상
     const primary = `hsla(${finalHue}, ${finalSat}%, ${lightness}%, ${alpha})`;
