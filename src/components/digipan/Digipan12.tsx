@@ -234,20 +234,64 @@ const Digipan12 = React.forwardRef<Digipan3DHandle, Digipan12Props>(({
         // Sort for numbering by frequency (lowest = 1)
         const sortedByPitch = [...generatedNotes].sort((a, b) => a.frequency - b.frequency);
 
-        return generatedNotes.map((n: any) => {
+        const finalNotes = generatedNotes.map((n: any) => {
             // All notes get their frequency-based rank (1 = lowest frequency)
             const rank = sortedByPitch.findIndex(x => x.id === n.id) + 1;
             const subLabel = rank.toString();
             return { ...n, subLabel };
         });
 
+        // Add Manual Snare Buttons (Bottom Left/Right) - Same as Digipan11
+        // Digipan11/12 Adjustments: LS cx+90/cy+110, RS cx-90/cy+110
+        const snareNoteR = {
+            id: 99,
+            cx: 825,  // 915 - 90
+            cy: 1025, // 915 + 110
+            scale: 0,
+            rotate: 0,
+            position: 'bottom',
+            angle: 0,
+            scaleX: 0.7,
+            scaleY: 0.7,
+            label: 'SnareR',
+            frequency: 0,
+            visualFrequency: 440,
+            labelOffset: 25,
+            hideGuide: true,
+            subLabel: 'Snare',
+            offset: [0, 0, 0] as [number, number, number]
+        };
+
+        const snareNoteL = {
+            id: 98,
+            cx: 175,  // 85 + 90
+            cy: 1025, // 915 + 110
+            scale: 0,
+            rotate: 0,
+            position: 'bottom',
+            angle: 0,
+            scaleX: 0.7,
+            scaleY: 0.7,
+            label: 'SnareL',
+            frequency: 0,
+            visualFrequency: 440,
+            labelOffset: 25,
+            hideGuide: true,
+            subLabel: 'Snare',
+            offset: [0, 0, 0] as [number, number, number]
+        };
+
+        finalNotes.push(snareNoteR, snareNoteL);
+
+        return finalNotes;
+
     }, [scale, externalNotes, baseNotes10]);
 
     const notesToRender = externalNotes || internalNotes;
 
-    // Filter notes for the Permanent Visual Layer (Bottom 2 notes: IDs 10, 11)
+    // Filter notes for the Permanent Visual Layer (Bottom 2 notes: IDs 10, 11, exclude snares)
     const visualNotes = useMemo(() => {
-        return notesToRender.filter((n: any) => n.id >= 10);
+        return notesToRender.filter((n: any) => n.id >= 10 && n.id < 98);
     }, [notesToRender]);
 
     // Define sceneSize based on forceCompactView
