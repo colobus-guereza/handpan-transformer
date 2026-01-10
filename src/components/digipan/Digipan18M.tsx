@@ -377,7 +377,7 @@ const Digipan18M = React.forwardRef<Digipan3DHandle, Digipan18MProps>(({
         // Adjustments: LS cx+110/cy+110, RS cx-110/cy+110
         const snareNoteR = {
             id: 99,
-            cx: 805,  // 915 - 110
+            cx: 825,  // 805 + 20
             cy: 1025, // 915 + 110
             scale: 0,
             rotate: 0,
@@ -396,7 +396,7 @@ const Digipan18M = React.forwardRef<Digipan3DHandle, Digipan18MProps>(({
 
         const snareNoteL = {
             id: 98,
-            cx: 195,  // 85 + 110
+            cx: 175,  // 195 - 20
             cy: 1025, // 915 + 110
             scale: 0,
             rotate: 0,
