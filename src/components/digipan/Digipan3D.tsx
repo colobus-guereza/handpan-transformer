@@ -1453,8 +1453,18 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
     return (
         <div
             ref={containerRef}
-            className="w-full h-full relative"
-            style={{ background: backgroundColor || '#FFFFFF', touchAction: isCameraLockedState ? 'none' : 'pan-y' }}
+            className="w-full h-full relative touch-none select-none"
+            style={{
+                background: backgroundColor || '#FFFFFF',
+                touchAction: 'none',
+                WebkitTouchCallout: 'none',
+                userSelect: 'none'
+            }}
+            onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }}
         > {/* Background Color, Allow vertical scroll */}
 
             {/* Mobile Layout: Bottom Corner Buttons */}
