@@ -57,7 +57,11 @@ export const useOctaveResonance = ({ getAudioContext, getMasterGain }: UseOctave
         if (!ctx) return null;
 
         try {
-            const fileName = noteName.replace('#', '%23'); // Simple manual encode for #
+            // Skip resonance for Snare notes (they are percussive/dry)
+            if (noteName.includes('Snare')) return null;
+
+            let fileName = noteName.replace('#', '%23'); // Simple manual encode for #
+
             const response = await fetch(`/sounds/${fileName}.mp3`);
             const arrayBuffer = await response.arrayBuffer();
 

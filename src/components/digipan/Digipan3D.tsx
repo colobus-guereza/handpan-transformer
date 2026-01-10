@@ -1,15 +1,17 @@
 'use client';
 
 import React, { useState, useRef, useMemo, Suspense, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import * as Tone from 'tone';
 
 // Shared mobile button style for consistent size and appearance
 const btnMobile = "w-[38.4px] h-[38.4px] flex items-center justify-center bg-white/80 backdrop-blur-sm rounded-full border border-slate-200 hover:bg-white transition-all duration-200";
+import { motion, AnimatePresence } from 'framer-motion';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { Text, OrbitControls, Center, Line, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import { Scale } from '@/data/handpanScales';
-import { Lock, Unlock, Camera, Check, Eye, EyeOff, MinusCircle, PlayCircle, Play, Ship, Pointer, Disc, Square, Drum, Music, Music2, Download, Trash2 } from 'lucide-react';
+import { Lock, Unlock, Camera, Check, Eye, EyeOff, MinusCircle, PlayCircle, Play, Ship, Pointer, Disc, Square, Drum, Music, Music2, Download, Trash2, X, Settings2 } from 'lucide-react';
 import { HANDPAN_CONFIG, getDomeHeight, TONEFIELD_CONFIG } from '@/constants/handpanConfig';
 import { DIGIPAN_VIEW_CONFIG, DIGIPAN_LABEL_POS_FACTOR } from '@/constants/digipanViewConfig';
 import html2canvas from 'html2canvas';
@@ -248,7 +250,9 @@ const ToneFieldMesh = React.memo(({
     playNote,
     offset,
     bottomTextColor,
-    bottomTextOpacity
+    bottomTextOpacity,
+    activeSnare, // New Prop
+    onLongPress  // New Prop
 }: {
     note: NoteData;
     centerX?: number;
@@ -260,6 +264,8 @@ const ToneFieldMesh = React.memo(({
     offset?: [number, number, number];
     bottomTextColor?: string;
     bottomTextOpacity?: number;
+    activeSnare?: string;
+    onLongPress?: () => void;
 }) => {
     const [hovered, setHovered] = useState(false);
     const [pulsing, setPulsing] = useState(false);
@@ -313,8 +319,19 @@ const ToneFieldMesh = React.memo(({
     const scaleXMult = note.scaleX ?? 1;
     const scaleYMult = note.scaleY ?? 1;
 
-    const finalRadiusX = radiusX * scaleXMult;
-    const finalRadiusY = radiusY * scaleYMult;
+    let finalRadiusX = radiusX * scaleXMult;
+    let finalRadiusY = radiusY * scaleYMult;
+
+    // Force Circle for Snare
+    if (note.label.includes('Snare')) {
+        const avg = (finalRadiusX + finalRadiusY) / 2;
+        // Use Y as base to ensure consistency or just average. 
+        // Actually, let's just make it equal to Y (height) which is usually the 'size' reference, or just average.
+        // Assuming standard tonefield is wider than tall (Width > Height).
+        // Let's set both to the smaller dimension (roughly height based) to keep it compact? 
+        // Or just use the Y radius for both.
+        finalRadiusX = finalRadiusY;
+    }
 
     // Z-position: Place on the 0,0 coordinate plane (Top of dome)
     const zPos = finalPosZ; // Use offset Z
@@ -453,17 +470,36 @@ const ToneFieldMesh = React.memo(({
         }
     };
 
+    const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+
     const handlePointerDown = (e: any) => {
         e.stopPropagation();
-        onClick?.(note.id);
 
-        // Play Sound via preloaded Howler (instant playback, no network delay)
-        if (playNote) {
-            playNote(note.label);
+        // Long Press Timer
+        if (onLongPress) {
+            longPressTimerRef.current = setTimeout(onLongPress, 600);
         }
 
-        // Trigger Sound Breathing effect
+        // ★ Latency Optimization: Audio First!
+        // Execute Audio Trigger immediately before any other logic (State updates, Visuals, Analytics)
+        if (playNote) {
+            // Include Override Logic for Snare (Use activeSnare prop if available)
+            const labelToPlay = activeSnare || note.label;
+            playNote(labelToPlay);
+        }
+
+        // Trigger Visual Effect (Parallel)
         triggerPulse();
+
+        // Execute Parent Logic (State Updates, Analytics, etc.) - potentially slower
+        onClick?.(note.id);
+    };
+
+    const handlePointerUp = () => {
+        if (longPressTimerRef.current) {
+            clearTimeout(longPressTimerRef.current);
+            longPressTimerRef.current = null;
+        }
     };
 
     return (
@@ -474,11 +510,14 @@ const ToneFieldMesh = React.memo(({
                 {/* Placed at z=0.2 to be IN FRONT of the visual dot (z=0.1) for reliable interaction */}
                 <mesh
                     onPointerDown={handlePointerDown}
+                    onPointerUp={handlePointerUp}
+                    onPointerLeave={handlePointerUp}
                     onPointerOver={() => {
                         document.body.style.cursor = 'pointer';
                         setHovered(true);
                     }}
                     onPointerOut={() => {
+                        handlePointerUp();
                         document.body.style.cursor = 'auto';
                         setHovered(false);
                     }}
@@ -497,25 +536,26 @@ const ToneFieldMesh = React.memo(({
                 </mesh>
 
                 {/* 1-b. Visual Mesh (Wireframe) - Standard Tonefields */}
-                {/* Visible in Modes 0 (1) and 1 (2) for ALL notes (including Bottom) */}
+                {/* Visible in Modes 0 (1) and 1 (2) for ALL notes (including Bottom). Snare is ALWAYS visible. */}
                 <mesh
                     rotation={[Math.PI / 2, 0, 0]}
                     scale={[finalRadiusX, 0.05, finalRadiusY]}
-                    visible={viewMode === 0 || viewMode === 1}
+                    visible={note.label.includes('Snare') || viewMode === 0 || viewMode === 1}
                 >
                     <sphereGeometry args={[1, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2]} />
                     <meshStandardMaterial
-                        color={hovered ? "#60A5FA" : "#FFFFFF"}
+                        color={note.label.includes('Snare') ? "#60A5FA" : (hovered ? "#60A5FA" : "#FFFFFF")}
                         emissive={hovered ? "#1E40AF" : "#000000"}
                         emissiveIntensity={hovered ? 0.5 : 0}
                         roughness={0.9}
                         metalness={0.0}
-                        wireframe={true}
+                        wireframe={note.label.includes('Snare') ? false : true}
                         toneMapped={false}
                         transparent={true}
-                        opacity={1}
+                        opacity={note.label.includes('Snare') ? 0.8 : 1}
                     />
                 </mesh>
+
 
                 {/* 1-c. Bottom Dot Visual (Sienna Guide) */}
                 {/* Visible ONLY in Guide Mode (Mode 4 / UI Mode 5) */}
@@ -666,6 +706,30 @@ const ToneFieldMesh = React.memo(({
 
                     const areLabelsVisible = viewMode === 0 || viewMode === 2;
 
+                    // Hide standard logic for Snare, but render custom Snare Label
+                    if (note.label.includes('Snare')) {
+                        let displayText = 'S1';
+                        // Use the passed activeSnare prop to determine S1/S2/S3
+                        if (activeSnare === 'Snare2') displayText = 'S2';
+                        if (activeSnare === 'Snare3') displayText = 'S3';
+
+                        return (
+                            <Text
+                                visible={areLabelsVisible} // Follows Pitch/Number Toggle
+                                position={[0, 0, 0.05]} // Slightly elevated
+                                fontSize={3.0}
+                                color="#FFFFFF"
+                                anchorX="center"
+                                anchorY="middle"
+                                fontWeight="bold"
+                                outlineWidth={0.05}
+                                outlineColor="#000000"
+                            >
+                                {displayText}
+                            </Text>
+                        );
+                    }
+
                     return (
                         <>
                             {/* Pitch Label (Center) - Remains at 0,0 but upright */}
@@ -814,6 +878,9 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
     const [isPlaying, setIsPlaying] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [drumTimer, setDrumTimer] = useState<number | null>(null);
+    // Snare Settings
+    const [activeSnares, setActiveSnares] = useState<Record<string, string>>({});
+    const [editingSnareId, setEditingSnareId] = useState<string | null>(null);
 
     // Recording State Management
     const [currentBlob, setCurrentBlob] = useState<Blob | null>(null);
@@ -1158,7 +1225,12 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
 
         // 1. Get all unique note labels in the current scale
         const uniqueNotes = new Set<string>();
-        notes.forEach(n => uniqueNotes.add(n.label));
+        notes.forEach(n => {
+            // Filter out Snare notes (No resonance logic needed)
+            if (!n.label.includes('Snare')) {
+                uniqueNotes.add(n.label);
+            }
+        });
 
         // 2. Preload them all in parallel
         preloadNotes(Array.from(uniqueNotes));
@@ -1170,8 +1242,12 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
     // Optimized Click Handler (Stable Callback)
     const handleToneFieldClick = useCallback((id: number) => {
         // 2. Play Resonant Notes (Lookup Map - O(1))
+        // Skip resonance for Snare (ID 99 or Label Check)
+        const clickedNote = notes.find(n => n.id === id);
+        const isSnare = clickedNote?.label.includes('Snare');
+
         const resonantTargets = resonanceMap[id];
-        if (resonantTargets) {
+        if (resonantTargets && !isSnare) {
             resonantTargets.forEach(target => {
                 playResonantNote(target.label, target.settings);
             });
@@ -1581,6 +1657,8 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
                     {notes.map((note) => (
                         <ToneFieldMesh
                             key={note.id}
+                            activeSnare={note.label.includes('Snare') ? (activeSnares[note.label] || 'Snare') : undefined}
+                            onLongPress={note.label.includes('Snare') ? () => setEditingSnareId(note.label) : undefined}
                             note={note}
                             centerX={centerX}
                             centerY={centerY}
@@ -1600,6 +1678,71 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
 
             {/* Scale Info Panel - Bottom Right Overlay (only shown in /digipan-3d-test dev page) */}
             {/* ScaleInfoPanel removed */}
+
+            {/* Snare Settings Popup (Mobile Style) */}
+            <AnimatePresence>
+                {editingSnareId && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 z-[150] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 select-none"
+                        onPointerDown={() => setEditingSnareId(null)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.9, y: 20 }}
+                            className="w-full max-w-xs bg-zinc-900 border border-white/10 rounded-[32px] p-6 shadow-2xl"
+                            // Stop propagation to prevent closing when clicking inside
+                            onClick={(e) => e.stopPropagation()}
+                            onPointerDown={(e) => e.stopPropagation()}
+                        >
+                            <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
+                                        <Drum size={16} className="text-blue-400" />
+                                    </div>
+                                    <h3 className="text-white font-bold tracking-tight">Snare Sound ({editingSnareId === 'SnareL' ? 'Left' : 'Right'})</h3>
+                                </div>
+                                <button
+                                    onClick={() => setEditingSnareId(null)}
+                                    className="text-white/40 hover:text-white"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            <div className="flex flex-col gap-3">
+                                {['Snare', 'Snare2', 'Snare3'].map((snareId, i) => {
+                                    const currentActive = activeSnares[editingSnareId] || 'Snare';
+                                    const isActive = currentActive === snareId;
+                                    return (
+                                        <button
+                                            key={snareId}
+                                            onClick={() => {
+                                                setActiveSnares(prev => ({ ...prev, [editingSnareId]: snareId }));
+                                                // Play sample immediately
+                                                if (playNote) playNote(snareId);
+                                            }}
+                                            className={`w-full py-4 px-6 rounded-2xl flex items-center justify-between transition-all active:scale-95
+                                            ${isActive
+                                                    ? 'bg-blue-600 shadow-lg shadow-blue-900/50'
+                                                    : 'bg-white/5 hover:bg-white/10'}
+                                        `}
+                                        >
+                                            <span className={`font-medium ${isActive ? 'text-white' : 'text-white/60'}`}>
+                                                Type {i + 1}
+                                            </span>
+                                            {isActive && <Check size={18} className="text-white" />}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Recording Finished Overlay - Only show if NOT mobile (Mobile auto-saves) */}
             {

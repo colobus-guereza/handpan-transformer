@@ -19,6 +19,8 @@ const normalizeNote = (note: string): string => {
         'G#3': 'G#3', 'Ab3': 'G#3',
         'G#4': 'G#4', 'Ab4': 'G#4',
         'G#5': 'G#5', 'Ab5': 'G#5',
+        'SnareL': 'Snare',
+        'SnareR': 'Snare',
     };
     if (map[note]) return map[note];
     return note;
@@ -39,6 +41,7 @@ const ALL_NOTES = [
     'F#3', 'F#4', 'F#5', // Gb mapped here
     'G3', 'G4', 'G5',
     'G#3', 'G#4', 'G#5', // Ab mapped here
+    'Snare', 'Snare2', 'Snare3', // Custom Snare Sounds
 ];
 
 export interface UseHandpanAudioReturn {
@@ -147,9 +150,14 @@ export const useHandpanAudio = (): UseHandpanAudioReturn => {
                 let loadedCount = 0;
 
                 ALL_NOTES.forEach((note) => {
-                    const filename = note.replace('#', '%23');
+                    let filename = note.replace('#', '%23');
+                    if (note === 'Snare') filename = 'snare1';
+                    if (note === 'Snare2') filename = 'snare2';
+                    if (note === 'Snare3') filename = 'snare3';
+
                     GLOBAL_SOUND_CACHE[note] = new Howl({
                         src: [`/sounds/${filename}.mp3`],
+                        format: ['mp3'],
                         preload: true,
                         html5: false,
                         volume: 0.6,
