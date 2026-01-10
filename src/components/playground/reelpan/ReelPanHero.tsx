@@ -30,7 +30,13 @@ const COLOR_THEMES = {
         cardBg: 'rgba(65, 45, 45, 0.35)',           // High transparency for subtle look
         primary: { r: 239, g: 68, b: 68 },           // #EF4444
         primaryLight: { r: 252, g: 165, b: 165 },    // #FCA5A5
-    }
+    },
+    ocean: {
+        gradient: 'linear-gradient(180deg, rgba(30, 42, 50, 0.25) 0%, rgba(20, 26, 30, 0.5) 100%)',
+        cardBg: 'rgba(45, 60, 70, 0.35)',           // High transparency for subtle look
+        primary: { r: 56, g: 189, b: 248 },         // #38BDF8 (Sky Blue)
+        primaryLight: { r: 186, g: 230, b: 253 },   // #BAE6FD
+    },
 } as const;
 
 type ColorTheme = keyof typeof COLOR_THEMES;

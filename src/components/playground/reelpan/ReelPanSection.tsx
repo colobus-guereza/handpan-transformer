@@ -60,11 +60,8 @@ export default function ReelPanSection({ title, scales, onSelect, lang }: ReelPa
                             {/* Text Info */}
                             <div className="text-center">
                                 <h3 className="text-sm font-bold text-white/90 truncate group-hover:text-white transition-colors">
-                                    {nickname}
-                                </h3>
-                                <p className="text-xs text-white/40 truncate">
                                     {scale.name}
-                                </p>
+                                </h3>
                             </div>
                         </div>
                     );

@@ -96,17 +96,150 @@ export function getScaleColors(scale: Scale): { primary: string; secondary: stri
     // 5. Alpha (투명도): 50%로 상향 조정 (색감 강화)
     const alpha = 0.5;
 
-    // [Fine-tuning] D Kurd: 라이트 브라운 그라데이션 (음 개수 상관없이 통일)
+    // [Fine-tuning] D Kurd: Midnight Serenity (고요한 한밤중)
     if (scale.name.includes('D Kurd')) {
-        const primary = `hsla(28, 45%, 65%, ${alpha})`;   // 따뜻한 라이트 브라운
-        const secondary = `hsla(22, 35%, 45%, ${alpha})`; // 조금 더 진한 브라운
+        const primary = `hsla(227, 55%, 15%, ${alpha})`;   // 중심: Deep Navy (#0b1026)
+        const secondary = `hsla(191, 75%, 65%, ${alpha})`; // 외곽: Moonlight Blue (#6dd5ed)
         return { primary, secondary };
     }
 
-    // [Fine-tuning] E Equinox: 하늘색-핑크 그라데이션 (메이저/마이너 혼합 이미지)
+    // [Fine-tuning] E Equinox: Twilight Horizon (여명의 지평선 - 매직 아워)
     if (scale.name.includes('E Equinox')) {
-        const primary = `hsla(205, 80%, 75%, ${alpha})`;   // 밝은 하늘색 (Sky Blue)
-        const secondary = `hsla(340, 85%, 80%, ${alpha})`; // 화사한 핑크 (Pink)
+        const primary = `hsla(247, 70%, 63%, ${alpha})`;   // 중심: Soft Iris (#6c5ce7)
+        const secondary = `hsla(339, 97%, 74%, ${alpha})`; // 외곽: Dawn Pink (#fd79a8)
+        return { primary, secondary };
+    }
+
+    // [Fine-tuning] Deep Ethnic: 신비롭고 이국적인 붉은 보라 ~ 와인빛 (기본 베이스)
+    if (scale.name.includes('Rasavali')) {
+        const primary = `hsla(347, 88%, 37%, ${alpha})`;   // 중심: Chili Red (#b20a2c) - Spicy Masala 테마
+        const secondary = `hsla(48, 89%, 50%, ${alpha})`;  // 외곽: Turmeric Gold (#f1c40f)
+        return { primary, secondary };
+    }
+
+    if (scale.name.includes('Saladin')) {
+        const primary = `hsla(22, 100%, 41%, ${alpha})`;   // 중심: Burnt Sienna (#d35400) - Ancient Sand 테마
+        const secondary = `hsla(28, 80%, 52%, ${alpha})`;  // 외곽: Sand Dune (#e67e22)
+        return { primary, secondary };
+    }
+
+    if (scale.name.includes('La Sirena')) {
+        const primary = `hsla(245, 39%, 28%, ${alpha})`;   // 중심: Deep Violet Blue (#302b63) - Mystic Ocean 테마
+        const secondary = `hsla(187, 72%, 50%, ${alpha})`;  // 외곽: Mermaid Scales (#24c6dc)
+        return { primary, secondary };
+    }
+
+    if (scale.name.includes('Romanian Hijaz')) {
+        const primary = `hsla(335, 65%, 55%, ${alpha})`;   // 신비로운 와인 레드
+        const secondary = `hsla(355, 60%, 40%, ${alpha})`; // 깊은 딥 레드
+        return { primary, secondary };
+    }
+
+    // [Fine-tuning] Sapphire: Royal Blue Gem (로열 블루 사파이어) - Deep Blue to Cyan
+    if (scale.name.includes('Sapphire')) {
+        const primary = `hsla(220, 100%, 8%, ${alpha})`;   // 중심: Deep Royal Blue (#000428)
+        const secondary = `hsla(190, 100%, 50%, ${alpha})`; // 외곽: Cyan Sparkle (#00d2ff)
+        return { primary, secondary };
+    }
+
+    // [Fine-tuning] Annaziska: Mystic Violet (신비의 보라)
+    if (scale.name.includes('Annaziska')) {
+        const primary = `hsla(296, 85%, 35%, ${alpha})`;   // 신비로운 임페리얼 바이올렛
+        const secondary = `hsla(312, 45%, 65%, ${alpha})`;  // 몽환적인 연보라
+        return { primary, secondary };
+    }
+
+    // [Fine-tuning] Hijaz: Desert Sunset (사막의 붉은 노을)
+    if (scale.name.includes('Hijaz')) {
+        const primary = `hsla(0, 85%, 35%, ${alpha})`;    // 뜨거운 블러드 레드
+        const secondary = `hsla(28, 90%, 55%, ${alpha})`;  // 사막의 황토빛/사프란
+        return { primary, secondary };
+    }
+
+    // [Fine-tuning] Amara: Celtic Mist (켈틱의 안개) - Slate Grey to Misty Blue
+    if (scale.name.includes('Amara')) {
+        const primary = `hsla(220, 10%, 24%, ${alpha})`;   // 중심: Slate Grey (#373B44)
+        const secondary = `hsla(217, 89%, 61%, ${alpha})`; // 외곽: Misty Blue (#4286f4)
+        return { primary, secondary };
+    }
+
+    // [Fine-tuning] Aegean: Mediterranean Aqua (지중해의 물빛)
+    if (scale.name.includes('Aegean')) {
+        const primary = `hsla(201, 80%, 55%, ${alpha})`;   // 청량한 마린 블루
+        const secondary = `hsla(177, 85%, 85%, ${alpha})`;  // 외곽: Foam White/Aqua Mint (#b9f2f0)
+        return { primary, secondary };
+    }
+
+    // [Fine-tuning] Yunsl: Sparkling Ocean (빛나는 바다) - Ocean Blue to Sunlit Reflection
+    if (scale.name.includes('Yunsl')) {
+        const primary = `hsla(213, 100%, 50%, ${alpha})`;  // 중심: Bright Ocean (#0072ff)
+        const secondary = `hsla(60, 100%, 95%, ${alpha})`; // 외곽: Sunlit Reflection (#fffde4)
+        return { primary, secondary };
+    }
+
+    // [Fine-tuning] Annapurna: Himalayan Sky (히말라야의 하늘) - Ice Blue to Pale Sky
+    if (scale.name.includes('Annapurna')) {
+        const primary = `hsla(204, 64%, 44%, ${alpha})`;   // 중심: Deep Sky Blue (#2980b9)
+        const secondary = `hsla(195, 92%, 70%, ${alpha})`; // 외곽: Ice/Light Sky Blue (#6dd5fa)
+        return { primary, secondary };
+    }
+
+    // [Fine-tuning] D Asha Group: Radiant Sunshine (찬란한 햇살) - Vivid Gold to Lemon White
+    if (scale.name.includes('D Asha')) {
+        const primary = `hsla(48, 100%, 55%, ${alpha})`;  // 중심: Vivid Gold (해바라기색)
+        const secondary = `hsla(60, 100%, 90%, ${alpha})`; // 외곽: Lemon White (빛이 폭발하는 느낌)
+        return { primary, secondary };
+    }
+
+    // [Fine-tuning] C Major 10: Fresh Mint (상쾌한 민트)
+    if (scale.name.includes('C Major')) {
+        const primary = `hsla(175, 80%, 33%, ${alpha})`;   // 중심: Teal/Blue-Green (#11998e)
+        const secondary = `hsla(143, 85%, 58%, ${alpha})`; // 외곽: Spring Green/Lime (#38ef7d)
+        return { primary, secondary };
+    }
+
+
+    // [Fine-tuning] Blues Group: Neon Tension (네온 텐션) - Tritone Vibe
+    if (scale.name.includes('Blues')) {
+        const primary = `hsla(260, 100%, 44%, ${alpha})`;  // 중심: Deep Burgundy/Purple (#4a00e0)
+        const secondary = `hsla(324, 100%, 50%, ${alpha})`; // 외곽: Hot Pink/Neon (#ff0099)
+        return { primary, secondary };
+    }
+
+    // [Fine-tuning] Bright Major Group: 상큼한 연두색 (기타 메이저 계열)
+    if (scale.name.includes('D Major')) {
+        const primary = `hsla(85, 85%, 65%, ${alpha})`;   // 상큼한 연두
+        const secondary = `hsla(110, 80%, 55%, ${alpha})`; // 싱그러운 풀색
+        return { primary, secondary };
+    }
+
+
+    // [Fine-tuning] Pygmy Group: Misty Deep Forest (안개 낀 심연의 숲)
+    if (scale.name.includes('Pygmy')) {
+        const pAlpha = 0.6; // 피그미 그룹만 투명도 상향 (색감 강조)
+        const primary = `hsla(194, 55%, 25%, ${pAlpha})`;   // 채도 상향 (35% -> 55%)
+        const secondary = `hsla(198, 50%, 35%, ${pAlpha})`; // 채도 상향 (38% -> 50%)
+        return { primary, secondary };
+    }
+
+    // [Fine-tuning] Aeolian Group: Vintage Burgundy & Amber (드라마틱한 노을)
+    if (scale.name.includes('Aeolian')) {
+        const primary = `hsla(337, 50%, 20%, ${alpha})`;   // 중심: Deep Merlot (#4a192c)
+        const secondary = `hsla(32, 60%, 70%, ${alpha})`;  // 외곽: Muted Gold (#e1b382)로 이어지는 따뜻함
+        return { primary, secondary };
+    }
+
+    // [Fine-tuning] Nordlys: Aurora Borealis (오로라 보레알리스)
+    if (scale.name.includes('Nordlys')) {
+        const primary = `hsla(152, 100%, 50%, ${alpha})`;   // 중심: Neon Aurora (#00ff87)
+        const secondary = `hsla(186, 100%, 69%, ${alpha})`;  // 외곽: Cyan Glow (#60efff)
+        return { primary, secondary };
+    }
+
+    // [Fine-tuning] Deepasia: Ink Wash (수묵담채)
+    if (scale.name.includes('Deepasia')) {
+        const primary = `hsla(0, 0%, 26%, ${alpha})`;   // 중심: Charcoal (#434343)
+        const secondary = `hsla(230, 20%, 97%, ${alpha})`; // 외곽: Rice Paper (#f5f6fa)
         return { primary, secondary };
     }
 
@@ -138,6 +271,11 @@ export function generateScaleGradient(scale: Scale): string {
     ];
     const pos = positions[hash % positions.length];
 
+    // E Equinox 특수 비율 적용 (청보라 비율 상향)
+    if (scale.name.includes('E Equinox')) {
+        return `radial-gradient(${pos}, ${primary} 0%, ${primary} 40%, ${secondary} 100%)`;
+    }
+
     return `radial-gradient(${pos}, ${primary} 0%, ${secondary} 100%)`;
 }
 
@@ -163,6 +301,11 @@ export function generateScaleGradientHover(scale: Scale): string {
         "circle at 20% 80%",
     ];
     const pos = positions[hash % positions.length];
+
+    // E Equinox 특수 비율 적용 (청보라 비율 상향)
+    if (scale.name.includes('E Equinox')) {
+        return `radial-gradient(${pos}, ${hPrimary} 0%, ${hPrimary} 40%, ${hSecondary} 100%)`;
+    }
 
     return `radial-gradient(${pos}, ${hPrimary} 0%, ${hSecondary} 100%)`;
 }
