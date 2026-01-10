@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useMemo, useState, useRef, useEffect } from "react";
+import React, { Suspense, useMemo, useState, useRef, useEffect } from "react";
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { motion, AnimatePresence } from "framer-motion";
@@ -72,6 +72,105 @@ const PianoKeysIcon = ({ size = 18, className = '' }: { size?: number; className
 
 // 상태 정의: 대기중 | 녹화중 | 검토중(완료후)
 type RecordState = 'idle' | 'recording' | 'reviewing';
+
+import { Scale } from '@/data/handpanScales';
+
+const CATEGORIES = [
+    { id: 'beginner', label: 'Beginner', labelKo: '입문용', tags: ['대중적', '입문추천', '국내인기', 'Bestseller', '기본', '표준', '표준확장', 'Popular', 'Recommended for Beginners', 'Domestic Popular', 'Basic', 'Standard', 'Standard Extended', '입문용', 'Beginner', '가성비최고', 'Best Value'] },
+    { id: 'healing', label: 'Healing', labelKo: '요가명상힐링', tags: ['명상', '힐링', '치유', '차분한', '평화', 'Deep', '피그미', '트랜스', '몽환적', '깊음', '깊은울림', '아마라', '켈틱마이너', '에지안', 'Meditation', 'Healing', 'Calm', 'Peace', 'Pygmy', 'Trance', 'Dreamy', 'Deep Resonance', 'Amara', 'Celtic Minor', 'Agean', 'Wellness'] },
+    { id: 'bright', label: 'Bright', labelKo: '메이저', tags: ['메이저', 'D메이저', 'Eb메이저', '밝음', '상쾌함', '희망적', '행복한', '윤슬', '사파이어', '청량함', '에너지', 'Major', 'D Major', 'Eb Major', 'Bright', 'Refreshing', 'Hopeful', 'Happy', 'Yunsl', 'Sapphire', 'Energy'] },
+    { id: 'ethnic', label: 'Deep Ethnic', labelKo: '딥 에스닉', tags: ['이국적', '집시', '아라비안', '중동풍', '독특함', '인도풍', '동양적', '하이브리드', '도리안', '블루스', '신비', '매니아', '라사발리', '딥아시아', '신비로움', '메이저마이너', '에퀴녹스', 'Exotic', 'Gypsy', 'Arabian', 'Middle Eastern', 'Unique', 'Indian Style', 'Oriental', 'Hybrid', 'Dorian', 'Blues', 'Mysterious', 'Mania', 'Rasavali', 'Deep Asia', 'Major-Minor', 'Equinox'] }
+];
+
+const matchesCategory = (scale: Scale, categoryId: string) => {
+    const category = CATEGORIES.find(c => c.id === categoryId);
+    if (!category) return true;
+    const allScaleTags = [...(scale.tags || []), ...(scale.tagsEn || [])];
+    return allScaleTags.some((tag: string) => category.tags.includes(tag));
+};
+
+// Helper: Ding Pitch Extraction
+const getPitchFromNote = (note: string): string => {
+    if (!note) return '';
+    const match = note.match(/^([A-G][#b]?)/);
+    return match ? match[1] : note.charAt(0);
+};
+
+// Memoized Scale Card Component
+const ScaleCard = ({
+    scale,
+    isSelected,
+    isDisabled,
+    isPreviewing,
+    scalePanelLang,
+    onSelect,
+    onPreview
+}: {
+    scale: Scale;
+    isSelected: boolean;
+    isDisabled: boolean;
+    isPreviewing: boolean;
+    scalePanelLang: 'ko' | 'en';
+    onSelect: (scale: Scale) => void;
+    onPreview: (e: React.MouseEvent, scale: Scale) => void;
+}) => {
+    const tags = scalePanelLang === 'en' && scale.tagsEn ? scale.tagsEn : scale.tags;
+
+    return (
+        <div
+            role="button"
+            tabIndex={isDisabled ? -1 : 0}
+            onClick={() => !isDisabled && onSelect(scale)}
+            onKeyDown={(e) => { if (!isDisabled && (e.key === 'Enter' || e.key === ' ')) onSelect(scale); }}
+            className={`p-4 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border ${isDisabled
+                ? 'cursor-default bg-white/[0.01] border-white/[0.02] text-white/40 opacity-50 pointer-events-none'
+                : isSelected
+                    ? 'cursor-pointer bg-slate-300/[0.06] backdrop-blur-md border-slate-300/30 hover:bg-slate-300/10 hover:border-slate-200/50'
+                    : 'cursor-pointer bg-white/[0.02] border-white/[0.05] text-white hover:bg-slate-300/[0.08] hover:border-slate-300/30'
+                }`}
+        >
+            <div className="flex flex-col z-10 flex-1 min-w-0 pr-4 gap-1.5">
+                <span className={`font-black text-xl tracking-tight truncate ${isDisabled ? 'text-white/40' : (isSelected ? 'text-white' : 'text-white/90')}`}>
+                    {scale.name}
+                </span>
+                {!isDisabled && tags && tags.length > 0 && (
+                    <div className="flex gap-1.5 flex-wrap">
+                        {tags.slice(0, 5).map((tag: string, idx: number) => (
+                            <span key={idx} className="px-2 py-0.5 text-[10px] font-medium bg-white/10 text-white/60 rounded-full whitespace-nowrap">
+                                {tag}
+                            </span>
+                        ))}
+                    </div>
+                )}
+                {isDisabled && (
+                    <span className="text-xs font-medium text-white/30 uppercase tracking-wider">
+                        Under Maintenance
+                    </span>
+                )}
+            </div>
+
+            {!isDisabled && (
+                <div className="flex items-center gap-3 z-10 shrink-0">
+                    <button
+                        onClick={(e) => onPreview(e, scale)}
+                        className={`w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-lg ${isSelected
+                            ? 'bg-slate-300/25 hover:bg-slate-300/40 text-slate-100 border border-slate-200/30'
+                            : 'bg-white/10 hover:bg-slate-300/25 text-white hover:text-slate-100 border border-white/10 hover:border-slate-200/30'
+                            } backdrop-blur-sm`}
+                    >
+                        {isPreviewing ? (
+                            <Volume2 size={20} className="animate-pulse" />
+                        ) : (
+                            <Play size={22} fill="currentColor" className="ml-1" />
+                        )}
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+};
+
+const MemoizedScaleCard = React.memo(ScaleCard);
 
 export default function ReelPanClient() {
     // 1. State Management
@@ -147,26 +246,33 @@ export default function ReelPanClient() {
         }
     }, [filterMode]);
 
-    const CATEGORIES = [
-        { id: 'beginner', label: 'Beginner', labelKo: '입문용', tags: ['대중적', '입문추천', '국내인기', 'Bestseller', '기본', '표준', '표준확장', 'Popular', 'Recommended for Beginners', 'Domestic Popular', 'Basic', 'Standard', 'Standard Extended', '입문용', 'Beginner', '가성비최고', 'Best Value'] },
-        { id: 'healing', label: 'Healing', labelKo: '요가명상힐링', tags: ['명상', '힐링', '치유', '차분한', '평화', 'Deep', '피그미', '트랜스', '몽환적', '깊음', '깊은울림', '아마라', '켈틱마이너', '에지안', 'Meditation', 'Healing', 'Calm', 'Peace', 'Pygmy', 'Trance', 'Dreamy', 'Deep Resonance', 'Amara', 'Celtic Minor', 'Agean', 'Wellness'] },
-        { id: 'bright', label: 'Bright', labelKo: '메이저', tags: ['메이저', 'D메이저', 'Eb메이저', '밝음', '상쾌함', '희망적', '행복한', '윤슬', '사파이어', '청량함', '에너지', 'Major', 'D Major', 'Eb Major', 'Bright', 'Refreshing', 'Hopeful', 'Happy', 'Yunsl', 'Sapphire', 'Energy'] },
-        { id: 'ethnic', label: 'Deep Ethnic', labelKo: '딥 에스닉', tags: ['이국적', '집시', '아라비안', '중동풍', '독특함', '인도풍', '동양적', '하이브리드', '도리안', '블루스', '신비', '매니아', '라사발리', '딥아시아', '신비로움', '메이저마이너', '에퀴녹스', 'Exotic', 'Gypsy', 'Arabian', 'Middle Eastern', 'Unique', 'Indian Style', 'Oriental', 'Hybrid', 'Dorian', 'Blues', 'Mysterious', 'Mania', 'Rasavali', 'Deep Asia', 'Major-Minor', 'Equinox'] }
-    ];
+    // [Optimization] Pre-calculate statistics for filters
+    const categoryStats = useMemo(() => {
+        return CATEGORIES.reduce((acc, cat) => {
+            acc[cat.id] = SCALES.filter(s => matchesCategory(s, cat.id)).length;
+            return acc;
+        }, {} as Record<string, number>);
+    }, []);
 
-    const matchesCategory = (scale: any, categoryId: string) => {
-        const category = CATEGORIES.find(c => c.id === categoryId);
-        if (!category) return true;
-        const allScaleTags = [...(scale.tags || []), ...(scale.tagsEn || [])];
-        return allScaleTags.some((tag: string) => category.tags.includes(tag));
-    };
+    const dingStats = useMemo(() => {
+        return SCALES.reduce((acc, scale) => {
+            const pitch = getPitchFromNote(scale.notes.ding);
+            const normalizedPitch = pitch === 'BB' ? 'Bb' : pitch;
+            acc[normalizedPitch] = (acc[normalizedPitch] || 0) + 1;
+            return acc;
+        }, {} as Record<string, number>);
+    }, []);
 
-    // Helper: Ding Pitch Extraction
-    const getPitchFromNote = (note: string): string => {
-        if (!note) return '';
-        const match = note.match(/^([A-G][#b]?)/);
-        return match ? match[1] : note.charAt(0);
-    };
+    const noteStats = useMemo(() => {
+        return SCALES.reduce((acc, scale) => {
+            const totalNotes = 1 + scale.notes.top.length + scale.notes.bottom.length;
+            acc[totalNotes] = (acc[totalNotes] || 0) + 1;
+            if (scale.id.includes('mutant') || scale.tags.some(t => t.toLowerCase().includes('mutant'))) {
+                acc.mutant = (acc.mutant || 0) + 1;
+            }
+            return acc;
+        }, { mutant: 0 } as Record<string, number>);
+    }, []);
 
     // Background Color State
     const [bgColor, setBgColor] = useState('#0A0000');
@@ -2337,12 +2443,6 @@ export default function ReelPanClient() {
                                             <div ref={filterContainerRef} className="flex gap-2 overflow-x-auto pb-4" style={{ touchAction: 'pan-x' }}>
                                                 {(() => {
                                                     if (filterMode === 'CATEGORY') {
-                                                        const categoryStats = CATEGORIES.reduce((acc, cat) => {
-                                                            const count = SCALES.filter(s => matchesCategory(s, cat.id)).length;
-                                                            acc[cat.id] = count;
-                                                            return acc;
-                                                        }, {} as Record<string, number>);
-
                                                         return (
                                                             <>
                                                                 <button
@@ -2376,14 +2476,8 @@ export default function ReelPanClient() {
                                                         );
                                                     }
                                                     if (filterMode === 'AZ') {
-                                                        const dingStats = SCALES.reduce((acc, scale) => {
-                                                            const pitch = getPitchFromNote(scale.notes.ding);
-                                                            const normalizedPitch = pitch === 'BB' ? 'Bb' : pitch;
-                                                            acc[normalizedPitch] = (acc[normalizedPitch] || 0) + 1;
-                                                            return acc;
-                                                        }, {} as Record<string, number>);
                                                         const allPitches = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'];
-                                                        const availablePitches = allPitches.filter(p => dingStats[p] > 0);
+                                                        const availablePitches = allPitches.filter(p => (dingStats[p] || 0) > 0);
 
                                                         return (
                                                             <>
@@ -2417,19 +2511,11 @@ export default function ReelPanClient() {
                                                             </>
                                                         );
                                                     } else {
-                                                        const stats = SCALES.reduce((acc, scale) => {
-                                                            const totalNotes = 1 + scale.notes.top.length + scale.notes.bottom.length;
-                                                            acc[totalNotes] = (acc[totalNotes] || 0) + 1;
-                                                            if (scale.id.includes('mutant') || scale.tags.some(t => t.toLowerCase().includes('mutant'))) {
-                                                                acc.mutant = (acc.mutant || 0) + 1;
-                                                            }
-                                                            return acc;
-                                                        }, { mutant: 0 } as Record<string, number>);
-                                                        const availableCounts = Object.keys(stats).filter(k => k !== 'mutant').map(Number).sort((a, b) => a - b);
+                                                        const availableCounts = Object.keys(noteStats).filter(k => k !== 'mutant').map(Number).sort((a, b) => a - b);
                                                         const filters = [
                                                             { label: scalePanelLang === 'ko' ? '전체' : 'All', value: 'all', count: SCALES.length },
-                                                            ...availableCounts.map(n => ({ label: `${n}`, value: String(n), count: stats[n] })),
-                                                            { label: 'Mutant', value: 'mutant', count: stats.mutant }
+                                                            ...availableCounts.map(n => ({ label: `${n}`, value: String(n), count: noteStats[n] })),
+                                                            { label: 'Mutant', value: 'mutant', count: noteStats.mutant }
                                                         ];
 
                                                         return filters.map(filter => (
@@ -2467,51 +2553,15 @@ export default function ReelPanClient() {
                                                 return (
                                                     <div key={currentScale.id} className="mb-2">
                                                         <div className="text-[12px] font-black uppercase tracking-[0.3em] text-white/30 mb-2 px-2">{scalePanelLang === 'ko' ? '현재 선택됨' : 'CURRENT SELECTED'}</div>
-                                                        <div
-                                                            role="button"
-                                                            tabIndex={isDisabled ? -1 : 0}
-                                                            onClick={() => !isDisabled && handleScaleSelect(currentScale)}
-                                                            onKeyDown={(e) => { if (!isDisabled && (e.key === 'Enter' || e.key === ' ')) handleScaleSelect(currentScale); }}
-                                                            className={`p-4 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border ${isDisabled
-                                                                ? 'cursor-default bg-slate-300/[0.02] backdrop-blur-md border-slate-300/10 opacity-50 pointer-events-none'
-                                                                : 'cursor-pointer bg-slate-300/[0.06] backdrop-blur-md border-slate-300/30 hover:bg-slate-300/10 hover:border-slate-200/50'
-                                                                }`}
-                                                        >
-                                                            <div className="flex flex-col z-10 flex-1 min-w-0 pr-4 gap-1.5">
-                                                                <span className={`font-black text-xl tracking-tight truncate ${isDisabled ? 'text-white/40' : 'text-white'}`}>
-                                                                    {currentScale.name}
-                                                                </span>
-                                                                {!isDisabled && currentScale.tags && currentScale.tags.length > 0 && (
-                                                                    <div className="flex gap-1.5 flex-wrap">
-                                                                        {(scalePanelLang === 'en' && currentScale.tagsEn ? currentScale.tagsEn : currentScale.tags).slice(0, 5).map((tag: string, idx: number) => (
-                                                                            <span key={idx} className="px-2 py-0.5 text-[10px] font-medium bg-white/10 text-white/60 rounded-full whitespace-nowrap">
-                                                                                {tag}
-                                                                            </span>
-                                                                        ))}
-                                                                    </div>
-                                                                )}
-                                                                {isDisabled && (
-                                                                    <span className="text-xs font-medium text-white/30 uppercase tracking-wider">
-                                                                        Under Maintenance
-                                                                    </span>
-                                                                )}
-                                                            </div>
-
-                                                            {!isDisabled && (
-                                                                <div className="flex items-center gap-3 z-10 shrink-0">
-                                                                    <button
-                                                                        onClick={(e) => handlePreview(e, currentScale)}
-                                                                        className="w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-lg bg-slate-300/25 hover:bg-slate-300/40 text-slate-100 border border-slate-200/30 backdrop-blur-sm"
-                                                                    >
-                                                                        {previewingScaleId === currentScale.id ? (
-                                                                            <Volume2 size={20} className="animate-pulse" />
-                                                                        ) : (
-                                                                            <Play size={22} fill="currentColor" className="ml-1" />
-                                                                        )}
-                                                                    </button>
-                                                                </div>
-                                                            )}
-                                                        </div>
+                                                        <MemoizedScaleCard
+                                                            scale={currentScale}
+                                                            isSelected={true}
+                                                            isDisabled={isDisabled}
+                                                            isPreviewing={previewingScaleId === currentScale.id}
+                                                            scalePanelLang={scalePanelLang}
+                                                            onSelect={handleScaleSelect}
+                                                            onPreview={handlePreview}
+                                                        />
                                                     </div>
                                                 );
                                             })()}
@@ -2520,52 +2570,16 @@ export default function ReelPanClient() {
                                             {processedScales.filter(scale => scale.id !== targetScale.id).map((scale) => {
                                                 const isDisabled = scale.id === 'e_amara_18';
                                                 return (
-                                                    <div
+                                                    <MemoizedScaleCard
                                                         key={scale.id}
-                                                        role="button"
-                                                        tabIndex={isDisabled ? -1 : 0}
-                                                        onClick={() => !isDisabled && handleScaleSelect(scale)}
-                                                        onKeyDown={(e) => { if (!isDisabled && (e.key === 'Enter' || e.key === ' ')) handleScaleSelect(scale); }}
-                                                        className={`p-4 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border ${isDisabled
-                                                            ? 'cursor-default bg-white/[0.01] border-white/[0.02] text-white/40 opacity-50 pointer-events-none'
-                                                            : 'cursor-pointer bg-white/[0.02] border-white/[0.05] text-white hover:bg-slate-300/[0.08] hover:border-slate-300/30'
-                                                            }`}
-                                                    >
-                                                        <div className="flex flex-col z-10 flex-1 min-w-0 pr-4 gap-1.5">
-                                                            <span className={`font-black text-xl tracking-tight truncate ${isDisabled ? 'text-white/40' : 'text-white/90'}`}>
-                                                                {scale.name}
-                                                            </span>
-                                                            {!isDisabled && scale.tags && scale.tags.length > 0 && (
-                                                                <div className="flex gap-1.5 flex-wrap">
-                                                                    {(scalePanelLang === 'en' && scale.tagsEn ? scale.tagsEn : scale.tags).slice(0, 5).map((tag: string, idx: number) => (
-                                                                        <span key={idx} className="px-2 py-0.5 text-[10px] font-medium bg-white/10 text-white/60 rounded-full whitespace-nowrap">
-                                                                            {tag}
-                                                                        </span>
-                                                                    ))}
-                                                                </div>
-                                                            )}
-                                                            {isDisabled && (
-                                                                <span className="text-xs font-medium text-white/30 uppercase tracking-wider">
-                                                                    Under Maintenance
-                                                                </span>
-                                                            )}
-                                                        </div>
-
-                                                        {!isDisabled && (
-                                                            <div className="flex items-center gap-3 z-10 shrink-0">
-                                                                <button
-                                                                    onClick={(e) => handlePreview(e, scale)}
-                                                                    className="w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-lg bg-white/10 hover:bg-slate-300/25 text-white hover:text-slate-100 border border-white/10 hover:border-slate-200/30"
-                                                                >
-                                                                    {previewingScaleId === scale.id ? (
-                                                                        <Volume2 size={20} className="animate-pulse" />
-                                                                    ) : (
-                                                                        <Play size={22} fill="currentColor" className="ml-1" />
-                                                                    )}
-                                                                </button>
-                                                            </div>
-                                                        )}
-                                                    </div>
+                                                        scale={scale}
+                                                        isSelected={false}
+                                                        isDisabled={isDisabled}
+                                                        isPreviewing={previewingScaleId === scale.id}
+                                                        scalePanelLang={scalePanelLang}
+                                                        onSelect={handleScaleSelect}
+                                                        onPreview={handlePreview}
+                                                    />
                                                 );
                                             })}
                                         </>
