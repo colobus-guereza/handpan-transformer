@@ -31,6 +31,8 @@ export interface Scale {
     id: string;
     name: string;
     nameEn?: string;
+    nickname?: string; // [NEW] Emotional Title (Korean)
+    nicknameEn?: string; // [NEW] Emotional Title (English)
     categoryId?: string; // Explicit category matching
     notes: {
         ding: string;
@@ -98,6 +100,8 @@ export const SCALES: Scale[] = [
         id: "d_kurd_9",
         name: "D Kurd 9",
         nameEn: "D Kurd 9",
+        nickname: "깊은 밤의 위로",
+        nicknameEn: "Solace in the Deep Night",
         notes: {
             ding: "D3",
             top: ["A3", "Bb3", "C4", "D4", "E4", "F4", "G4", "A4"],
@@ -161,6 +165,8 @@ export const SCALES: Scale[] = [
         id: "d_kurd_10",
         name: "D Kurd 10",
         nameEn: "D Kurd 10",
+        nickname: "완벽한 첫걸음",
+        nicknameEn: "A Perfect Beginning",
         notes: {
             ding: "D3",
             top: ["A3", "Bb3", "C4", "D4", "E4", "F4", "G4", "A4", "C5"],
@@ -169,8 +175,8 @@ export const SCALES: Scale[] = [
         vector: { minorMajor: -0.8, pureSpicy: 0.1, rarePopular: 0.98 },
         tags: ["마이너", "대중적", "연습곡 제일많음", "유튜브교재도 많음"],
         tagsEn: ["Minor", "Popular", "Most Practice Songs", "Youtube Tutorials"],
-        description: "대중적인 D minor와 같은 음계인 D Kurd 10으로, 유튜브에 악보와 연습곡이 가장 많은 입문용에 적합한 모델입니다. 대중적인 음계이기 때문에 다양한 음악분야에서의 활용도가 매우 높습니다.",
-        descriptionEn: "D Kurd 10, the same scale as the popular D minor. It is the best model for beginners with the most sheet music and practice songs available on YouTube. Due to its popularity, it has very high versatility across various music genres.",
+        description: "D Kurd 10 - D3 / A Bb C4 D E F G A C5",
+        descriptionEn: "D Kurd 10 - D3 / A Bb C4 D E F G A C5",
         videoUrl: "https://youtu.be/uL40C1bqKik?si=DpqHwPB_RLpcA5mc",
         productUrl: "https://smartstore.naver.com/sndhandpan/products/7514024868",
         ownUrl: "https://handpan.co.kr/shop/?idx=74",
@@ -224,6 +230,8 @@ export const SCALES: Scale[] = [
         id: "e_equinox_14",
         name: "E Equinox 14",
         nameEn: "E Equinox 14",
+        nickname: "새벽녘의 몽환",
+        nicknameEn: "Reverie at Dawn",
         notes: {
             ding: "E3",
             top: ["G3", "B3", "C4", "D4", "E4", "F#4", "G4", "B4", "C5"],
@@ -287,6 +295,8 @@ export const SCALES: Scale[] = [
         id: "fs_low_pygmy_14_mutant",
         name: "F# Low Pygmy 14",
         nameEn: "F# Low Pygmy 14",
+        nickname: "숲속의 속삭임",
+        nicknameEn: "Forest Whispers",
         notes: {
             ding: "F#3",
             top: ["G#3", "A3", "C#4", "E4", "F#4", "G#4", "A4", "B4", "C#5", "D3", "E3"], // F#5 -> E3
@@ -350,6 +360,8 @@ export const SCALES: Scale[] = [
         id: "fs2_nordlys_14_mutant",
         name: "F#2 Nordlys 14",
         nameEn: "F#2 Nordlys 14",
+        nickname: "오로라의 신비",
+        nicknameEn: "Secrets of the Aurora",
         categoryId: "ethnic",
         notes: {
             ding: "F#2",
@@ -382,6 +394,8 @@ export const SCALES: Scale[] = [
         id: "d_kurd_15_mutant",
         name: "D Kurd 15",
         nameEn: "D Kurd 15",
+        nickname: "완성된 깊은 울림",
+        nicknameEn: "Perfect Resonance",
         categoryId: "beginner",
         notes: {
             ding: "D3",
@@ -414,6 +428,8 @@ export const SCALES: Scale[] = [
         id: "f_aeolian_10",
         name: "F Aeolian 10",
         nameEn: "F Aeolian 10",
+        nickname: "가을의 쓸쓸함",
+        nicknameEn: "Autumn's Melancholy",
         notes: {
             ding: "F3",
             top: ["Ab3", "Bb3", "C4", "Db4", "Eb4", "F4", "G4", "Ab4", "C5"],
@@ -477,6 +493,8 @@ export const SCALES: Scale[] = [
         id: "e_romanian_hijaz_10",
         name: "E Romanian Hijaz 10",
         nameEn: "E Romanian Hijaz 10",
+        nickname: "유랑의 열정",
+        nicknameEn: "Nomad's Passion",
         notes: {
             ding: "E3",
             top: ["A3", "B3", "C4", "D#4", "E4", "F#4", "G4", "A4", "B4"],
@@ -540,6 +558,8 @@ export const SCALES: Scale[] = [
         id: "d_saladin_9",
         name: "D Saladin 9",
         nameEn: "D Saladin 9",
+        nickname: "붉은 사막의 전설",
+        nicknameEn: "Legend of the Red Desert",
         notes: {
             ding: "D3",
             top: ["G3", "A3", "C4", "D4", "Eb4", "F#4", "G4", "A4"],
@@ -603,6 +623,8 @@ export const SCALES: Scale[] = [
         id: "d_asha_9",
         name: "D Asha 9",
         nameEn: "D Asha 9",
+        nickname: "희망의 노래",
+        nicknameEn: "Song of Hope",
         notes: {
             ding: "D3",
             top: ["G3", "A3", "B3", "C#4", "D4", "E4", "F#4", "A4"],
@@ -666,6 +688,8 @@ export const SCALES: Scale[] = [
         id: "e_la_sirena_10",
         name: "E La Sirena 10",
         nameEn: "E La Sirena 10",
+        nickname: "인어의 유혹",
+        nicknameEn: "The Siren's Call",
         notes: {
             ding: "E3",
             top: ["G3", "B3", "C#4", "D4", "E4", "F#4", "G4", "B4", "E5"],
@@ -729,6 +753,8 @@ export const SCALES: Scale[] = [
         id: "cs_pygmy_9",
         name: "C# Pygmy 9",
         nameEn: "C# Pygmy 9",
+        nickname: "신비의 숲",
+        nicknameEn: "Mystic Forest",
         notes: {
             ding: "C#3",
             top: ["F#3", "G#3", "A3", "C#4", "E4", "F#4", "G#4", "A4"],
@@ -792,6 +818,8 @@ export const SCALES: Scale[] = [
         id: "d_asha_15_mutant",
         name: "D Asha 15",
         nameEn: "D Asha 15",
+        nickname: "찬란한 희망",
+        nicknameEn: "Radiant Hope",
         notes: {
             ding: "D3",
             top: ["A3", "B3", "C#4", "D4", "E4", "F#4", "G4", "A4", "B4", "C#5", "D5"],
@@ -855,6 +883,8 @@ export const SCALES: Scale[] = [
         id: "e_equinox_12",
         name: "E Equinox 12",
         nameEn: "E Equinox 12",
+        nickname: "낮과 밤의 공존",
+        nicknameEn: "Where Day Meets Night",
         notes: {
             ding: "E3",
             top: ["G3", "B3", "C4", "D4", "E4", "F#4", "G4", "B4", "C5"],
@@ -918,6 +948,8 @@ export const SCALES: Scale[] = [
         id: "e_equinox_10",
         name: "E Equinox 10",
         nameEn: "E Equinox 10",
+        nickname: "미묘한 경계",
+        nicknameEn: "The Liminal Line",
         notes: {
             ding: "E3",
             top: ["G3", "B3", "C4", "D4", "E4", "F#4", "G4", "B4", "C5"],
@@ -981,6 +1013,8 @@ export const SCALES: Scale[] = [
         id: "fs_low_pygmy_18_mutant",
         name: "F# Low Pygmy 18",
         nameEn: "F# Low Pygmy 18",
+        nickname: "대지의 숨결",
+        nicknameEn: "Earth's Breath",
         notes: {
             ding: "F#3",
             top: ["G#3", "A3", "D4", "E4", "F#4", "G#4", "A4", "D5", "E5", "F#5", "G#5"],
@@ -1044,6 +1078,8 @@ export const SCALES: Scale[] = [
         id: "cs_pygmy_11",
         name: "C# Pygmy 11",
         nameEn: "C# Pygmy 11",
+        nickname: "깊은 숲의 명상",
+        nicknameEn: "Meditation in Deep Woods",
         notes: {
             ding: "C#3",
             top: ["F#3", "G#3", "A3", "C#4", "E4", "F#4", "G#4", "A4"],
@@ -1107,6 +1143,8 @@ export const SCALES: Scale[] = [
         id: "f_low_pygmy_12",
         name: "F Low Pygmy 12",
         nameEn: "F Low Pygmy 12",
+        nickname: "따뜻한 위로",
+        nicknameEn: "Warm Solace",
         notes: {
             ding: "F3",
             top: ["G3", "Ab3", "C4", "Eb4", "F4", "G4", "Ab4", "C5", "Eb5"],
@@ -1170,6 +1208,8 @@ export const SCALES: Scale[] = [
         id: "d_kurd_12",
         name: "D Kurd 12",
         nameEn: "D Kurd 12",
+        nickname: "모던한 감성",
+        nicknameEn: "Modern Sensibility",
         notes: {
             ding: "D3",
             top: ["A3", "Bb3", "C4", "D4", "E4", "F4", "G4", "A4", "C5"],
@@ -1233,6 +1273,8 @@ export const SCALES: Scale[] = [
         id: "f_low_pygmy_9",
         name: "F Low Pygmy 9",
         nameEn: "F Low Pygmy 9",
+        nickname: "고요한 쉼",
+        nicknameEn: "Quiet Respite",
         notes: {
             ding: "F3",
             top: ["G3", "G#3", "C4", "D#4", "F4", "G4", "G#4", "C5"],
@@ -1296,6 +1338,8 @@ export const SCALES: Scale[] = [
         id: "cs_annapurna_9",
         name: "C# Annapurna 9",
         nameEn: "C# Annapurna 9",
+        nickname: "설산의 청량함",
+        nicknameEn: "Majesty of the Snowy Peaks",
         notes: {
             ding: "C#3",
             top: ["G#3", "C4", "C#4", "D#4", "F4", "F#4", "G#4", "C#5"],
@@ -1355,6 +1399,8 @@ export const SCALES: Scale[] = [
         id: "c_major_10",
         name: "C Major 10",
         nameEn: "C Major 10",
+        nickname: "맑은 동심",
+        nicknameEn: "Pure Innocence",
         notes: {
             ding: "C3",
             top: ["G3", "A3", "B3", "C4", "D4", "E4", "F4", "G4", "A4"],
@@ -1418,6 +1464,8 @@ export const SCALES: Scale[] = [
         id: "c_rasavali_10",
         name: "C Rasavali 10",
         nameEn: "C Rasavali 10",
+        nickname: "인도의 신비",
+        nicknameEn: "Mystic India",
         notes: {
             ding: "C3",
             top: ["G3", "Ab3", "C4", "D4", "E4", "F4", "G4", "Ab4", "C5"],
@@ -1481,6 +1529,8 @@ export const SCALES: Scale[] = [
         id: "cs_deepasia_14",
         name: "C# Deepasia 14",
         nameEn: "C# Deepasia 14",
+        nickname: "동방의 깊은 울림",
+        nicknameEn: "Depths of Asia",
         notes: {
             ding: "C#3",
             top: ["G#3", "Bb3", "C#4", "F4", "F#4", "G#4", "C#5", "D#5", "F5"],
@@ -1544,6 +1594,8 @@ export const SCALES: Scale[] = [
         id: "cs_blues_9",
         name: "C# Blues 9",
         nameEn: "C# Blues 9",
+        nickname: "도심의 저녁",
+        nicknameEn: "City at Dusk",
         notes: {
             ding: "C#3",
             top: ["G#3", "B3", "C#4", "E4", "F#4", "G4", "G#4", "B4"],
@@ -1607,6 +1659,8 @@ export const SCALES: Scale[] = [
         id: "eb_muju_10",
         name: "Eb MUJU 10",
         nameEn: "Eb MUJU 10",
+        nickname: "무주의 바람",
+        nicknameEn: "Winds of Muju",
         notes: {
             ding: "Eb3",
             top: ["G3", "Ab3", "Bb3", "C4", "Eb4", "F4", "G4", "Ab4", "C5"],
@@ -1670,6 +1724,8 @@ export const SCALES: Scale[] = [
         id: "c_yunsl_9",
         name: "C Yunsl 9",
         nameEn: "C Yunsl 9",
+        nickname: "물결 위 햇살",
+        nicknameEn: "Sunlight on the Ripples",
         notes: {
             ding: "C3",
             top: ["C4", "D4", "E4", "F4", "G4", "B4", "C5", "D5"],
@@ -1733,6 +1789,8 @@ export const SCALES: Scale[] = [
         id: "cs_sapphire_9",
         name: "C# Sapphire 9",
         nameEn: "C# Sapphire 9",
+        nickname: "사파이어의 빛",
+        nicknameEn: "Sapphire Glow",
         notes: {
             ding: "C#3",
             top: ["G#3", "B3", "C#4", "F4", "F#4", "G#4", "B4", "C#5"],
@@ -1796,6 +1854,8 @@ export const SCALES: Scale[] = [
         id: "cs_annaziska_9",
         name: "C# Annaziska 9",
         nameEn: "C# Annaziska 9",
+        nickname: "미지의 여행",
+        nicknameEn: "Journey into the Unknown",
         notes: {
             ding: "C#3",
             top: ["G#3", "A3", "B3", "C#4", "D#4", "E4", "F#4", "G#4"],
@@ -1859,6 +1919,8 @@ export const SCALES: Scale[] = [
         id: "e_hijaz_9",
         name: "E Hijaz 9",
         nameEn: "E Hijaz 9",
+        nickname: "열정의 춤",
+        nicknameEn: "Dance of Passion",
         notes: {
             ding: "E3",
             top: ["A3", "B3", "C4", "D#4", "E4", "F#4", "G4", "B4"],
@@ -1922,6 +1984,8 @@ export const SCALES: Scale[] = [
         id: "cs_amara_9",
         name: "C# Amara 9",
         nameEn: "C# Amara 9",
+        nickname: "켈틱의 신비",
+        nicknameEn: "Celtic Enigma",
         notes: {
             ding: "C#3",
             top: ["G#3", "B3", "C#4", "D#4", "E4", "F#4", "G#4", "B4"],
@@ -1985,6 +2049,8 @@ export const SCALES: Scale[] = [
         id: "fs_low_pygmy_12",
         name: "F# Low Pygmy 12",
         nameEn: "F# Low Pygmy 12",
+        nickname: "꿈꾸는 숲",
+        nicknameEn: "Dreaming Woods",
         notes: {
             ding: "F#3",
             top: ["G#3", "A3", "C#4", "E4", "F#4", "G#4", "A4", "C#5", "E5"],
@@ -2006,6 +2072,8 @@ export const SCALES: Scale[] = [
         id: "e_amara_18",
         name: "E Amara 18",
         nameEn: "E Amara 18",
+        nickname: "영혼의 울림",
+        nicknameEn: "Soul Resonance",
         notes: {
             ding: "E3",
             top: ["B3", "C4", "E4", "F#4", "G4", "A4", "B4", "C5", "E5", "F#5", "G5", "A5"],
@@ -2026,6 +2094,8 @@ export const SCALES: Scale[] = [
         id: "cs_amara_10",
         name: "C# Amara 10",
         nameEn: "C# Amara 10",
+        nickname: "신비의 시작",
+        nicknameEn: "A Mysterious Beginning",
         notes: {
             ding: "C#3",
             top: ["G#3", "B3", "C#4", "D#4", "E4", "F#4", "G#4", "B4", "C#5"],
@@ -2057,6 +2127,8 @@ export const SCALES: Scale[] = [
         id: "c_agean_10",
         name: "C Agean 10",
         nameEn: "C Agean 10",
+        nickname: "치유의 바다",
+        nicknameEn: "Sea of Healing",
         notes: {
             ding: "C3",
             top: ["E3", "G3", "B3", "C4", "E4", "F#4", "G4", "B4", "E5"],
@@ -2084,6 +2156,8 @@ export const SCALES: Scale[] = [
         id: "f_aeolian_12",
         name: "F Aeolian 12",
         nameEn: "F Aeolian 12",
+        nickname: "깊은 애수",
+        nicknameEn: "Deep Melancholy",
         notes: {
             ding: "F3",
             top: ["Ab3", "Bb3", "C4", "Db4", "Eb4", "F4", "G4", "Ab4", "C5"],

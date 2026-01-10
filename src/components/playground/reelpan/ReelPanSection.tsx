@@ -1,88 +1,75 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { Scale } from '@/data/handpanScales';
 import { Play } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { generateScaleGradient, generateScaleGradientHover } from '@/lib/scaleGradient';
 
 interface ReelPanSectionProps {
     title: string;
     scales: Scale[];
     onSelect: (scale: Scale) => void;
-    onPreview: (e: React.MouseEvent, scale: Scale) => void;
-    currentScaleId?: string;
-    previewingScaleId?: string | null;
-    lang?: 'ko' | 'en';
+    lang: 'ko' | 'en';
 }
 
-export default function ReelPanSection({
-    title,
-    scales,
-    onSelect,
-    onPreview,
-    currentScaleId,
-    previewingScaleId,
-    lang = 'ko'
-}: ReelPanSectionProps) {
-    const scrollContainerRef = useRef<HTMLDivElement>(null);
+export default function ReelPanSection({ title, scales, onSelect, lang }: ReelPanSectionProps) {
+    if (scales.length === 0) return null;
 
     return (
-        <div className="w-full mb-10">
-            <h2 className="text-2xl font-bold text-white mb-4 px-2 flex items-center gap-2">
-                {title}
-            </h2>
+        <section className="py-6">
+            <div className="px-6 mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-bold text-white">{title}</h2>
+                <span className="text-xs text-white/40">{scales.length}</span>
+            </div>
 
             <div
-                ref={scrollContainerRef}
-                className="flex gap-4 overflow-x-auto pb-4 px-2 snap-x snap-mandatory hide-scrollbar"
+                className="flex overflow-x-auto px-6 gap-4 pb-4 snap-x snap-mandatory hide-scrollbar"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
                 {scales.map((scale) => {
-                    const isSelected = scale.id === currentScaleId;
-                    const isPreviewing = scale.id === previewingScaleId;
-                    const nickname = lang === 'en' ? (scale.nicknameEn || scale.nameEn) : (scale.nickname || scale.name);
-
-                    // Minimal gradient for cards
-                    const mood = scale.vector?.minorMajor || 0;
-                    let cardBg = '';
-                    if (mood < -0.3) cardBg = 'bg-slate-900/40 border-slate-700/50'; // Minor
-                    else if (mood > 0.3) cardBg = 'bg-amber-900/20 border-amber-700/30'; // Major
-                    else cardBg = 'bg-emerald-900/20 border-emerald-700/30'; // Neutral
+                    const nickname = lang === 'ko' ? (scale.nickname || scale.name) : (scale.nicknameEn || scale.nameEn || scale.name);
+                    const gradient = generateScaleGradient(scale);
+                    const hoverGradient = generateScaleGradientHover(scale);
 
                     return (
                         <div
                             key={scale.id}
-                            className={`snap-center shrink-0 w-[240px] md:w-[280px] aspect-[4/3] rounded-[24px] border relative overflow-hidden group cursor-pointer transition-all duration-300 ${cardBg} ${isSelected ? 'ring-2 ring-white/50 scale-[1.02]' : 'hover:scale-[1.01] hover:bg-white/5'}`}
                             onClick={() => onSelect(scale)}
+                            className="snap-start shrink-0 w-[160px] flex flex-col gap-2 cursor-pointer group"
                         >
-                            <div className="absolute inset-0 p-5 flex flex-col justify-between">
-                                <div>
-                                    <h3 className={`text-lg font-bold leading-tight mb-1 ${isSelected ? 'text-white' : 'text-white/90'}`}>
-                                        {nickname}
-                                    </h3>
-                                    <p className="text-xs text-white/50 font-medium">
-                                        {lang === 'en' ? scale.nameEn || scale.name : scale.name}
-                                    </p>
-                                </div>
+                            {/* Card Image/Gradient Area - Unique per scale */}
+                            <div
+                                className="w-full aspect-square rounded-2xl border border-white/[0.08] group-hover:border-white/25 transition-all overflow-hidden relative shadow-md"
+                                style={{ background: gradient }}
+                            >
+                                {/* Hover Gradient Layer */}
+                                <div
+                                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                                    style={{ background: hoverGradient }}
+                                />
 
-                                <div className="flex items-end justify-between">
-                                    <div className="flex gap-1">
-                                        {/* Simple visualization of notes or tags */}
-                                        <span className="text-[10px] px-2 py-1 rounded-full bg-black/20 text-white/40">
-                                            {scale.notes.top.length + scale.notes.bottom.length + 1} Notes
-                                        </span>
+                                {/* Subtle inner glow overlay - softened for pastel */}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-white/[0.1] pointer-events-none" />
+
+                                {/* Play Icon Overlay */}
+                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                    <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30">
+                                        <Play size={20} fill="white" className="text-white ml-0.5" />
                                     </div>
-
-                                    <button
-                                        onClick={(e) => onPreview(e, scale)}
-                                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isPreviewing ? 'bg-white text-black' : 'bg-white/10 text-white hover:bg-white/20'}`}
-                                    >
-                                        <Play size={16} fill={isPreviewing ? "currentColor" : "none"} />
-                                    </button>
                                 </div>
+                            </div>
+
+                            {/* Text Info */}
+                            <div className="text-center">
+                                <h3 className="text-sm font-bold text-white/90 truncate group-hover:text-white transition-colors">
+                                    {nickname}
+                                </h3>
+                                <p className="text-xs text-white/40 truncate">
+                                    {scale.name}
+                                </p>
                             </div>
                         </div>
                     );
                 })}
             </div>
-        </div>
+        </section>
     );
 }

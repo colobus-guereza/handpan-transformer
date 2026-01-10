@@ -1,88 +1,178 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Play, Volume2 } from 'lucide-react';
+
+
 import { Scale } from '@/data/handpanScales';
-import { Play } from 'lucide-react';
-import { motion } from 'framer-motion';
+
+// Color theme definitions with high transparency for subtle glass effect
+const COLOR_THEMES = {
+    green: {
+        gradient: 'linear-gradient(180deg, rgba(30, 42, 31, 0.25) 0%, rgba(20, 26, 20, 0.5) 100%)',
+        cardBg: 'rgba(45, 65, 48, 0.35)',           // High transparency for subtle look
+        primary: { r: 124, g: 185, b: 124 },        // #7CB97C
+        primaryLight: { r: 197, g: 229, b: 197 },   // #C5E5C5
+    },
+    magenta: {
+        gradient: 'linear-gradient(180deg, rgba(42, 30, 42, 0.25) 0%, rgba(26, 20, 26, 0.5) 100%)',
+        cardBg: 'rgba(65, 45, 65, 0.35)',           // High transparency for subtle look
+        primary: { r: 185, g: 124, b: 185 },        // #B97CB9
+        primaryLight: { r: 229, g: 197, b: 229 },   // #E5C5E5
+    }
+} as const;
+
+type ColorTheme = keyof typeof COLOR_THEMES;
 
 interface ReelPanHeroProps {
-    scale: Scale;
+    introScales: Scale[];
+    isPreviewing: (scaleId: string) => boolean;
     onPlay: (e: React.MouseEvent, scale: Scale) => void;
     onSelect: (scale: Scale) => void;
-    lang?: 'ko' | 'en';
+    lang: 'ko' | 'en';
+    title?: { ko: string; en: string };
+    colorTheme?: ColorTheme;
 }
 
-export default function ReelPanHero({ scale, onPlay, onSelect, lang = 'ko' }: ReelPanHeroProps) {
-    if (!scale) return null;
-
-    const nickname = lang === 'en' ? (scale.nicknameEn || scale.nameEn) : (scale.nickname || scale.name);
-    const subName = lang === 'en' ? scale.nameEn || scale.name : scale.name;
-    const desc = lang === 'en' ? scale.descriptionEn : scale.description;
-
-    // Generate gradient based on mood vector
-    // minorMajor: -1 (Dark/Blue) ~ 0 (Green/Teal) ~ 1 (Bright/Orange)
-    const mood = scale.vector?.minorMajor || 0;
-
-    let gradient = '';
-    if (mood < -0.5) {
-        // Deep Minor (Night, Purple, Deep Blue)
-        gradient = 'radial-gradient(circle at 30% 20%, #4a1d96 0%, #0f172a 60%, #000000 100%)';
-    } else if (mood < 0) {
-        // Soft Minor (Teal, Forest)
-        gradient = 'radial-gradient(circle at 30% 20%, #115e59 0%, #0f172a 60%, #000000 100%)';
-    } else if (mood < 0.5) {
-        // Neutral / Major-Minor (Green, Gold)
-        gradient = 'radial-gradient(circle at 30% 20%, #b45309 0%, #2f1c10 60%, #000000 100%)';
-    } else {
-        // Bright Major (Orange, Yellow, Blue Sky)
-        gradient = 'radial-gradient(circle at 30% 20%, #ea580c 0%, #431407 60%, #000000 100%)';
-    }
+export default function ReelPanHero({
+    introScales,
+    isPreviewing,
+    onPlay,
+    onSelect,
+    lang,
+    title = { ko: '가장 자연스러운 시작', en: 'Easy to Start' },
+    colorTheme = 'green'
+}: ReelPanHeroProps) {
+    const theme = COLOR_THEMES[colorTheme];
+    const { r, g, b } = theme.primary;
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="w-full relative aspect-[16/10] md:aspect-[21/9] rounded-[40px] overflow-hidden shadow-2xl mb-8 group cursor-pointer"
-            onClick={() => onSelect(scale)}
-            style={{
-                background: gradient
-            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="w-full relative flex flex-col pt-20 pb-6 px-6 overflow-hidden rounded-[28px] shadow-2xl gap-6"
+            style={{ background: theme.gradient }}
         >
-            {/* Overlay */}
-            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-500" />
+            {/* Background Texture */}
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 mix-blend-overlay pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
 
-            <div className="absolute inset-0 p-8 flex flex-col justify-end items-start md:p-12">
-                <div className="mb-2 inline-flex items-center px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/10">
-                    <span className="text-xs font-medium text-white/80 uppercase tracking-widest">Today's Pick</span>
-                </div>
-
-                <h1 className="text-4xl md:text-6xl font-black text-white mb-2 leading-tight tracking-tight shadow-sm">
-                    {nickname}
-                </h1>
-
-                <div className="flex items-center gap-4 mb-6">
-                    <span className="text-lg md:text-xl text-white/80 font-medium tracking-wide">
-                        {subName}
-                    </span>
-                    <div className="h-1 w-1 rounded-full bg-white/50" />
-                    <span className="text-sm md:text-base text-white/60 line-clamp-1 max-w-[200px] md:max-w-none">
-                        {desc}
-                    </span>
-                </div>
-
-                <button
-                    onClick={(e) => onPlay(e, scale)}
-                    className="flex items-center gap-3 px-8 py-4 bg-white text-black rounded-full font-bold text-lg hover:scale-105 active:scale-95 transition-transform duration-200 shadow-[0_0_40px_rgba(255,255,255,0.3)]"
+            {/* Top: Header */}
+            <div className="relative z-10 flex flex-col items-start gap-4">
+                {/* Title - Hierarchy Level 1 (highest) */}
+                <motion.h1
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-[28px] md:text-3xl font-bold leading-[1.3] font-sans"
+                    style={{ color: 'rgba(247, 245, 240, 0.95)' }}
                 >
-                    <Play fill="currentColor" size={24} />
-                    <span>Watch Preview</span>
-                </button>
+                    {lang === 'ko' ? title.ko : title.en}
+                </motion.h1>
             </div>
 
-            {/* Decorative Elements */}
-            <div className="absolute top-8 right-8 text-white/10">
-                <svg width="120" height="120" viewBox="0 0 24 24" fill="currentColor">
-                    <circle cx="12" cy="12" r="10" />
-                </svg>
+            {/* Bottom: Scale List */}
+            <div className="relative z-10 flex flex-col gap-3">
+                {introScales.map((scale, index) => (
+                    <motion.div
+                        key={scale.id}
+                        initial={{ x: -20, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ delay: 0.3 + (index * 0.1) }}
+                    >
+                        <IntroScaleCard
+                            scale={scale}
+                            isPreviewing={isPreviewing(scale.id)}
+                            scalePanelLang={lang}
+                            onSelect={onSelect}
+                            onPreview={onPlay}
+                            colorTheme={colorTheme}
+                        />
+                    </motion.div>
+                ))}
             </div>
         </motion.div>
+    );
+}
+
+const IntroScaleCard = ({
+    scale,
+    isPreviewing,
+    scalePanelLang,
+    onSelect,
+    onPreview,
+    colorTheme = 'green'
+}: {
+    scale: Scale;
+    isPreviewing: boolean;
+    scalePanelLang: 'ko' | 'en';
+    onSelect: (scale: Scale) => void;
+    onPreview: (e: React.MouseEvent, scale: Scale) => void;
+    colorTheme?: ColorTheme;
+}) => {
+    const theme = COLOR_THEMES[colorTheme];
+    const { r, g, b } = theme.primary;
+    const light = theme.primaryLight;
+
+    return (
+        <div
+            className="p-4 rounded-[24px] flex items-center justify-between group transition-all backdrop-blur-sm"
+            style={{
+                background: theme.cardBg,
+                borderTop: `1px solid rgba(${r}, ${g}, ${b}, 0.25)`
+            }}
+        >
+            {/* Scale Name - Hierarchy Level 2 (medium) */}
+            <div className="flex flex-col min-w-0 flex-1 mr-2">
+                <span className="font-semibold text-base tracking-tight whitespace-nowrap" style={{ color: 'rgba(240, 235, 229, 0.75)' }}>{scale.name}</span>
+            </div>
+            <div className="flex items-center gap-2">
+                {/* Play Preview Button - Icon only, subtle */}
+                <button
+                    onClick={(e) => onPreview(e, scale)}
+                    className="w-10 h-10 rounded-full flex items-center justify-center transition-all"
+                    style={{
+                        background: 'transparent',
+                        color: isPreviewing ? `rgb(${r}, ${g}, ${b})` : `rgba(${light.r}, ${light.g}, ${light.b}, 0.5)`
+                    }}
+                >
+                    {isPreviewing ? (
+                        <Volume2 size={18} className="animate-pulse" style={{ filter: `drop-shadow(0 0 6px rgba(${r}, ${g}, ${b}, 0.6))` }} />
+                    ) : (
+                        <Play size={18} fill="currentColor" style={{ filter: `drop-shadow(0 0 4px rgba(${light.r}, ${light.g}, ${light.b}, 0.2))` }} />
+                    )}
+                </button>
+                {/* Action Button - Hierarchy Level 3 (lowest) */}
+                <button
+                    onClick={() => onSelect(scale)}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all`}
+                    style={{
+                        background: `linear-gradient(135deg, rgba(${r}, ${g}, ${b}, 0.28), rgba(${r}, ${g}, ${b}, 0.12))`,
+                        border: `1px solid rgba(${r}, ${g}, ${b}, 0.55)`,
+                        color: `rgba(${r}, ${g}, ${b}, 0.88)`
+                    }}
+                >
+                    <ArrowRightIcon size={18} />
+                </button>
+            </div>
+        </div>
+    );
+};
+
+// Helper icon for the "Play Now" arrow
+function ArrowRightIcon({ size = 24 }: { size?: number }) {
+    return (
+        <svg
+            width={size}
+            height={size}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        >
+            <path d="M5 12h14" />
+            <path d="m12 5 7 7-7 7" />
+        </svg>
     );
 }

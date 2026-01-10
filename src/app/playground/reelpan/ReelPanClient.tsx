@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from "framer-motion";
 import { SCALES } from '@/data/handpanScales';
 import { Layout, Check, Square, Circle, Smartphone, Keyboard, Play, Pause, Volume2, Download, Trash2, X, Type, Search, ChevronDown, Share2, RefreshCcw, Drum, SlidersHorizontal, Settings2, Sparkles, ArrowLeft, Music2, Music, FileText, Palette, MoreVertical, Moon, Sun, Flame } from 'lucide-react';
+import ReelPanHero from '@/components/playground/reelpan/ReelPanHero';
+import ReelPanSection from '@/components/playground/reelpan/ReelPanSection';
 
 // MIDI parsing utilities
 import { parseMidi, findBestMatchScale } from '@/lib/midiUtils';
@@ -177,6 +179,8 @@ const ScaleCard = ({
         </div>
     );
 };
+
+
 
 const MemoizedScaleCard = React.memo(ScaleCard);
 
@@ -2360,61 +2364,74 @@ export default function ReelPanClient() {
                             exit={{ opacity: 0, y: 20 }}
                             className="absolute inset-0 z-[100] bg-black/60 backdrop-blur-[40px] overflow-y-auto custom-scrollbar pointer-events-auto"
                         >
-                            <div className="px-6 py-4 border-b border-white/[0.08] flex items-center justify-between">
+                            <div className="px-6 pt-4 pb-0 flex items-center justify-between shrink-0">
+                                {/* Left Side: Empty or Logo if needed */}
+                                <div className="w-10" />
+
+                                {/* Right Side: Language & Close */}
                                 <div className="flex items-center gap-3">
-                                    <h2 className="text-white font-bold text-sm tracking-[0.25em] opacity-90">
-                                        {scalePanelLang === 'ko' ? (
-                                            <><span className="text-[#FFD700]">snd</span> 디지털 핸드팬</>
-                                        ) : (
-                                            <><span className="text-[#FFD700]">snd</span> digital handpan</>
-                                        )}
-                                    </h2>
                                     <button
                                         onClick={() => setScalePanelLang(scalePanelLang === 'ko' ? 'en' : 'ko')}
-                                        className="px-2 py-1 text-[10px] font-bold rounded-full bg-white/10 text-white/70 hover:bg-white/20 hover:text-white transition-all border border-white/10"
+                                        className="w-10 h-10 rounded-full bg-white/[0.03] flex items-center justify-center text-[10px] font-bold text-white/40 hover:bg-white/[0.08] hover:text-white/70 transition-all border border-white/[0.03]"
                                     >
                                         {scalePanelLang === 'ko' ? 'EN' : '한글'}
                                     </button>
-                                </div>
-                                <button
-                                    onClick={() => setShowScaleSelector(false)}
-                                    className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all border border-white/[0.05]"
-                                >
-                                    ✕
-                                </button>
-                            </div>
-
-                            <div className="px-4 py-6 flex flex-col gap-4">
-                                {/* Search Bar */}
-                                <div className="px-2 relative flex items-center gap-2">
-                                    <div className="relative flex-1">
-                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30">
-                                            <Search size={16} />
-                                        </div>
-                                        <input
-                                            type="text"
-                                            placeholder={scalePanelLang === 'ko' ? '스케일 이름이나 태그로 검색...' : 'Search scales or tags...'}
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                            onFocus={() => setShowAdvancedFilters(true)}
-                                            className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pl-10 pr-10 text-sm text-white focus:outline-none focus:border-slate-300/50 focus:bg-white/[0.08] transition-all"
-                                        />
-                                        {searchTerm && (
-                                            <button
-                                                onClick={() => setSearchTerm('')}
-                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white"
-                                            >
-                                                <X size={14} />
-                                            </button>
-                                        )}
-                                    </div>
                                     <button
                                         onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all border ${showAdvancedFilters ? 'bg-slate-300 text-slate-900 border-slate-200' : 'bg-white/5 text-white/40 border-white/10'}`}
+                                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all border
+                                        ${showAdvancedFilters
+                                                ? 'bg-slate-400/60 text-slate-900 border-slate-300/40 shadow-[0_0_10px_rgba(255,255,255,0.1)]'
+                                                : 'bg-white/[0.03] text-white/40 hover:text-white/70 hover:bg-white/[0.08] border-white/[0.03]'
+                                            }`}
                                     >
-                                        <SlidersHorizontal size={18} />
+                                        <Search size={18} />
+                                    </button>
+                                    <button
+                                        onClick={() => setShowScaleSelector(false)}
+                                        className="w-10 h-10 rounded-full bg-white/[0.03] flex items-center justify-center text-white/40 hover:text-white/70 hover:bg-white/[0.08] transition-all border border-white/[0.03]"
+                                    >
+                                        ✕
                                     </button>
                                 </div>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto custom-scrollbar px-4 pt-[15px] pb-6 flex flex-col gap-4">
+                                {/* Browse Mode: Hero Cards Horizontal Slider - Shows when NOT searching */}
+                                {!showAdvancedFilters && (
+                                    <div
+                                        className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-2 hide-scrollbar -mx-4 px-4"
+                                        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                                    >
+                                        {/* Card 1: Introductory Best Sellers */}
+                                        <div className="snap-center shrink-0 w-[calc(100%-16px)]">
+                                            <ReelPanHero
+                                                introScales={['d_kurd_10', 'cs_amara_10', 'f_aeolian_10', 'c_agean_10']
+                                                    .map(id => SCALES.find(s => s.id === id))
+                                                    .filter((s): s is Scale => !!s)}
+                                                isPreviewing={(scaleId) => previewingScaleId === scaleId}
+                                                onPlay={handlePreview}
+                                                onSelect={handleScaleSelect}
+                                                lang={scalePanelLang}
+                                            />
+                                        </div>
+
+                                        {/* Card 2: Wellness & Spiritual */}
+                                        <div className="snap-center shrink-0 w-[calc(100%-16px)]">
+                                            <ReelPanHero
+                                                introScales={['fs_low_pygmy_14_mutant', 'fs_low_pygmy_12', 'f_low_pygmy_9', 'cs_pygmy_11']
+                                                    .map(id => SCALES.find(s => s.id === id))
+                                                    .filter((s): s is Scale => !!s)}
+                                                isPreviewing={(scaleId) => previewingScaleId === scaleId}
+                                                onPlay={handlePreview}
+                                                onSelect={handleScaleSelect}
+                                                lang={scalePanelLang}
+                                                title={{ ko: '힐링이 필요할 때', en: "The 'Pygmy's" }}
+                                                colorTheme="magenta"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
 
                                 {/* Advanced Filter Controls - Scale Mode Only */}
                                 <AnimatePresence>
@@ -2426,6 +2443,31 @@ export default function ReelPanClient() {
                                             transition={{ duration: 0.2 }}
                                             className="flex flex-col gap-3 px-2 overflow-hidden"
                                         >
+                                            {/* Search Input (Integrated) */}
+                                            <div className="relative flex items-center gap-2">
+                                                <div className="relative flex-1">
+                                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30">
+                                                        <Search size={16} />
+                                                    </div>
+                                                    <input
+                                                        type="text"
+                                                        placeholder={scalePanelLang === 'ko' ? '스케일 검색...' : 'Search scales...'}
+                                                        value={searchTerm}
+                                                        autoFocus
+                                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                                        className="w-full bg-white/10 border border-white/10 rounded-xl py-2 pl-9 pr-9 text-sm text-white focus:outline-none focus:border-white/30 transition-all placeholder:text-white/20"
+                                                    />
+                                                    {searchTerm && (
+                                                        <button
+                                                            onClick={() => setSearchTerm('')}
+                                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white"
+                                                        >
+                                                            <X size={14} />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+
                                             {/* Filter Mode Toggle */}
                                             <div className="flex p-1 bg-white/5 rounded-lg mb-1">
                                                 <button
@@ -2548,127 +2590,125 @@ export default function ReelPanClient() {
                                     )}
                                 </AnimatePresence>
 
-                                {/* Scales or Songs List */}
-                                <div className="grid grid-cols-1 gap-3 pb-20">
-                                    {selectorMode === 'scale' ? (
-                                        <>
-                                            {/* Current Selected Scale - First in List */}
-                                            {(() => {
-                                                const currentScale = processedScales.find(s => s.id === targetScale.id);
-                                                if (!currentScale) return null;
-                                                const isDisabled = currentScale.id === 'e_amara_18';
-
-                                                return (
-                                                    <div key={currentScale.id} className="mb-2">
-                                                        <div className="text-[12px] font-black uppercase tracking-[0.3em] text-white/30 mb-2 px-2">{scalePanelLang === 'ko' ? '현재 선택됨' : 'CURRENT SELECTED'}</div>
+                                {/* Scales or Songs List (Rendered only when Filters/Search Active) */}
+                                {(showAdvancedFilters || searchTerm) ? (
+                                    <div className="grid grid-cols-1 gap-3 pb-20">
+                                        {selectorMode === 'scale' ? (
+                                            <>
+                                                {/* Filtered List Content */}
+                                                {processedScales.map((scale) => {
+                                                    const isDisabled = scale.id === 'e_amara_18';
+                                                    return (
                                                         <MemoizedScaleCard
-                                                            scale={currentScale}
-                                                            isSelected={true}
+                                                            key={scale.id}
+                                                            scale={scale}
+                                                            isSelected={targetScale.id === scale.id}
                                                             isDisabled={isDisabled}
-                                                            isPreviewing={previewingScaleId === currentScale.id}
+                                                            isPreviewing={previewingScaleId === scale.id}
                                                             scalePanelLang={scalePanelLang}
                                                             onSelect={handleScaleSelect}
                                                             onPreview={handlePreview}
                                                         />
+                                                    );
+                                                })}
+                                            </>
+                                        ) : (
+                                            /* Songs List (Keep existing song logic) */
+                                            <>
+                                                {/* Current Selected Song - First in List */}
+                                                {selectedSong && (
+                                                    <div className="mb-2">
+                                                        <div className="text-[12px] font-black uppercase tracking-[0.3em] text-white/30 mb-2 px-2">CURRENT SELECTED</div>
+                                                        <div className="p-4 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border cursor-pointer bg-slate-300/[0.06] backdrop-blur-md border-slate-300/30">
+                                                            <div className="flex items-center z-10 flex-1 min-w-0 pr-4">
+                                                                <div className="flex items-center gap-3">
+                                                                    <FileText size={20} className="text-white/60" />
+                                                                    <span className="font-black text-xl tracking-tight truncate text-white">
+                                                                        {selectedSong.title}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex items-center gap-3 z-10 shrink-0">
+                                                                <button
+                                                                    onClick={toggleSongPlayback}
+                                                                    disabled={!selectedSong.midiSrc}
+                                                                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-lg ${selectedSong.midiSrc
+                                                                        ? 'bg-slate-300/25 hover:bg-slate-300/40 text-slate-100 border border-slate-200/30'
+                                                                        : 'bg-gray-500/25 text-gray-400 border border-gray-500/30 cursor-not-allowed'
+                                                                        } backdrop-blur-sm`}
+                                                                >
+                                                                    {isSongPlaying ? (
+                                                                        <Volume2 size={20} className="animate-pulse" />
+                                                                    ) : (
+                                                                        <Play size={22} fill="currentColor" className="ml-1" />
+                                                                    )}
+                                                                </button>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                );
-                                            })()}
+                                                )}
 
-                                            {/* Other Scales */}
-                                            {processedScales.filter(scale => scale.id !== targetScale.id).map((scale) => {
-                                                const isDisabled = scale.id === 'e_amara_18';
-                                                return (
-                                                    <MemoizedScaleCard
-                                                        key={scale.id}
-                                                        scale={scale}
-                                                        isSelected={false}
-                                                        isDisabled={isDisabled}
-                                                        isPreviewing={previewingScaleId === scale.id}
-                                                        scalePanelLang={scalePanelLang}
-                                                        onSelect={handleScaleSelect}
-                                                        onPreview={handlePreview}
-                                                    />
-                                                );
-                                            })}
-                                        </>
-                                    ) : (
-                                        /* Songs List */
-                                        <>
-                                            {/* Current Selected Song - First in List */}
-                                            {selectedSong && (
-                                                <div className="mb-2">
-                                                    <div className="text-[12px] font-black uppercase tracking-[0.3em] text-white/30 mb-2 px-2">CURRENT SELECTED</div>
-                                                    <div className="p-4 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border cursor-pointer bg-slate-300/[0.06] backdrop-blur-md border-slate-300/30">
+                                                {/* Other Songs */}
+                                                {REELPAN_SONGS.filter(song => !selectedSong || song.id !== selectedSong.id).map((song) => (
+                                                    <div
+                                                        key={song.id}
+                                                        role="button"
+                                                        tabIndex={0}
+                                                        onClick={() => handleSongSelect(song)}
+                                                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleSongSelect(song); }}
+                                                        className="p-4 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border cursor-pointer bg-white/[0.02] border-white/[0.05] text-white hover:bg-slate-300/[0.08] hover:border-slate-300/30"
+                                                    >
                                                         <div className="flex items-center z-10 flex-1 min-w-0 pr-4">
                                                             <div className="flex items-center gap-3">
                                                                 <FileText size={20} className="text-white/60" />
-                                                                <span className="font-black text-xl tracking-tight truncate text-white">
-                                                                    {selectedSong.title}
-                                                                </span>
+                                                                <div>
+                                                                    <span className="font-black text-xl tracking-tight truncate text-white/90 block">
+                                                                        {song.title}
+                                                                    </span>
+                                                                    <span className="text-sm text-white/50 block mt-1">
+                                                                        {song.scaleName}
+                                                                    </span>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                         <div className="flex items-center gap-3 z-10 shrink-0">
-                                                            <button
-                                                                onClick={toggleSongPlayback}
-                                                                disabled={!selectedSong.midiSrc}
-                                                                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-lg ${selectedSong.midiSrc
-                                                                    ? 'bg-slate-300/25 hover:bg-slate-300/40 text-slate-100 border border-slate-200/30'
-                                                                    : 'bg-gray-500/25 text-gray-400 border border-gray-500/30 cursor-not-allowed'
-                                                                    } backdrop-blur-sm`}
-                                                            >
-                                                                {isSongPlaying ? (
-                                                                    <Volume2 size={20} className="animate-pulse" />
-                                                                ) : (
-                                                                    <Play size={22} fill="currentColor" className="ml-1" />
-                                                                )}
-                                                            </button>
+                                                            {song.midiSrc && (
+                                                                <div className="flex items-center gap-2 text-xs text-white/40">
+                                                                    <Music size={12} />
+                                                                    <span>MIDI</span>
+                                                                </div>
+                                                            )}
+                                                            {song.xmlSrc && (
+                                                                <div className="flex items-center gap-2 text-xs text-white/40">
+                                                                    <FileText size={12} />
+                                                                    <span>Score</span>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
-                                                </div>
-                                            )}
+                                                ))}
+                                            </>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col gap-8 pb-20">
+                                        <ReelPanSection
+                                            title={scalePanelLang === 'ko' ? '내면의 정서' : 'Inner Scape'}
+                                            scales={SCALES}
+                                            onSelect={handleScaleSelect}
+                                            lang={scalePanelLang}
+                                        />
+                                    </div>
+                                )}
+                            </div>
 
-                                            {/* Other Songs */}
-                                            {REELPAN_SONGS.filter(song => !selectedSong || song.id !== selectedSong.id).map((song) => (
-                                                <div
-                                                    key={song.id}
-                                                    role="button"
-                                                    tabIndex={0}
-                                                    onClick={() => handleSongSelect(song)}
-                                                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleSongSelect(song); }}
-                                                    className="p-4 rounded-[32px] text-left transition-all duration-300 flex items-center justify-between group relative overflow-hidden border cursor-pointer bg-white/[0.02] border-white/[0.05] text-white hover:bg-slate-300/[0.08] hover:border-slate-300/30"
-                                                >
-                                                    <div className="flex items-center z-10 flex-1 min-w-0 pr-4">
-                                                        <div className="flex items-center gap-3">
-                                                            <FileText size={20} className="text-white/60" />
-                                                            <div>
-                                                                <span className="font-black text-xl tracking-tight truncate text-white/90 block">
-                                                                    {song.title}
-                                                                </span>
-                                                                <span className="text-sm text-white/50 block mt-1">
-                                                                    {song.scaleName}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex items-center gap-3 z-10 shrink-0">
-                                                        {song.midiSrc && (
-                                                            <div className="flex items-center gap-2 text-xs text-white/40">
-                                                                <Music size={12} />
-                                                                <span>MIDI</span>
-                                                            </div>
-                                                        )}
-                                                        {song.xmlSrc && (
-                                                            <div className="flex items-center gap-2 text-xs text-white/40">
-                                                                <FileText size={12} />
-                                                                <span>Score</span>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </>
-                                    )}
-                                </div>
+                            {/* Footer: Title */}
+                            <div className="py-6 text-center text-white font-bold text-sm tracking-[0.25em] opacity-50 shrink-0 pointer-events-none pb-8 text-shadow-sm select-none">
+                                {scalePanelLang === 'ko' ? (
+                                    <><span className="text-[#FFD700]">snd</span> handpan</>
+                                ) : (
+                                    <><span className="text-[#FFD700]">snd</span> digital handpan</>
+                                )}
                             </div>
 
                         </motion.div>

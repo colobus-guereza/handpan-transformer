@@ -172,14 +172,14 @@ export default function PlaygroundHome() {
     const [lang, setLang] = useState<'ko' | 'en'>('ko');
     const t = translations[lang];
     const [previewingScaleId, setPreviewingScaleId] = useState<string | null>(null);
-    
+
     // F# Low Pygmy 14 스케일 찾기
     const previewScale = SCALES.find(s => s.id === 'fs_low_pygmy_14_mutant') || SCALES[0];
-    
+
     // 오디오 관련 훅 및 refs
     const { playNote, resumeAudio } = useHandpanAudio();
     const abortControllerRef = useRef<AbortController | null>(null);
-    
+
     // 미리듣기 중지 함수
     const stopPreview = () => {
         if (abortControllerRef.current) {
@@ -188,7 +188,7 @@ export default function PlaygroundHome() {
         }
         setPreviewingScaleId(null);
     };
-    
+
     // 미리듣기 핸들러 (ReelPanClient와 동일한 로직)
     const handlePreview = async (e: React.MouseEvent, scale: any) => {
         e.stopPropagation();
@@ -247,7 +247,7 @@ export default function PlaygroundHome() {
             }
         }
     };
-    
+
     // 컴포넌트 언마운트 시 미리듣기 중지
     useEffect(() => {
         return () => {
@@ -606,7 +606,7 @@ export default function PlaygroundHome() {
                     </div>
 
                     {/* Section 6: Footer (CTA) */}
-                    <div className="text-center py-12 border-t border-white/10">
+                    <div className="text-center pt-6 pb-12 border-t border-white/10">
                         <div className="text-xl text-slate-300 font-medium tracking-wide flex flex-col gap-2">
                             {t.footerCTAText.split('\n').map((line, lineIndex) => (
                                 <p key={lineIndex}>

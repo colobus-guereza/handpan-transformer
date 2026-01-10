@@ -18,5 +18,11 @@ export const metadata: Metadata = {
 export default async function ReelPanPage({ params }: { params: Promise<Record<string, never>> }) {
     // Unwrap params to satisfy Next.js 16 requirement
     await params;
+
+    console.log('ReelPanClient type:', typeof ReelPanClient);
+    if (typeof ReelPanClient !== 'function') {
+        throw new Error(`ReelPanClient import invalid. Type: ${typeof ReelPanClient}, Value: ${JSON.stringify(ReelPanClient)}`);
+    }
+
     return <ReelPanClient />;
 }
