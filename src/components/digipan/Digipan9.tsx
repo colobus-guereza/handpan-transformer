@@ -120,7 +120,45 @@ const Digipan9 = React.forwardRef<Digipan3DHandle, Digipan9Props>(({
         // Sort by frequency to determine 1-based numbering
         const sorted = [...generatedNotes].sort((a, b) => a.frequency - b.frequency);
 
+        // Add Manual Snare Buttons (Bottom Left/Right) - Same as Digipan10
+        const snareNoteR = {
+            id: 99,
+            cx: 915,
+            cy: 915,
+            scale: 0,
+            rotate: 0,
+            position: 'bottom',
+            angle: 0,
+            scaleX: 0.7,
+            scaleY: 0.7,
+            label: 'SnareR',
+            frequency: 0,
+            visualFrequency: 440, // Use 440Hz for size calculation
+            labelOffset: 25,
+            hideGuide: true
+        };
+
+        const snareNoteL = {
+            id: 98,
+            cx: 85,
+            cy: 915,
+            scale: 0,
+            rotate: 0,
+            position: 'bottom',
+            angle: 0,
+            scaleX: 0.7,
+            scaleY: 0.7,
+            label: 'SnareL',
+            frequency: 0,
+            visualFrequency: 440, // Use 440Hz for size calculation
+            labelOffset: 25,
+            hideGuide: true
+        };
+
+        generatedNotes.push(snareNoteR, snareNoteL);
+
         return generatedNotes.map(n => {
+            if (n.label.includes('Snare')) return { ...n, subLabel: 'Snare' };
             const rank = sorted.findIndex(x => x.id === n.id) + 1;
             return {
                 ...n,
