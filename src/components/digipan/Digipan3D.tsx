@@ -708,16 +708,25 @@ const ToneFieldMesh = React.memo(({
 
                     // Hide standard logic for Snare, but render custom Snare Label
                     if (note.label.includes('Snare')) {
-                        let displayText = 'S1';
-                        // Use the passed activeSnare prop to determine S1/S2/S3
-                        if (activeSnare === 'Snare2') displayText = 'S2';
-                        if (activeSnare === 'Snare3') displayText = 'S3';
+                        // 1. Determine Prefix (LS vs RS)
+                        // If label has 'L', it's Left Snare. Otherwise (R or none), treat as Right Snare.
+                        // Assuming 'SnareL' -> LS, 'SnareR' (or just 'Snare' if implicitly right) -> RS
+                        const isLeft = note.label.includes('SnareL');
+                        const prefix = isLeft ? 'LS' : 'RS';
+
+                        // 2. Determine Suffix (Preset ID: 1, 2, 3)
+                        // activeSnare prop comes from parent state: 'Snare' (default), 'Snare2', 'Snare3'
+                        let suffix = '1';
+                        if (activeSnare === 'Snare2') suffix = '2';
+                        if (activeSnare === 'Snare3') suffix = '3';
+
+                        const displayText = `${prefix}${suffix}`;
 
                         return (
                             <Text
                                 visible={areLabelsVisible} // Follows Pitch/Number Toggle
                                 position={[0, 0, 0.05]} // Slightly elevated
-                                fontSize={3.0}
+                                fontSize={2.7} // Reduced by 10% (was 3.0)
                                 color="#FFFFFF"
                                 anchorX="center"
                                 anchorY="middle"
@@ -1689,70 +1698,74 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
             {/* Scale Info Panel - Bottom Right Overlay (only shown in /digipan-3d-test dev page) */}
             {/* ScaleInfoPanel removed */}
 
-            {/* Snare Settings Popup (Mobile Style) */}
-            <AnimatePresence>
-                {editingSnareId && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="absolute inset-0 z-[150] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 select-none"
-                        onPointerDown={() => setEditingSnareId(null)}
-                    >
+            {/* Snare Settings Popup (Mobile Style) - Portaled to Body to cover full screen including Footer */}
+            {/* Snare Settings Popup (Mobile Style) - Portaled to Body to cover full screen including Footer */}
+            {typeof document !== 'undefined' && createPortal(
+                <AnimatePresence>
+                    {editingSnareId && (
                         <motion.div
-                            initial={{ scale: 0.9, y: 20 }}
-                            animate={{ scale: 1, y: 0 }}
-                            exit={{ scale: 0.9, y: 20 }}
-                            className="w-full max-w-xs bg-zinc-900 border border-white/10 rounded-[32px] p-6 shadow-2xl"
-                            // Stop propagation to prevent closing when clicking inside
-                            onClick={(e) => e.stopPropagation()}
-                            onPointerDown={(e) => e.stopPropagation()}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 select-none touch-none"
+                            onPointerDown={() => setEditingSnareId(null)}
                         >
-                            <div className="flex items-center justify-between mb-6">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
-                                        <Drum size={16} className="text-blue-400" />
+                            <motion.div
+                                initial={{ scale: 0.9, y: 20 }}
+                                animate={{ scale: 1, y: 0 }}
+                                exit={{ scale: 0.9, y: 20 }}
+                                className="w-full max-w-[280px] bg-zinc-900 border border-white/10 rounded-[28px] p-5 shadow-2xl"
+                                // Stop propagation to prevent closing when clicking inside
+                                onClick={(e) => e.stopPropagation()}
+                                onPointerDown={(e) => e.stopPropagation()}
+                            >
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
+                                            <Drum size={16} className="text-blue-400" />
+                                        </div>
+                                        <h3 className="text-white font-bold tracking-tight text-sm">Snare Sound ({editingSnareId === 'SnareL' ? 'Left' : 'Right'})</h3>
                                     </div>
-                                    <h3 className="text-white font-bold tracking-tight">Snare Sound ({editingSnareId === 'SnareL' ? 'Left' : 'Right'})</h3>
+                                    <button
+                                        onClick={() => setEditingSnareId(null)}
+                                        className="text-white/40 hover:text-white"
+                                    >
+                                        <X size={18} />
+                                    </button>
                                 </div>
-                                <button
-                                    onClick={() => setEditingSnareId(null)}
-                                    className="text-white/40 hover:text-white"
-                                >
-                                    <X size={20} />
-                                </button>
-                            </div>
 
-                            <div className="flex flex-col gap-3">
-                                {['Snare', 'Snare2', 'Snare3'].map((snareId, i) => {
-                                    const currentActive = activeSnares[editingSnareId] || 'Snare';
-                                    const isActive = currentActive === snareId;
-                                    return (
-                                        <button
-                                            key={snareId}
-                                            onClick={() => {
-                                                setActiveSnares(prev => ({ ...prev, [editingSnareId]: snareId }));
-                                                // Play sample immediately
-                                                if (playNote) playNote(snareId);
-                                            }}
-                                            className={`w-full py-4 px-6 rounded-2xl flex items-center justify-between transition-all active:scale-95
+                                <div className="flex flex-col gap-2">
+                                    {['Snare', 'Snare2', 'Snare3'].map((snareId, i) => {
+                                        const currentActive = activeSnares[editingSnareId] || 'Snare';
+                                        const isActive = currentActive === snareId;
+                                        return (
+                                            <button
+                                                key={snareId}
+                                                onClick={() => {
+                                                    setActiveSnares(prev => ({ ...prev, [editingSnareId]: snareId }));
+                                                    // Play sample immediately
+                                                    if (playNote) playNote(snareId);
+                                                }}
+                                                className={`w-full py-3 px-5 rounded-xl flex items-center justify-between transition-all active:scale-95
                                             ${isActive
-                                                    ? 'bg-blue-600 shadow-lg shadow-blue-900/50'
-                                                    : 'bg-white/5 hover:bg-white/10'}
+                                                        ? 'bg-blue-600 shadow-lg shadow-blue-900/50'
+                                                        : 'bg-white/5 hover:bg-white/10'}
                                         `}
-                                        >
-                                            <span className={`font-medium ${isActive ? 'text-white' : 'text-white/60'}`}>
-                                                Type {i + 1}
-                                            </span>
-                                            {isActive && <Check size={18} className="text-white" />}
-                                        </button>
-                                    );
-                                })}
-                            </div>
+                                            >
+                                                <span className={`font-medium text-sm ${isActive ? 'text-white' : 'text-white/60'}`}>
+                                                    Type {i + 1}
+                                                </span>
+                                                {isActive && <Check size={16} className="text-white" />}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </motion.div>
                         </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                    )}
+                </AnimatePresence>,
+                document.body
+            )}
 
             {/* Recording Finished Overlay - Only show if NOT mobile (Mobile auto-saves) */}
             {

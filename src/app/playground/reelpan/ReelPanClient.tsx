@@ -1993,7 +1993,8 @@ export default function ReelPanClient() {
                                     onPointerDown={handleDrumDown}
                                     onPointerUp={handleDrumUp}
                                     disabled={!isDrumSynthReady}
-                                    className={`w-12 h-12 rounded-full backdrop-blur-md border border-white/10 flex flex-col items-center justify-center transition-all active:scale-90 relative overflow-hidden group duration-500
+                                    onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                    className={`w-12 h-12 rounded-full backdrop-blur-md border border-white/10 flex flex-col items-center justify-center transition-all active:scale-90 relative overflow-hidden group duration-500 touch-none select-none
                                          ${!isDrumSynthReady
                                             ? 'bg-white/5 opacity-50 cursor-not-allowed'
                                             : isDrumPlaying
@@ -2023,7 +2024,8 @@ export default function ReelPanClient() {
                                     onPointerDown={handleChordDown}
                                     onPointerUp={handleChordUp}
                                     disabled={!isChordSynthReady}
-                                    className={`w-12 h-12 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center transition-all active:scale-95 relative overflow-hidden group duration-500
+                                    onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                    className={`w-12 h-12 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center transition-all active:scale-95 relative overflow-hidden group duration-500 touch-none select-none
                                         ${!isChordSynthReady
                                             ? 'bg-white/5 opacity-50 cursor-not-allowed'
                                             : isChordPlaying
@@ -2062,8 +2064,8 @@ export default function ReelPanClient() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="absolute inset-0 z-[150] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6"
-                            onClick={() => setShowDrumSettings(false)}
+                            className="absolute inset-0 z-[150] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 select-none"
+                            onPointerDown={() => setShowDrumSettings(false)}
                         >
                             <motion.div
                                 initial={{ scale: 0.9, y: 20 }}
@@ -2071,6 +2073,7 @@ export default function ReelPanClient() {
                                 exit={{ scale: 0.9, y: 20 }}
                                 className="w-full max-w-xs bg-zinc-900 border border-white/10 rounded-[32px] p-6 shadow-2xl"
                                 onClick={(e) => e.stopPropagation()}
+                                onPointerDown={(e) => e.stopPropagation()}
                             >
                                 <div className="flex items-center justify-between mb-6">
                                     <div className="flex items-center gap-2">
@@ -2165,8 +2168,8 @@ export default function ReelPanClient() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="absolute inset-0 z-[150] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6"
-                            onClick={() => setShowChordSettings(false)}
+                            className="absolute inset-0 z-[150] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 select-none"
+                            onPointerDown={() => setShowChordSettings(false)}
                         >
                             <motion.div
                                 initial={{ scale: 0.9, y: 20 }}
@@ -2174,6 +2177,7 @@ export default function ReelPanClient() {
                                 exit={{ scale: 0.9, y: 20 }}
                                 className="w-full max-w-xs bg-zinc-900 border border-white/10 rounded-[32px] p-6 shadow-2xl max-h-[80vh] overflow-y-auto"
                                 onClick={(e) => e.stopPropagation()}
+                                onPointerDown={(e) => e.stopPropagation()}
                             >
                                 <div className="flex items-center justify-between mb-6">
                                     <div className="flex items-center gap-2">

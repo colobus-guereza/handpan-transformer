@@ -719,7 +719,8 @@ export default function PanReelPage() {
                                 <button
                                     onPointerDown={handleDrumDown}
                                     onPointerUp={handleDrumUp}
-                                    className={`w-12 h-12 rounded-full backdrop-blur-md border border-white/10 flex flex-col items-center justify-center transition-all active:scale-90 relative overflow-hidden group
+                                    onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                    className={`w-12 h-12 rounded-full backdrop-blur-md border border-white/10 flex flex-col items-center justify-center transition-all active:scale-90 relative overflow-hidden group touch-none select-none
                                          ${isDrumPlaying ? 'bg-orange-500/40 border-orange-500/50' : 'bg-white/10 hover:bg-white/20'}
                                      `}
                                 >
@@ -752,8 +753,8 @@ export default function PanReelPage() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="absolute inset-0 z-[150] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6"
-                            onClick={() => setShowDrumSettings(false)}
+                            className="absolute inset-0 z-[150] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 select-none"
+                            onPointerDown={() => setShowDrumSettings(false)}
                         >
                             <motion.div
                                 initial={{ scale: 0.9, y: 20 }}
@@ -761,6 +762,7 @@ export default function PanReelPage() {
                                 exit={{ scale: 0.9, y: 20 }}
                                 className="w-full max-w-xs bg-zinc-900 border border-white/10 rounded-[32px] p-6 shadow-2xl"
                                 onClick={(e) => e.stopPropagation()}
+                                onPointerDown={(e) => e.stopPropagation()}
                             >
                                 <div className="flex items-center justify-between mb-6">
                                     <div className="flex items-center gap-2">
