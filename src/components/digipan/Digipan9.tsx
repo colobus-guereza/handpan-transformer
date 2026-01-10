@@ -113,7 +113,8 @@ const Digipan9 = React.forwardRef<Digipan3DHandle, Digipan9Props>(({
                 label: noteName,
                 frequency: frequency || 440,
                 visualFrequency: visualFrequency, // Fixed visual size
-                labelOffset: 25
+                labelOffset: 25,
+                offset: [0, 0, 0] as [number, number, number]
             };
         });
 
@@ -135,7 +136,8 @@ const Digipan9 = React.forwardRef<Digipan3DHandle, Digipan9Props>(({
             frequency: 0,
             visualFrequency: 440, // Use 440Hz for size calculation
             labelOffset: 25,
-            hideGuide: true
+            hideGuide: true,
+            offset: [0, 0, 0] as [number, number, number]
         };
 
         const snareNoteL = {
@@ -152,7 +154,8 @@ const Digipan9 = React.forwardRef<Digipan3DHandle, Digipan9Props>(({
             frequency: 0,
             visualFrequency: 440, // Use 440Hz for size calculation
             labelOffset: 25,
-            hideGuide: true
+            hideGuide: true,
+            offset: [0, 0, 0] as [number, number, number]
         };
 
         generatedNotes.push(snareNoteR, snareNoteL);

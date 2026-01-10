@@ -221,7 +221,9 @@ const Digipan10 = React.forwardRef<Digipan3DHandle, Digipan10Props>(({
             ...userProvidedData[0],
             label: scale.notes.ding,
             frequency: TEMPLATE_FREQUENCIES[0],
-            labelOffset: 25
+            visualFrequency: TEMPLATE_FREQUENCIES[0],
+            labelOffset: 25,
+            offset: [0, 0, 0] as [number, number, number]
         };
 
         const topNotes = scale.notes.top.map((pitch, index) => {
@@ -232,7 +234,9 @@ const Digipan10 = React.forwardRef<Digipan3DHandle, Digipan10Props>(({
                 ...template,
                 label: pitch,
                 frequency: TEMPLATE_FREQUENCIES[index + 1] || 440,
-                labelOffset: 25
+                visualFrequency: TEMPLATE_FREQUENCIES[index + 1] || 440,
+                labelOffset: 25,
+                offset: [0, 0, 0] as [number, number, number]
             };
         }).filter(n => n !== null);
 
@@ -253,8 +257,10 @@ const Digipan10 = React.forwardRef<Digipan3DHandle, Digipan10Props>(({
             scaleY: 0.7,
             label: 'SnareR',
             frequency: 0,
+            visualFrequency: 440, // Added to prevent 0-division
             labelOffset: 25,
-            hideGuide: true
+            hideGuide: true,
+            offset: [0, 0, 0] as [number, number, number]
         };
 
         // Snare Left (Mirrored)
@@ -270,8 +276,10 @@ const Digipan10 = React.forwardRef<Digipan3DHandle, Digipan10Props>(({
             scaleY: 0.7,
             label: 'SnareL',
             frequency: 0,
+            visualFrequency: 440, // Added to prevent 0-division
             labelOffset: 25,
-            hideGuide: true
+            hideGuide: true,
+            offset: [0, 0, 0] as [number, number, number]
         };
 
         generatedNotes.push(snareNoteR, snareNoteL);
