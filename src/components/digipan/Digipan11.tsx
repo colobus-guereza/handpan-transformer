@@ -292,6 +292,49 @@ const Digipan11 = React.forwardRef<Digipan3DHandle, Digipan11Props>(({
             return { ...n, subLabel };
         });
 
+        // Add Manual Snare Buttons (Bottom Left/Right) - Adjusted for Digipan11
+        // Base: SnareL(85, 915), SnareR(915, 915)
+        // Digipan11 Adjustments: LS cx+90/cy+110, RS cx-90/cy+110
+        const snareNoteR = {
+            id: 99,
+            cx: 825,  // 915 - 90
+            cy: 1025, // 915 + 110
+            scale: 0,
+            rotate: 0,
+            position: 'bottom',
+            angle: 0,
+            scaleX: 0.7,
+            scaleY: 0.7,
+            label: 'SnareR',
+            frequency: 0,
+            visualFrequency: 440,
+            labelOffset: 25,
+            hideGuide: true,
+            subLabel: 'Snare',
+            offset: [0, 0, 0] as [number, number, number]
+        };
+
+        const snareNoteL = {
+            id: 98,
+            cx: 175,  // 85 + 90
+            cy: 1025, // 915 + 110
+            scale: 0,
+            rotate: 0,
+            position: 'bottom',
+            angle: 0,
+            scaleX: 0.7,
+            scaleY: 0.7,
+            label: 'SnareL',
+            frequency: 0,
+            visualFrequency: 440,
+            labelOffset: 25,
+            hideGuide: true,
+            subLabel: 'Snare',
+            offset: [0, 0, 0] as [number, number, number]
+        };
+
+        finalNotes.push(snareNoteR, snareNoteL);
+
         return finalNotes;
 
     }, [scale, externalNotes]); // removed useVerticalLayout dep
@@ -312,7 +355,7 @@ const Digipan11 = React.forwardRef<Digipan3DHandle, Digipan11Props>(({
             onNoteClick={onNoteClick}
             onScaleSelect={onScaleSelect}
             // Background is simpler now - we pass content instead of string
-            backgroundContent={<Digipan11Background visualNotes={notesToRender.filter(n => n.id >= 9)} viewMode={viewMode} />}
+            backgroundContent={<Digipan11Background visualNotes={notesToRender.filter(n => n.id >= 9 && n.id < 98)} viewMode={viewMode} />}
             // tonefieldOffset={[-28.5, 0, 0]} // REMOVED global offset, will use per-note offset
             extraControls={extraControls}
             noteCountFilter={9} // Keep filter as 9 for now as it duplicates 9
