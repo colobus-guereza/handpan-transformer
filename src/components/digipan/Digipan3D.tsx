@@ -271,8 +271,22 @@ const ToneFieldMesh = React.memo(({
     const [pulsing, setPulsing] = useState(false);
 
     // Calculate position
-    const cx = note.cx ?? 500;
-    const cy = note.cy ?? 500;
+    let cx = note.cx ?? 500;
+    let cy = note.cy ?? 500;
+
+    // Apply Snare Position Adjustment
+    if (note.label.includes('Snare')) {
+        // Vertical Adjustment
+        cy -= 90; // Was -80, added -10
+
+        // Horizontal Adjustment (Spread Out)
+        if (note.label.includes('SnareL')) {
+            cx -= 40; // Was -30, added -10
+        } else {
+            cx += 40; // Was +30, added +10
+        }
+    }
+
     const pos = svgTo3D(cx, cy, centerX, centerY);
 
     // Apply Offset
@@ -322,14 +336,10 @@ const ToneFieldMesh = React.memo(({
     let finalRadiusX = radiusX * scaleXMult;
     let finalRadiusY = radiusY * scaleYMult;
 
-    // Force Circle for Snare
+    // Force Circle for Snare & Apply Size
     if (note.label.includes('Snare')) {
-        const avg = (finalRadiusX + finalRadiusY) / 2;
-        // Use Y as base to ensure consistency or just average. 
-        // Actually, let's just make it equal to Y (height) which is usually the 'size' reference, or just average.
-        // Assuming standard tonefield is wider than tall (Width > Height).
-        // Let's set both to the smaller dimension (roughly height based) to keep it compact? 
-        // Or just use the Y radius for both.
+        const snareScaleFactor = 1.06; // Was 1.08
+        finalRadiusY = finalRadiusY * snareScaleFactor;
         finalRadiusX = finalRadiusY;
     }
 
@@ -541,18 +551,30 @@ const ToneFieldMesh = React.memo(({
                     rotation={[Math.PI / 2, 0, 0]}
                     scale={[finalRadiusX, 0.05, finalRadiusY]}
                     visible={note.label.includes('Snare') || viewMode === 0 || viewMode === 1}
+                    onPointerDown={handlePointerDown}
+                    onPointerUp={handlePointerUp}
+                    onPointerLeave={handlePointerUp}
+                    onPointerOver={() => {
+                        document.body.style.cursor = 'pointer';
+                        setHovered(true);
+                    }}
+                    onPointerOut={() => {
+                        handlePointerUp();
+                        document.body.style.cursor = 'auto';
+                        setHovered(false);
+                    }}
                 >
                     <sphereGeometry args={[1, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2]} />
                     <meshStandardMaterial
-                        color={note.label.includes('Snare') ? "#60A5FA" : (hovered ? "#60A5FA" : "#FFFFFF")}
-                        emissive={hovered ? "#1E40AF" : "#000000"}
-                        emissiveIntensity={hovered ? 0.5 : 0}
+                        color={note.label.includes('Snare') ? "#0047A0" : (hovered ? "#0047A0" : "#FFFFFF")}
+                        emissive={hovered ? "#003478" : "#000000"}
+                        emissiveIntensity={hovered ? 0.6 : 0}
                         roughness={0.9}
                         metalness={0.0}
                         wireframe={note.label.includes('Snare') ? false : true}
                         toneMapped={false}
                         transparent={true}
-                        opacity={note.label.includes('Snare') ? 0.8 : 1}
+                        opacity={note.label.includes('Snare') ? 0.6 : 1}
                     />
                 </mesh>
 
@@ -726,13 +748,15 @@ const ToneFieldMesh = React.memo(({
                             <Text
                                 visible={areLabelsVisible} // Follows Pitch/Number Toggle
                                 position={[0, 0, 0.05]} // Slightly elevated
-                                fontSize={2.7} // Reduced by 10% (was 3.0)
+                                fontSize={2.7} // Reverted to 2.7 (+5px effect)
                                 color="#FFFFFF"
                                 anchorX="center"
                                 anchorY="middle"
                                 fontWeight="bold"
                                 outlineWidth={0.05}
                                 outlineColor="#000000"
+                                onPointerDown={handlePointerDown} // Explicitly handle touches on text
+                                onPointerUp={handlePointerUp}
                             >
                                 {displayText}
                             </Text>

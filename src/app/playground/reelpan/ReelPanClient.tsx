@@ -1916,10 +1916,10 @@ export default function ReelPanClient() {
 
                         <div className="flex-1 min-h-[100px]" />
 
-                        <footer className="w-full px-6 py-8 pb-6 bg-gradient-to-t from-black/95 to-transparent pointer-events-auto min-h-[180px] flex flex-col justify-end items-center gap-6">
+                        <footer className="w-full px-6 py-8 pb-6 bg-gradient-to-t from-black/95 to-transparent pointer-events-none min-h-[180px] flex flex-col justify-end items-center gap-6">
 
-                            {/* 하단 버튼 그룹 */}
-                            <div className="w-full flex items-center justify-between max-w-[380px] relative">
+                            {/* 하단 버튼 그룹 (Interactive) */}
+                            <div className="w-full flex items-center justify-between max-w-[380px] relative pointer-events-auto">
 
 
                                 {/* 1. Label Toggle */}
@@ -2030,7 +2030,6 @@ export default function ReelPanClient() {
                                             ? 'bg-white/5 opacity-50 cursor-not-allowed'
                                             : isChordPlaying
                                                 ? 'bg-purple-500/30 border-purple-500/50'
-
                                                 : 'bg-white/10 hover:bg-white/20'
                                         }
                                         ${recordState === 'recording' ? 'opacity-50' : 'opacity-100'}
