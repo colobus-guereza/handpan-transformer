@@ -2721,7 +2721,7 @@ export default function ReelPanClient() {
                                         )}
                                     </div>
                                 ) : (
-                                    <div className="flex flex-col gap-8 pb-20">
+                                    <div className="flex flex-col gap-8 pb-6">
                                         <ReelPanSection
                                             title={scalePanelLang === 'ko' ? '무드 팔레트' : 'Mood Palette'}
                                             scales={SCALES}
