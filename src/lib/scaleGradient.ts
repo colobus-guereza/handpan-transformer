@@ -93,8 +93,15 @@ export function getScaleColors(scale: Scale): { primary: string; secondary: stri
     finalHue = (finalHue + hueVariation + 360) % 360;
     const finalSat = Math.min(100, Math.max(40, saturation));
 
-    // 5. Alpha (투명도): 35%로 상향 조정 (시인성 확보)
-    const alpha = 0.35;
+    // 5. Alpha (투명도): 50%로 상향 조정 (색감 강화)
+    const alpha = 0.5;
+
+    // [Fine-tuning] D Kurd: 라이트 브라운 그라데이션 (음 개수 상관없이 통일)
+    if (scale.name.includes('D Kurd')) {
+        const primary = `hsla(28, 45%, 65%, ${alpha})`;   // 따뜻한 라이트 브라운
+        const secondary = `hsla(22, 35%, 45%, ${alpha})`; // 조금 더 진한 브라운
+        return { primary, secondary };
+    }
 
     // Primary: 기본 색상
     const primary = `hsla(${finalHue}, ${finalSat}%, ${lightness}%, ${alpha})`;

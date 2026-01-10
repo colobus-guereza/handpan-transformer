@@ -2444,6 +2444,21 @@ export default function ReelPanClient() {
                                                 colorTheme="yellow"
                                             />
                                         </div>
+
+                                        {/* Card 4: Exotic Fragrant */}
+                                        <div className="snap-center shrink-0 w-[calc(100%-16px)]">
+                                            <ReelPanHero
+                                                introScales={['e_romanian_hijaz_10', 'd_saladin_9', 'e_la_sirena_10', 'e_equinox_14']
+                                                    .map(id => SCALES.find(s => s.id === id))
+                                                    .filter((s): s is Scale => !!s)}
+                                                isPreviewing={(scaleId) => previewingScaleId === scaleId}
+                                                onPlay={handlePreview}
+                                                onSelect={handleScaleSelect}
+                                                lang={scalePanelLang}
+                                                title={{ ko: '향이 짙은', en: 'Deeply Fragrant' }}
+                                                colorTheme="red"
+                                            />
+                                        </div>
                                     </div>
                                 )}
 
