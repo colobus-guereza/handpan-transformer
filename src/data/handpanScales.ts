@@ -31,6 +31,7 @@ export interface Scale {
     id: string;
     name: string;
     nameEn?: string;
+    categoryId?: string; // Explicit category matching
     notes: {
         ding: string;
         top: string[];
@@ -344,7 +345,71 @@ export const SCALES: Scale[] = [
         }
     },
 
-    // 5. F Aeolian 10 (Domestic Steady Seller)
+    // 5. F#2 Nordlys 14 (Nordic Fantasy) - Mutant
+    {
+        id: "fs2_nordlys_14_mutant",
+        name: "F#2 Nordlys 14",
+        nameEn: "F#2 Nordlys 14",
+        categoryId: "ethnic",
+        notes: {
+            ding: "F#2",
+            top: ["F3", "F#3", "G#3", "A#3", "C4", "C#4", "F4", "G#4", "C5", "C#3", "A#2"],
+            bottom: ["C#5", "F5"]
+        },
+        vector: { minorMajor: 0.1, pureSpicy: 0.6, rarePopular: 0.3 },
+        tags: ["리디안", "북유럽오로라", "증4도", "판타지"],
+        tagsEn: ["Lydian", "Nordic Aurora", "Augmented 4th", "Fantasy"],
+        description: "북유럽의 신비로운 오로라를 연상시키는 스케일로, 리디안 모드의 판타지스러운 분위기를 강조합니다. F#2의 깊은 베이스와 넓은 음역대를 통해 웅장하고 신비로운 사운드를 제공합니다.",
+        descriptionEn: "A scale reminiscent of the mysterious Nordic Aurora, emphasizing the fantasy atmosphere of the Lydian mode. It provides a grand and mysterious sound through the deep bass of F#2 and a wide range.",
+        i18n: {
+            fr: {
+                name: "F#2 Nordlys 14",
+                description: "Une gamme évoquant les mystérieuses aurores boréales, mettant l'accent sur l'atmosphère fantastique du mode Lydien. Elle offre un son grandiose et mystérieux grâce aux basses profondes de F#2."
+            },
+            ja: {
+                name: "F#2 Nordlys 14",
+                description: "北欧の神秘的なオーロラ을 연상시키는 스케일로, 리디안 모드의 판타스틱한 분위기를 강조합니다. F#2의 깊은 베이스와 넓은 음역대를 통해 웅장하고 신비로운 사운드를 제공합니다."
+            },
+            zh: {
+                name: "F#2 Nordlys 14",
+                description: "让人联想起北欧神秘极光的音阶，强调莉迪亚调式的梦幻氛围。通过 F#2 的深沉低音和宽广音域，提供宏伟而神秘的声音。"
+            }
+        }
+    },
+
+    // 6. D Kurd 15 (Classic Mutant) - Mutant
+    {
+        id: "d_kurd_15_mutant",
+        name: "D Kurd 15",
+        nameEn: "D Kurd 15",
+        categoryId: "beginner",
+        notes: {
+            ding: "D3",
+            top: ["Bb3", "C4", "D4", "E4", "F4", "G4", "A4", "C5", "D5", "E5", "F5"],
+            bottom: ["F3", "G3", "A3"]
+        },
+        vector: { minorMajor: -0.6, pureSpicy: 0.3, rarePopular: 0.7 },
+        tags: ["D마이너", "클래식뮤턴트", "폭넓은활용도", "중급자용"],
+        tagsEn: ["D Minor", "Classic Mutant", "High Versatility", "Intermediate"],
+        description: "D Kurd 구성에 하판과 상판 뮤턴트 노트를 추가하여 음역대를 확장한 클래식 뮤턴트 스케일입니다. 폭넓은 연주가 가능하며 중급자들에게 큰 사랑을 받는 모델입니다.",
+        descriptionEn: "A classic mutant scale that expands the range of the D Kurd by adding bottom and top mutant notes. It allows for a wide range of playing and is highly loved by intermediate players.",
+        i18n: {
+            fr: {
+                name: "D Kurd 15",
+                description: "Une gamme mutant classique qui élargit la portée du D Kurd en ajoutant des notes mutants en bas et en haut. Elle permet une large gamme de jeu et est très appréciée des joueurs intermédiaires."
+            },
+            ja: {
+                name: "D Kurd 15",
+                description: "D Kurd 構成に下板と上板의 미뉴턴트 노트를 추가하여 음역대를 확장한 클래식 미뉴턴트 스케일입니다. 폭넓은 연주가 가능하며 중급자들에게 큰 사랑을 받는 모델입니다."
+            },
+            zh: {
+                name: "D Kurd 15",
+                description: "在 D Kurd 的基础上增加了底部和顶部变异音，扩展了音域的经典变异音阶。它支持更广泛的演奏，深受中级玩家喜爱。"
+            }
+        }
+    },
+
+    // 7. F Aeolian 10 (Domestic Steady Seller)
     {
         id: "f_aeolian_10",
         name: "F Aeolian 10",

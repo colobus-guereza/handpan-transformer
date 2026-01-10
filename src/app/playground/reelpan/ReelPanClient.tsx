@@ -83,6 +83,14 @@ const CATEGORIES = [
 ];
 
 const matchesCategory = (scale: Scale, categoryId: string) => {
+    // 1. Priority: Explicit Category ID
+    if (scale.categoryId) {
+        // Map 'ethnic' to 'ethnic' (Deep Ethnic)
+        // Ensure terminology matches between SCALES data and CATEGORIES UI
+        return scale.categoryId === categoryId;
+    }
+
+    // 2. Fallback: Tag-based matching
     const category = CATEGORIES.find(c => c.id === categoryId);
     if (!category) return true;
     const allScaleTags = [...(scale.tags || []), ...(scale.tagsEn || [])];
