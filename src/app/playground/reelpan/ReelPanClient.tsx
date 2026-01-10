@@ -2455,7 +2455,7 @@ export default function ReelPanClient() {
                                                 onPlay={handlePreview}
                                                 onSelect={handleScaleSelect}
                                                 lang={scalePanelLang}
-                                                title={{ ko: '향이 짙은', en: 'Deeply Fragrant' }}
+                                                title={{ ko: '향이 짙은', en: 'Spicy' }}
                                                 colorTheme="red"
                                             />
                                         </div>

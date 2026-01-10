@@ -103,6 +103,13 @@ export function getScaleColors(scale: Scale): { primary: string; secondary: stri
         return { primary, secondary };
     }
 
+    // [Fine-tuning] E Equinox: 하늘색-핑크 그라데이션 (메이저/마이너 혼합 이미지)
+    if (scale.name.includes('E Equinox')) {
+        const primary = `hsla(205, 80%, 75%, ${alpha})`;   // 밝은 하늘색 (Sky Blue)
+        const secondary = `hsla(340, 85%, 80%, ${alpha})`; // 화사한 핑크 (Pink)
+        return { primary, secondary };
+    }
+
     // Primary: 기본 색상
     const primary = `hsla(${finalHue}, ${finalSat}%, ${lightness}%, ${alpha})`;
 
