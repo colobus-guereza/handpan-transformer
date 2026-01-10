@@ -28,110 +28,111 @@ function hashString(str: string): number {
  * - 0.0 (Rare): 어두운 15-22%
  * - 1.0 (Popular): 밝은 22-32%
  */
+/**
+ * 스케일의 vector 값을 기반으로 더욱 풍부하고 구체적인 HSL 색상 쌍을 생성
+ */
 export function getScaleColors(scale: Scale): { primary: string; secondary: string } {
     const { minorMajor, pureSpicy, rarePopular } = scale.vector;
 
-    // Hue: minorMajor 기반
-    // -1 → 250 (보라/파랑), 0 → 180 (청록), +1 → 40 (골드/오렌지)
-    const normalizedMM = (minorMajor + 1) / 2; // 0 ~ 1
+    // 1. Hue (색조): minorMajor (-1.0 ~ 1.0) 기반으로 넓은 스펙트럼 매핑
+    // -1.0 (Deep Minor): 240 (Deep Blue)
+    // -0.5 (Melancholic): 280 (Violet/Purple)
+    //  0.0 (Neutral/Hybrid): 180 (Teal/Emerald)
+    //  0.5 (Major): 120 (Soft Green)
+    //  1.0 (Bright Major): 45 (Gold/Warm Orange)
+
     let hue: number;
-    if (normalizedMM < 0.5) {
-        // Minor side: 280 → 200 (보라 → 시안)
-        hue = 280 - (normalizedMM * 2) * 80;
+    if (minorMajor <= -0.5) {
+        // -1.0 to -0.5: Deep Blue to Violet
+        const t = (minorMajor + 1) / 0.5; // 0 to 1
+        hue = 240 + t * 40;
+    } else if (minorMajor <= 0) {
+        // -0.5 to 0: Violet to Teal
+        const t = (minorMajor + 0.5) / 0.5; // 0 to 1
+        hue = 280 - t * 100;
+    } else if (minorMajor <= 0.5) {
+        // 0 to 0.5: Teal to Green
+        const t = minorMajor / 0.5; // 0 to 1
+        hue = 180 - t * 60;
     } else {
-        // Major side: 60 → 30 (노랑 → 오렌지)
-        hue = 60 - ((normalizedMM - 0.5) * 2) * 30;
+        // 0.5 to 1.0: Green to Gold
+        const t = (minorMajor - 0.5) / 0.5; // 0 to 1
+        hue = 120 - t * 75;
     }
 
-    // Saturation: pureSpicy 기반 (30% ~ 55%) - pastel range
-    const saturation = 30 + pureSpicy * 25;
+    // 2. Saturation (채도): pureSpicy (0.0 ~ 1.0) 기반 (50% ~ 95%)
+    // 소리가 화려할수록(Spicy) 더 선명한 색상
+    const saturation = 50 + pureSpicy * 45;
 
-    // Lightness: rarePopular 기반 (75% ~ 88%) - high lightness for pastel
-    const lightness = 75 + rarePopular * 13;
+    // 3. Lightness (명도): rarePopular (0.0 ~ 1.0) 기반 (40% ~ 65%)
+    // 파스텔톤에서 벗어나 색상 고유의 농도가 느껴지도록 하향 조절
+    const lightness = 40 + (1 - rarePopular) * 25;
 
-    // Hash for variation: 동일 스케일에 일관된 변형
+    // Hash for consistent variation
     const hash = hashString(scale.id);
-    const hueVariation = (hash % 16) - 8; // -8 ~ +8
-    const satVariation = (hash % 8) - 4;  // -4 ~ +4
+    const hueVariation = (hash % 20) - 10; // -10 ~ +10
 
     const finalHue = (hue + hueVariation + 360) % 360;
-    const finalSat = Math.min(60, Math.max(25, saturation + satVariation));
+    const finalSat = Math.min(100, Math.max(30, saturation));
 
-    // Transparency: semi-transparent for background visibility
-    const alpha = 0.65;
+    // 4. Alpha (투명도): 전체 배경이 잘 보이도록 하향 조절 (0.3 ~ 0.4)
+    const alpha = 0.35;
 
     // Primary: 기본 색상
     const primary = `hsla(${finalHue}, ${finalSat}%, ${lightness}%, ${alpha})`;
 
-    // Secondary: 살짝 다른 색조 (그라데이션용)
-    const secondaryHue = (finalHue + 25 + (hash % 15)) % 360;
-    const secondaryLightness = Math.max(65, lightness - 10);
-    const secondary = `hsla(${secondaryHue}, ${finalSat * 0.9}%, ${secondaryLightness}%, ${alpha})`;
+    // Secondary: 색상환에서 약간 떨어진 색상 (풍부한 그라데이션을 위해)
+    const secondaryHue = (finalHue + 40 + (hash % 30)) % 360;
+    const secondarySat = Math.max(40, finalSat * 0.8);
+    const secondaryLight = Math.max(30, lightness - 15);
+    const secondary = `hsla(${secondaryHue}, ${secondarySat}%, ${secondaryLight}%, ${alpha})`;
 
     return { primary, secondary };
 }
 
 /**
- * 스케일에 대한 완전한 CSS 그라데이션 문자열 생성 (방사형, 선형 등 다양화)
+ * 스케일에 대한 방사형(Radial) 그라데이션 생성
  */
 export function generateScaleGradient(scale: Scale): string {
     const { primary, secondary } = getScaleColors(scale);
     const hash = hashString(scale.id);
 
-    // 0: Linear, 1: Radial
-    const typeChoice = hash % 2;
+    const positions = [
+        "circle at 30% 30%",
+        "circle at 70% 30%",
+        "circle at 50% 50%",
+        "ellipse at 50% 0%",
+        "circle at 20% 80%",
+    ];
+    const pos = positions[hash % positions.length];
 
-    if (typeChoice === 0) {
-        // Diagonal Linear
-        const angles = [45, 135, 225, 315, 160, 200];
-        const angle = angles[hash % angles.length];
-        return `linear-gradient(${angle}deg, ${primary} 0%, ${secondary} 100%)`;
-    } else {
-        // Radial
-        const positions = [
-            "circle at top left",
-            "circle at center",
-            "circle at bottom right",
-            "ellipse at top",
-            "circle at 30% 30%",
-        ];
-        const pos = positions[hash % positions.length];
-        return `radial-gradient(${pos}, ${primary} 0%, ${secondary} 100%)`;
-    }
+    return `radial-gradient(${pos}, ${primary} 0%, ${secondary} 100%)`;
 }
 
 /**
- * 스케일에 대한 호버 시 사용할 약간 더 선명한 파스텔 그라데이션 생성
+ * 스케일에 대한 호버 시 더욱 선명한 방사형 그라데이션 생성
  */
 export function generateScaleGradientHover(scale: Scale): string {
-    const { primary, secondary } = getScaleColors(scale);
+    const colors = getScaleColors(scale);
     const hash = hashString(scale.id);
 
-    // Hover state: increase opacity and slightly adjust lightness
-    const hoverAlpha = 0.85;
+    // Hover state: increase opacity and slightly increase saturation/lightness
+    const hoverAlpha = 0.6;
 
-    // Helper to adjust alpha in hsla string
     const makeHover = (hsla: string) => hsla.replace(/[\d.]+\)$/, `${hoverAlpha})`);
 
-    const hPrimary = makeHover(primary);
-    const hSecondary = makeHover(secondary);
+    const hPrimary = makeHover(colors.primary);
+    const hSecondary = makeHover(colors.secondary);
 
-    const typeChoice = hash % 2;
+    const positions = [
+        "circle at 30% 30%",
+        "circle at 70% 30%",
+        "circle at 50% 50%",
+        "ellipse at 50% 0%",
+        "circle at 20% 80%",
+    ];
+    const pos = positions[hash % positions.length];
 
-    if (typeChoice === 0) {
-        const angles = [45, 135, 225, 315, 160, 200];
-        const angle = angles[hash % angles.length];
-        return `linear-gradient(${angle}deg, ${hPrimary} 0%, ${hSecondary} 100%)`;
-    } else {
-        const positions = [
-            "circle at top left",
-            "circle at center",
-            "circle at bottom right",
-            "ellipse at top",
-            "circle at 30% 30%",
-        ];
-        const pos = positions[hash % positions.length];
-        return `radial-gradient(${pos}, ${hPrimary} 0%, ${hSecondary} 100%)`;
-    }
+    return `radial-gradient(${pos}, ${hPrimary} 0%, ${hSecondary} 100%)`;
 }
 

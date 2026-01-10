@@ -18,6 +18,12 @@ const COLOR_THEMES = {
         cardBg: 'rgba(65, 45, 65, 0.35)',           // High transparency for subtle look
         primary: { r: 185, g: 124, b: 185 },        // #B97CB9
         primaryLight: { r: 229, g: 197, b: 229 },   // #E5C5E5
+    },
+    yellow: {
+        gradient: 'linear-gradient(180deg, rgba(45, 40, 30, 0.25) 0%, rgba(26, 24, 15, 0.5) 100%)',
+        cardBg: 'rgba(65, 60, 35, 0.35)',           // High transparency for subtle look
+        primary: { r: 234, g: 179, b: 8 },           // #EAB308
+        primaryLight: { r: 254, g: 240, b: 138 },    // #FEF08A
     }
 } as const;
 

@@ -2429,6 +2429,21 @@ export default function ReelPanClient() {
                                                 colorTheme="magenta"
                                             />
                                         </div>
+
+                                        {/* Card 3: Major Scales */}
+                                        <div className="snap-center shrink-0 w-[calc(100%-16px)]">
+                                            <ReelPanHero
+                                                introScales={['c_yunsl_9', 'eb_muju_10', 'cs_annapurna_9', 'd_asha_15_mutant']
+                                                    .map(id => SCALES.find(s => s.id === id))
+                                                    .filter((s): s is Scale => !!s)}
+                                                isPreviewing={(scaleId) => previewingScaleId === scaleId}
+                                                onPlay={handlePreview}
+                                                onSelect={handleScaleSelect}
+                                                lang={scalePanelLang}
+                                                title={{ ko: '메이저 스케일', en: 'Major Scale' }}
+                                                colorTheme="yellow"
+                                            />
+                                        </div>
                                     </div>
                                 )}
 
@@ -2707,7 +2722,7 @@ export default function ReelPanClient() {
                                 {scalePanelLang === 'ko' ? (
                                     <><span className="text-[#FFD700]">snd</span> handpan</>
                                 ) : (
-                                    <><span className="text-[#FFD700]">snd</span> digital handpan</>
+                                    <><span className="text-[#FFD700]">snd</span> handpan</>
                                 )}
                             </div>
 
