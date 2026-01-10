@@ -2441,7 +2441,7 @@ export default function ReelPanClient() {
                                                 onSelect={handleScaleSelect}
                                                 lang={scalePanelLang}
                                                 title={{ ko: '메이저 스케일', en: 'Major Scale' }}
-                                                colorTheme="yellow"
+                                                colorTheme="ocean"
                                             />
                                         </div>
 
@@ -2723,7 +2723,7 @@ export default function ReelPanClient() {
                                 ) : (
                                     <div className="flex flex-col gap-8 pb-20">
                                         <ReelPanSection
-                                            title={scalePanelLang === 'ko' ? '내면의 정서' : 'Inner Scape'}
+                                            title={scalePanelLang === 'ko' ? '무드 팔레트' : 'Mood Palette'}
                                             scales={SCALES}
                                             onSelect={handleScaleSelect}
                                             lang={scalePanelLang}
