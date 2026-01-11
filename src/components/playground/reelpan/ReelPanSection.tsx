@@ -40,25 +40,14 @@ export default function ReelPanSection({ title, scales, onSelect, lang }: ReelPa
                                 className="w-full aspect-square rounded-2xl border border-white/[0.08] group-hover:border-white/25 transition-all overflow-hidden relative shadow-md"
                                 style={{ background: gradient }}
                             >
-                                {/* 1. Starry Texture Layer (Enhanced Visibility) */}
+                                {/* Hover Gradient Layer */}
                                 <div
-                                    className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-70 mix-blend-screen pointer-events-none"
-                                    style={{ filter: 'contrast(150%) brightness(130%)' }}
-                                />
-
-                                {/* 2. Nebula Glow Overlay (Cosmic Atmosphere) */}
-                                <div
-                                    className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.1] to-transparent opacity-60 mix-blend-overlay pointer-events-none"
-                                />
-
-                                {/* 3. Hover Gradient Layer */}
-                                <div
-                                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 mix-blend-soft-light"
+                                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                                     style={{ background: hoverGradient }}
                                 />
 
-                                {/* 3. Deep Vignette Overlay (Cosmic Depth) */}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10 pointer-events-none" />
+                                {/* Subtle inner glow overlay */}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-white/[0.1] pointer-events-none" />
 
                                 {/* Play Icon Overlay */}
                                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
