@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { Play, Volume2 } from 'lucide-react';
 
 
@@ -63,11 +63,34 @@ const ReelPanHero = React.memo(({
     const theme = COLOR_THEMES[colorTheme];
     const { r, g, b } = theme.primary;
 
+    // Animation Variants
+    const containerVariants: Variants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                when: "beforeChildren",
+                staggerChildren: 0.1,
+                duration: 0.4
+            }
+        }
+    };
+
+    const itemVariants: Variants = {
+        hidden: { x: -10, opacity: 0 },
+        visible: {
+            x: 0,
+            opacity: 1,
+            transition: { type: "spring", stiffness: 300, damping: 24 }
+        }
+    };
+
     return (
         <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="w-full relative flex flex-col pt-20 pb-6 px-6 overflow-hidden rounded-[28px] shadow-2xl gap-6"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="w-full relative flex flex-col pt-20 pb-6 px-6 overflow-hidden rounded-[28px] shadow-2xl gap-6 will-change-transform"
             style={{ background: theme.gradient }}
         >
             {/* Background Texture */}
@@ -78,9 +101,7 @@ const ReelPanHero = React.memo(({
             <div className="relative z-10 flex flex-col items-start gap-4">
                 {/* Title - Hierarchy Level 1 (highest) */}
                 <motion.h1
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.2 }}
+                    variants={itemVariants}
                     className="text-[28px] md:text-3xl font-bold leading-[1.3] font-sans"
                     style={{ color: 'rgba(247, 245, 240, 0.95)' }}
                 >
@@ -90,12 +111,11 @@ const ReelPanHero = React.memo(({
 
             {/* Bottom: Scale List */}
             <div className="relative z-10 flex flex-col gap-3">
-                {introScales.map((scale, index) => (
+                {introScales.map((scale) => (
                     <motion.div
                         key={scale.id}
-                        initial={{ x: -20, opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        transition={{ delay: 0.3 + (index * 0.1) }}
+                        variants={itemVariants}
+                        className="will-change-transform" // Performance hint
                     >
                         <IntroScaleCard
                             scale={scale}
