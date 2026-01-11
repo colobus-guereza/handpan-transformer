@@ -50,7 +50,7 @@ export default function ReelPanSection({ title, scales, onSelect, lang }: ReelPa
             </div>
 
             <div
-                className="flex overflow-x-auto px-6 gap-4 pb-4 snap-x snap-mandatory hide-scrollbar"
+                className="grid grid-rows-2 grid-flow-col gap-4 px-6 pb-4 overflow-x-auto snap-x snap-mandatory hide-scrollbar"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
                 {scales.map((scale) => {
@@ -58,16 +58,17 @@ export default function ReelPanSection({ title, scales, onSelect, lang }: ReelPa
                     const gradient = generateScaleGradient(scale);
                     const hoverGradient = generateScaleGradientHover(scale);
                     const bgImage = getScaleBackgroundImage(scale.name);
+                    const isDisabled = scale.id === 'e_amara_18';
 
                     return (
                         <div
                             key={scale.id}
-                            onClick={() => onSelect(scale)}
-                            className="snap-start shrink-0 w-[160px] flex flex-col gap-2 cursor-pointer group"
+                            onClick={() => !isDisabled && onSelect(scale)}
+                            className={`snap-start shrink-0 w-[160px] flex flex-col gap-2 group ${isDisabled ? 'cursor-not-allowed opacity-50 grayscale pointer-events-none' : 'cursor-pointer'}`}
                         >
                             {/* Card Image/Gradient Area - Unique per scale */}
                             <div
-                                className="w-full aspect-square rounded-2xl border border-white/[0.08] group-hover:border-white/25 transition-all overflow-hidden relative shadow-md bg-cover bg-center"
+                                className="w-full aspect-square rounded-2xl ring-0 group-hover:ring-1 group-hover:ring-white/20 ring-inset transition-all overflow-hidden relative shadow-md bg-cover bg-center"
                                 style={{
                                     background: bgImage ? `url(${bgImage})` : gradient,
                                     backgroundSize: 'cover',
@@ -80,8 +81,8 @@ export default function ReelPanSection({ title, scales, onSelect, lang }: ReelPa
                                     style={{ background: hoverGradient }}
                                 />
 
-                                {/* Subtle inner glow overlay */}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-white/[0.1] pointer-events-none" />
+                                {/* Subtle inner glow overlay - Top highlight only, no bottom shadow */}
+                                <div className="absolute inset-0 bg-gradient-to-b from-white/[0.1] to-transparent pointer-events-none" />
 
                                 {/* Play Icon Overlay */}
                                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">

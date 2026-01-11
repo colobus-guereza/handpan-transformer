@@ -206,10 +206,10 @@ export function getScaleColors(scale: Scale): { primary: string; secondary: stri
         return { primary, secondary };
     }
 
-    // [Fine-tuning] Bright Major Group: 상큼한 연두색 (기타 메이저 계열)
-    if (scale.name.includes('D Major')) {
-        const primary = `hsla(85, 85%, 65%, ${alpha})`;   // 상큼한 연두
-        const secondary = `hsla(110, 80%, 55%, ${alpha})`; // 싱그러운 풀색
+    // [Fine-tuning] Eb Muju: Winds of Muju (무주의 바람) - Nature Green
+    if (scale.name.includes('Muju')) {
+        const primary = `hsla(85, 85%, 65%, ${alpha})`;   // 상큼한 연두 (Fresh Lime)
+        const secondary = `hsla(110, 80%, 55%, ${alpha})`; // 싱그러운 풀색 (Fresh Grass)
         return { primary, secondary };
     }
 

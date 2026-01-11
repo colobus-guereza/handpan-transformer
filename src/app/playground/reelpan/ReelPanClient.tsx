@@ -198,6 +198,32 @@ export default function ReelPanClient() {
     const [showScaleSelector, setShowScaleSelector] = useState(false);
     const [targetScale, setTargetScale] = useState(SCALES.find(s => s.id === 'd_kurd_10') || SCALES[0]);
     const [previewingScaleId, setPreviewingScaleId] = useState<string | null>(null);
+
+    // Create a diverse ordering to prevent same-group clustering in the 2x2 grid
+    // Simple deterministic shuffle using a prime number step to distribute groups
+    const shuffledScales = useMemo(() => {
+        // Deterministic Fisher-Yates shuffle to ensure thorough mixing of groups (color/type)
+        // Uses a fixed seed so the order is consistent across reloads ("Exhibition" feel)
+        const scales = [...SCALES];
+        let currentIndex = scales.length;
+        let randomIndex;
+
+        // Simple seeded PRNG (Linear Congruential Generator)
+        let seed = 123456789; // Fixed seed for consistent "curated" feel
+        const random = () => {
+            const x = Math.sin(seed++) * 10000;
+            return x - Math.floor(x);
+        };
+
+        while (currentIndex !== 0) {
+            randomIndex = Math.floor(random() * currentIndex);
+            currentIndex--;
+            [scales[currentIndex], scales[randomIndex]] = [
+                scales[randomIndex], scales[currentIndex]];
+        }
+        return scales;
+    }, []);
+
     const [selectorMode, setSelectorMode] = useState<'scale' | 'song'>('scale'); // 스케일 vs 곡 선택 모드
     const [selectedSong, setSelectedSong] = useState<any>(null); // 선택된 곡
     const [isSongPlaying, setIsSongPlaying] = useState(false); // 곡 자동연주 상태
@@ -2719,9 +2745,10 @@ export default function ReelPanClient() {
                                     </div>
                                 ) : (
                                     <div className="flex flex-col gap-8 pb-6">
+
                                         <ReelPanSection
                                             title={scalePanelLang === 'ko' ? '사운드스케이프' : 'Soundscapes'}
-                                            scales={SCALES}
+                                            scales={shuffledScales}
                                             onSelect={handleScaleSelect}
                                             lang={scalePanelLang}
                                         />
