@@ -81,25 +81,25 @@ export function getScaleColors(scale: Scale): { primary: string; secondary: stri
         finalHue = (vectorHue * 0.3) + (semanticHue * 0.7);
     }
 
-    // 3. Saturation: pureSpicy 기반 (60% ~ 95%)
-    const saturation = 60 + pureSpicy * 35;
+    // 3. Saturation: pureSpicy 기반 (70% ~ 100%) - 상향 조정
+    const saturation = 70 + pureSpicy * 30;
 
-    // 4. Lightness: rarePopular 기반 (35% ~ 60%)
-    const lightness = 35 + (1 - rarePopular) * 25;
+    // 4. Lightness: rarePopular 기반 (50% ~ 75%) - 상향 조정 (너무 어둡지 않게)
+    const lightness = 50 + (1 - rarePopular) * 25;
 
     const hash = hashString(scale.id);
     const hueVariation = (hash % 20) - 10;
 
     finalHue = (finalHue + hueVariation + 360) % 360;
-    const finalSat = Math.min(100, Math.max(40, saturation));
+    const finalSat = Math.min(100, Math.max(50, saturation));
 
-    // 5. Alpha (투명도): 50%로 상향 조정 (색감 강화)
-    const alpha = 0.5;
+    // 5. Alpha (투명도): 0.85로 상향 조정 (배경이 비쳐서 어두워지는 현상 방지)
+    const alpha = 0.85;
 
-    // [Fine-tuning] D Kurd: Midnight Serenity (고요한 한밤중)
+    // [Fine-tuning] D Kurd: Midnight Serenity (고요한 한밤중) - 밝기 상향
     if (scale.name.includes('D Kurd')) {
-        const primary = `hsla(227, 55%, 15%, ${alpha})`;   // 중심: Deep Navy (#0b1026)
-        const secondary = `hsla(191, 75%, 65%, ${alpha})`; // 외곽: Moonlight Blue (#6dd5ed)
+        const primary = `hsla(227, 55%, 35%, ${alpha})`;   // 중심: Deep Navy -> 조금 더 밝게
+        const secondary = `hsla(191, 75%, 75%, ${alpha})`; // 외곽: Moonlight Blue -> 더 밝게
         return { primary, secondary };
     }
 
@@ -135,10 +135,10 @@ export function getScaleColors(scale: Scale): { primary: string; secondary: stri
         return { primary, secondary };
     }
 
-    // [Fine-tuning] Sapphire: Royal Blue Gem (로열 블루 사파이어) - Deep Blue to Cyan
+    // [Fine-tuning] Sapphire: Royal Blue Gem (로열 블루 사파이어) - Brightness Boost
     if (scale.name.includes('Sapphire')) {
-        const primary = `hsla(220, 100%, 8%, ${alpha})`;   // 중심: Deep Royal Blue (#000428)
-        const secondary = `hsla(190, 100%, 50%, ${alpha})`; // 외곽: Cyan Sparkle (#00d2ff)
+        const primary = `hsla(220, 90%, 30%, ${alpha})`;   // 중심: Royal Blue (너무 어둡지 않게 8% -> 30%)
+        const secondary = `hsla(190, 100%, 60%, ${alpha})`; // 외곽: Cyan Sparkle (50% -> 60%)
         return { primary, secondary };
     }
 
@@ -156,10 +156,10 @@ export function getScaleColors(scale: Scale): { primary: string; secondary: stri
         return { primary, secondary };
     }
 
-    // [Fine-tuning] Amara: Celtic Mist (켈틱의 안개) - Slate Grey to Misty Blue
+    // [Fine-tuning] Amara: Celtic Mist (켈틱의 안개) - Brightness Boost
     if (scale.name.includes('Amara')) {
-        const primary = `hsla(220, 10%, 24%, ${alpha})`;   // 중심: Slate Grey (#373B44)
-        const secondary = `hsla(217, 89%, 61%, ${alpha})`; // 외곽: Misty Blue (#4286f4)
+        const primary = `hsla(220, 15%, 40%, ${alpha})`;   // 중심: Slate Grey (24% -> 40%)
+        const secondary = `hsla(217, 89%, 70%, ${alpha})`; // 외곽: Misty Blue (61% -> 70%)
         return { primary, secondary };
     }
 
@@ -222,10 +222,10 @@ export function getScaleColors(scale: Scale): { primary: string; secondary: stri
         return { primary, secondary };
     }
 
-    // [Fine-tuning] Aeolian Group: Vintage Burgundy & Amber (드라마틱한 노을)
+    // [Fine-tuning] Aeolian Group: Vintage Burgundy & Amber - Brightness Boost
     if (scale.name.includes('Aeolian')) {
-        const primary = `hsla(337, 50%, 20%, ${alpha})`;   // 중심: Deep Merlot (#4a192c)
-        const secondary = `hsla(32, 60%, 70%, ${alpha})`;  // 외곽: Muted Gold (#e1b382)로 이어지는 따뜻함
+        const primary = `hsla(337, 50%, 35%, ${alpha})`;   // 중심: Deep Merlot (20% -> 35%)
+        const secondary = `hsla(32, 70%, 75%, ${alpha})`;  // 외곽: Muted Gold (70% -> 75%)
         return { primary, secondary };
     }
 
@@ -236,10 +236,10 @@ export function getScaleColors(scale: Scale): { primary: string; secondary: stri
         return { primary, secondary };
     }
 
-    // [Fine-tuning] Deepasia: Ink Wash (수묵담채)
+    // [Fine-tuning] Deepasia: Ink Wash (수묵담채) - Brightness Boost
     if (scale.name.includes('Deepasia')) {
-        const primary = `hsla(0, 0%, 26%, ${alpha})`;   // 중심: Charcoal (#434343)
-        const secondary = `hsla(230, 20%, 97%, ${alpha})`; // 외곽: Rice Paper (#f5f6fa)
+        const primary = `hsla(0, 0%, 40%, ${alpha})`;    // 중심: Charcoal (26% -> 40%)
+        const secondary = `hsla(230, 20%, 98%, ${alpha})`; // 외곽: Rice Paper
         return { primary, secondary };
     }
 
