@@ -6,16 +6,20 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 const normalizeNote = (note: string): string => {
     // Map common aliases to the filenames we likely have
     const map: Record<string, string> = {
+        'A#2': 'Bb2', // 2nd Octave
         'A#3': 'Bb3', 'A#4': 'Bb4', 'A#5': 'Bb5',
         'C#3': 'C#3', 'Db3': 'C#3', // Prefer C# if both exist or just standardizing
         'C#4': 'C#4', 'Db4': 'C#4',
         'C#5': 'C#5', 'Db5': 'C#5',
+        'D#2': 'D#2', 'Eb2': 'D#2', // 2nd Octave
         'D#3': 'D#3', 'Eb3': 'D#3', // Standardize to Sharp or Flat based on ALL_NOTES?
         'D#4': 'D#4', 'Eb4': 'D#4',
         'D#5': 'D#5', 'Eb5': 'D#5',
+        'F#2': 'F#2', 'Gb2': 'F#2', // 2nd Octave
         'F#3': 'F#3', 'Gb3': 'F#3',
         'F#4': 'F#4', 'Gb4': 'F#4',
         'F#5': 'F#5', 'Gb5': 'F#5',
+        'G#2': 'G#2', 'Ab2': 'G#2', // 2nd Octave
         'G#3': 'G#3', 'Ab3': 'G#3',
         'G#4': 'G#4', 'Ab4': 'G#4',
         'G#5': 'G#5', 'Ab5': 'G#5',
@@ -29,6 +33,9 @@ const normalizeNote = (note: string): string => {
 // All available notes in the handpan sound library
 // Adjusted to match the likely file existence and normalization
 const ALL_NOTES = [
+    // 2nd Octave
+    'D2', 'D#2', 'E2', 'F2', 'F#2', 'G2', 'G#2', 'A2', 'Bb2', 'B2',
+    // 3rd Octave ~
     'A3', 'A4', 'A5',
     'Bb3', 'Bb4', 'Bb5', // A# mapped here
     'B3', 'B4', 'B5',

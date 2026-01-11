@@ -77,6 +77,11 @@ type RecordState = 'idle' | 'recording' | 'reviewing';
 
 import { Scale } from '@/data/handpanScales';
 
+const HERO_SCALES_1 = ['d_kurd_10', 'cs_amara_10', 'f_aeolian_10', 'c_agean_10'].map(id => SCALES.find(s => s.id === id)).filter((s): s is Scale => !!s);
+const HERO_SCALES_2 = ['fs_low_pygmy_14_mutant', 'fs_low_pygmy_12', 'f_low_pygmy_9', 'cs_pygmy_11'].map(id => SCALES.find(s => s.id === id)).filter((s): s is Scale => !!s);
+const HERO_SCALES_3 = ['c_yunsl_9', 'eb_muju_10', 'cs_annapurna_9', 'd_asha_15_mutant'].map(id => SCALES.find(s => s.id === id)).filter((s): s is Scale => !!s);
+const HERO_SCALES_4 = ['e_romanian_hijaz_10', 'd_saladin_9', 'e_la_sirena_10', 'e_equinox_14'].map(id => SCALES.find(s => s.id === id)).filter((s): s is Scale => !!s);
+
 const CATEGORIES = [
     { id: 'beginner', label: 'Beginner', labelKo: '입문용', tags: ['대중적', '입문추천', '국내인기', 'Bestseller', '기본', '표준', '표준확장', 'Popular', 'Recommended for Beginners', 'Domestic Popular', 'Basic', 'Standard', 'Standard Extended', '입문용', 'Beginner', '가성비최고', 'Best Value'] },
     { id: 'healing', label: 'Healing', labelKo: '요가명상힐링', tags: ['명상', '힐링', '치유', '차분한', '평화', 'Deep', '피그미', '트랜스', '몽환적', '깊음', '깊은울림', '아마라', '켈틱마이너', '에지안', 'Meditation', 'Healing', 'Calm', 'Peace', 'Pygmy', 'Trance', 'Dreamy', 'Deep Resonance', 'Amara', 'Celtic Minor', 'Agean', 'Wellness'] },
@@ -2405,9 +2410,7 @@ export default function ReelPanClient() {
                                         {/* Card 1: Introductory Best Sellers */}
                                         <div className="snap-center shrink-0 w-[calc(100%-16px)]">
                                             <ReelPanHero
-                                                introScales={['d_kurd_10', 'cs_amara_10', 'f_aeolian_10', 'c_agean_10']
-                                                    .map(id => SCALES.find(s => s.id === id))
-                                                    .filter((s): s is Scale => !!s)}
+                                                introScales={HERO_SCALES_1}
                                                 isPreviewing={(scaleId) => previewingScaleId === scaleId}
                                                 onPlay={handlePreview}
                                                 onSelect={handleScaleSelect}
@@ -2418,9 +2421,7 @@ export default function ReelPanClient() {
                                         {/* Card 2: Wellness & Spiritual */}
                                         <div className="snap-center shrink-0 w-[calc(100%-16px)]">
                                             <ReelPanHero
-                                                introScales={['fs_low_pygmy_14_mutant', 'fs_low_pygmy_12', 'f_low_pygmy_9', 'cs_pygmy_11']
-                                                    .map(id => SCALES.find(s => s.id === id))
-                                                    .filter((s): s is Scale => !!s)}
+                                                introScales={HERO_SCALES_2}
                                                 isPreviewing={(scaleId) => previewingScaleId === scaleId}
                                                 onPlay={handlePreview}
                                                 onSelect={handleScaleSelect}
@@ -2433,9 +2434,7 @@ export default function ReelPanClient() {
                                         {/* Card 3: Major Scales */}
                                         <div className="snap-center shrink-0 w-[calc(100%-16px)]">
                                             <ReelPanHero
-                                                introScales={['c_yunsl_9', 'eb_muju_10', 'cs_annapurna_9', 'd_asha_15_mutant']
-                                                    .map(id => SCALES.find(s => s.id === id))
-                                                    .filter((s): s is Scale => !!s)}
+                                                introScales={HERO_SCALES_3}
                                                 isPreviewing={(scaleId) => previewingScaleId === scaleId}
                                                 onPlay={handlePreview}
                                                 onSelect={handleScaleSelect}
@@ -2448,9 +2447,7 @@ export default function ReelPanClient() {
                                         {/* Card 4: Exotic Fragrant */}
                                         <div className="snap-center shrink-0 w-[calc(100%-16px)]">
                                             <ReelPanHero
-                                                introScales={['e_romanian_hijaz_10', 'd_saladin_9', 'e_la_sirena_10', 'e_equinox_14']
-                                                    .map(id => SCALES.find(s => s.id === id))
-                                                    .filter((s): s is Scale => !!s)}
+                                                introScales={HERO_SCALES_4}
                                                 isPreviewing={(scaleId) => previewingScaleId === scaleId}
                                                 onPlay={handlePreview}
                                                 onSelect={handleScaleSelect}

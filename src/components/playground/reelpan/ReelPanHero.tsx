@@ -51,7 +51,7 @@ interface ReelPanHeroProps {
     colorTheme?: ColorTheme;
 }
 
-export default function ReelPanHero({
+const ReelPanHero = React.memo(({
     introScales,
     isPreviewing,
     onPlay,
@@ -59,7 +59,7 @@ export default function ReelPanHero({
     lang,
     title = { ko: '가장 자연스러운 시작', en: 'Easy to Start' },
     colorTheme = 'green'
-}: ReelPanHeroProps) {
+}: ReelPanHeroProps) => {
     const theme = COLOR_THEMES[colorTheme];
     const { r, g, b } = theme.primary;
 
@@ -110,9 +110,11 @@ export default function ReelPanHero({
             </div>
         </motion.div>
     );
-}
+});
 
-const IntroScaleCard = ({
+export default ReelPanHero;
+
+const IntroScaleCard = React.memo(({
     scale,
     isPreviewing,
     scalePanelLang,
@@ -133,7 +135,7 @@ const IntroScaleCard = ({
 
     return (
         <div
-            className="p-4 rounded-[24px] flex items-center justify-between group transition-all backdrop-blur-sm"
+            className="p-4 rounded-[24px] flex items-center justify-between group transition-all" // Performance: Removed backdrop-blur-sm
             style={{
                 background: theme.cardBg,
                 borderTop: `1px solid rgba(${r}, ${g}, ${b}, 0.25)`
@@ -174,7 +176,7 @@ const IntroScaleCard = ({
             </div>
         </div>
     );
-};
+});
 
 // Helper icon for the "Play Now" arrow
 function ArrowRightIcon({ size = 24 }: { size?: number }) {
