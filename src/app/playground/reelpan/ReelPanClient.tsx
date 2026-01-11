@@ -2024,23 +2024,21 @@ export default function ReelPanClient() {
                             <motion.button
                                 onClick={() => setShowScaleSelector(true)}
                                 disabled={isRecording || !!recordCountdown}
-                                className={`flex flex-col items-center justify-center transition-all ${isRecording || !!recordCountdown ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105 active:scale-95'}`}
+                                className={`relative flex items-center justify-center transition-all ${isRecording || !!recordCountdown ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105 active:scale-95'}`}
                             >
-                                <div className="flex items-center gap-1.5">
-                                    <AnimatePresence mode="wait">
-                                        <motion.h1
-                                            key={selectedSong ? selectedSong.id : targetScale.id}
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            exit={{ opacity: 0 }}
-                                            transition={{ duration: 0.2 }}
-                                            className="text-white/30 font-normal text-xl tracking-normal drop-shadow-md group-hover:text-white/80 transition-colors"
-                                        >
-                                            {selectedSong ? selectedSong.title : targetScale.name}
-                                        </motion.h1>
-                                    </AnimatePresence>
-                                    <ChevronDown size={18} className="text-white/30 group-hover:text-white/80 transition-colors mt-0.5" />
-                                </div>
+                                <AnimatePresence mode="wait">
+                                    <motion.h1
+                                        key={selectedSong ? selectedSong.id : targetScale.id}
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="text-white/30 font-normal text-xl tracking-normal drop-shadow-md group-hover:text-white/80 transition-colors"
+                                    >
+                                        {selectedSong ? selectedSong.title : targetScale.name}
+                                    </motion.h1>
+                                </AnimatePresence>
+                                <ChevronDown size={18} className="absolute -right-6 text-white/30 group-hover:text-white/80 transition-colors" />
                             </motion.button>
                         </header>
 
