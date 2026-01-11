@@ -77,7 +77,7 @@ type RecordState = 'idle' | 'recording' | 'reviewing';
 
 import { Scale } from '@/data/handpanScales';
 
-const HERO_SCALES_1 = ['d_kurd_10', 'cs_amara_10', 'f_aeolian_10', 'c_agean_10'].map(id => SCALES.find(s => s.id === id)).filter((s): s is Scale => !!s);
+const HERO_SCALES_1 = ['d_kurd_10', 'cs_amara_10', 'f_aeolian_10', 'c_aegean_10'].map(id => SCALES.find(s => s.id === id)).filter((s): s is Scale => !!s);
 const HERO_SCALES_2 = ['fs_low_pygmy_14_mutant', 'fs_low_pygmy_12', 'f_low_pygmy_9', 'cs_pygmy_11'].map(id => SCALES.find(s => s.id === id)).filter((s): s is Scale => !!s);
 const HERO_SCALES_3 = ['c_yunsl_9', 'eb_muju_10', 'cs_annapurna_9', 'd_asha_15_mutant'].map(id => SCALES.find(s => s.id === id)).filter((s): s is Scale => !!s);
 const HERO_SCALES_4 = ['e_romanian_hijaz_10', 'd_saladin_9', 'e_la_sirena_10', 'e_equinox_14'].map(id => SCALES.find(s => s.id === id)).filter((s): s is Scale => !!s);
@@ -2720,7 +2720,7 @@ export default function ReelPanClient() {
                                 ) : (
                                     <div className="flex flex-col gap-8 pb-6">
                                         <ReelPanSection
-                                            title={scalePanelLang === 'ko' ? '무드 팔레트' : 'Mood Palette'}
+                                            title={scalePanelLang === 'ko' ? '사운드스케이프' : 'Soundscapes'}
                                             scales={SCALES}
                                             onSelect={handleScaleSelect}
                                             lang={scalePanelLang}
