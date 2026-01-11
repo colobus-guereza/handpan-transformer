@@ -229,10 +229,10 @@ export function getScaleColors(scale: Scale): { primary: string; secondary: stri
         return { primary, secondary };
     }
 
-    // [Fine-tuning] Nordlys: Aurora Borealis (오로라 보레알리스)
+    // [Fine-tuning] Nordlys: Aurora Borealis (오로라 보레알리스) - Balanced for visibility
     if (scale.name.includes('Nordlys')) {
-        const primary = `hsla(152, 100%, 50%, ${alpha})`;   // 중심: Neon Aurora (#00ff87)
-        const secondary = `hsla(186, 100%, 69%, ${alpha})`;  // 외곽: Cyan Glow (#60efff)
+        const primary = `hsla(152, 80%, 40%, ${alpha})`;   // 중심: Neon Aurora -> Deeper Green (100% -> 80% Sat, 50% -> 40% Light)
+        const secondary = `hsla(186, 85%, 65%, ${alpha})`;  // 외곽: Cyan Glow -> Soft Cyan (100% -> 85% Sat, 69% -> 65% Light)
         return { primary, secondary };
     }
 

@@ -60,7 +60,7 @@ background: radial-gradient(
 | 스케일 그룹 | 테마명 (Theme) | Primary (중심) | Secondary (외곽) | 비고 |
 | :--- | :--- | :--- | :--- | :--- |
 | **Pygmy** | *Misty Deep Forest* (안개 낀 숲) | **Deep Forest Green** (깊은 숲)<br>*투명도 0.6* | **Misty Mint** (안개 낀 민트) | 울창한 원시림 |
-| **Nordlys** | *Aurora Borealis* (오로라) | **Neon Aurora** (오로라 초록) | **Cyan Glow** (형광 시안) | 밤하늘의 오로라 |
+| **Nordlys** | *Aurora Borealis* (오로라) | **Neon Aurora** (오로라 초록)<br>*Sat 80%, Light 40%* | **Cyan Glow** (형광 시안)<br>*Sat 85%, Light 65%* | 밤하늘의 오로라 (밸런스 조정) |
 | **C Major 10** | *Fresh Mint* (상쾌한 민트) | **Teal Green** (청록색) | **Spring Lime** (봄 라임색) | 긍정적이고 상쾌한 기분 |
 | **D Major** | *Bright Major* (싱그러운 숲) | **Lime Green** (라임 그린) | **Fresh Green** (푸른 풀색) | 밝고 명랑한 느낌 |
 | **D Asha** | *Radiant Sunshine* (찬란한 햇살) | **Vivid Gold** (해바라기색) | **Lemon White** (레몬 화이트) | 희망찬 햇살, 빛 |
