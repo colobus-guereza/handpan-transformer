@@ -487,7 +487,7 @@ const ToneFieldMesh = React.memo(({
 
         // Long Press Timer
         if (onLongPress) {
-            longPressTimerRef.current = setTimeout(onLongPress, 600);
+            longPressTimerRef.current = setTimeout(onLongPress, 1000);
         }
 
         // ★ Latency Optimization: Audio First!
