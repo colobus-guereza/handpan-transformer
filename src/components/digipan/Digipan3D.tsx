@@ -252,7 +252,8 @@ const ToneFieldMesh = React.memo(({
     bottomTextColor,
     bottomTextOpacity,
     activeSnare, // New Prop
-    onLongPress  // New Prop
+    onLongPress, // New Prop
+    snareVolume  // New Prop
 }: {
     note: NoteData;
     centerX?: number;
@@ -266,6 +267,7 @@ const ToneFieldMesh = React.memo(({
     bottomTextOpacity?: number;
     activeSnare?: string;
     onLongPress?: () => void;
+    snareVolume?: number;
 }) => {
     const [hovered, setHovered] = useState(false);
     const [pulsing, setPulsing] = useState(false);
@@ -351,7 +353,8 @@ const ToneFieldMesh = React.memo(({
         if (demoActive) {
             // Play Sound via preloaded Howler (instant playback)
             if (playNote) {
-                playNote(note.label);
+                const volume = snareVolume !== undefined ? snareVolume : 0.6;
+                playNote(note.label, volume);
             }
 
             // Trigger Visual Pulse
@@ -495,7 +498,8 @@ const ToneFieldMesh = React.memo(({
         if (playNote) {
             // Include Override Logic for Snare (Use activeSnare prop if available)
             const labelToPlay = activeSnare || note.label;
-            playNote(labelToPlay);
+            const volume = snareVolume !== undefined ? snareVolume : 0.6;
+            playNote(labelToPlay, volume);
         }
 
         // Trigger Visual Effect (Parallel)
@@ -913,6 +917,7 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
     const [drumTimer, setDrumTimer] = useState<number | null>(null);
     // Snare Settings
     const [activeSnares, setActiveSnares] = useState<Record<string, string>>({});
+    const [snareVolumes, setSnareVolumes] = useState<Record<string, number>>({});
     const [editingSnareId, setEditingSnareId] = useState<string | null>(null);
 
     // Recording State Management
@@ -1701,6 +1706,7 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
                         <ToneFieldMesh
                             key={note.id}
                             activeSnare={note.label.includes('Snare') ? (activeSnares[note.label] || 'Snare') : undefined}
+                            snareVolume={note.label.includes('Snare') ? (snareVolumes[note.label] || 0.6) : undefined}
                             onLongPress={note.label.includes('Snare') ? () => setEditingSnareId(note.label) : undefined}
                             note={note}
                             centerX={centerX}
@@ -1783,6 +1789,28 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
                                             </button>
                                         );
                                     })}
+                                </div>
+                                <div className="mt-6 pt-4 border-t border-white/10">
+                                    <div className="flex justify-between items-center mb-3">
+                                        <span className="text-xs font-bold text-white/40 uppercase tracking-widest">Volume</span>
+                                        <span className="text-sm font-mono font-bold text-blue-400">
+                                            {Math.round((snareVolumes[editingSnareId] !== undefined ? snareVolumes[editingSnareId] : 0.6) * 100)}%
+                                        </span>
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max="100"
+                                        value={Math.round((snareVolumes[editingSnareId] !== undefined ? snareVolumes[editingSnareId] : 0.6) * 100)}
+                                        onChange={(e) => {
+                                            const newVol = parseInt(e.target.value) / 100;
+                                            setSnareVolumes(prev => ({ ...prev, [editingSnareId]: newVol }));
+                                            // Play sample at new volume for real-time feedback
+                                            const snareType = activeSnares[editingSnareId] || 'Snare';
+                                            if (playNote) playNote(snareType, newVol);
+                                        }}
+                                        className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-blue-500"
+                                    />
                                 </div>
                             </motion.div>
                         </motion.div>
