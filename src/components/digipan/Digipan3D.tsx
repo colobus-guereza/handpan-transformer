@@ -99,9 +99,71 @@ const CameraHandler = ({
             }}
         />
     );
+
 };
 
-// ... (HandpanBody, ToneFieldMesh components remain the same)
+// =============================================================================
+// TOUCH INPUT MANAGER (NEW: Raycaster-based Continuous Touch)
+// =============================================================================
+const TouchInputManager = ({ active, onNoteTrigger }: { active: boolean, onNoteTrigger: (id: number) => void }) => {
+    const { camera, scene, pointer, raycaster } = useThree();
+    const lastTriggeredRef = useRef<number | null>(null);
+    const isPointerDownRef = useRef(false);
+
+    // Global Pointer State Tracking (Robust across DOM elements)
+    useEffect(() => {
+        const handleDown = () => { isPointerDownRef.current = true; };
+        // Reset on Up/Cancel/Leave to be safe
+        const handleUp = () => {
+            isPointerDownRef.current = false;
+            lastTriggeredRef.current = null;
+        };
+
+        // Listen on window to catch releases outside the canvas
+        window.addEventListener('pointerdown', handleDown);
+        window.addEventListener('pointerup', handleUp);
+        window.addEventListener('pointercancel', handleUp);
+        return () => {
+            window.removeEventListener('pointerdown', handleDown);
+            window.removeEventListener('pointerup', handleUp);
+            // window.removeEventListener('pointercancel', handleUp);
+        };
+    }, []);
+
+    useFrame(() => {
+        if (!isPointerDownRef.current) return;
+
+        // Perform Raycasting from Camera to Pointer
+        raycaster.setFromCamera(pointer, camera);
+
+        // Filter for objects that are specifically ToneFields
+        const intersects = raycaster.intersectObjects(scene.children, true);
+
+        // Debug Log (Throttled or just for one frame if needed, but for now simple log)
+        const hit = intersects.find(i => i.object.userData?.isToneField);
+        // console.log('Raycast | PointerDown:', isPointerDownRef.current, 'Hits:', intersects.length, 'ToneField:', hit?.object.userData.noteId);
+
+        if (hit) {
+            const noteId = hit.object.userData.noteId;
+            // console.log('Hit Note:', noteId, 'Last:', lastTriggeredRef.current);
+            // Trigger only if it's a NEW note (different from the last one triggered in this gesture)
+            if (noteId !== lastTriggeredRef.current) {
+                // console.log('🎵 Triggering Note via Slide:', noteId);
+                onNoteTrigger(noteId);
+                lastTriggeredRef.current = noteId;
+            }
+        } else {
+            // console.log('No Note Hit');
+            // If we drift off any note, reset lastTriggered so we can re-trigger the same note if we slide back in?
+            // Or keep it to prevent re-triggering the same note immediately if we slide out and back in very quickly?
+            // Let's reset it to allow re-entry triggering.
+            lastTriggeredRef.current = null;
+        }
+    });
+
+    return null;
+};
+
 
 import { SCALES, NoteData } from '@/data/handpanScales';
 
@@ -368,6 +430,7 @@ const ToneFieldMesh = React.memo(({
     const CLICK_EFFECT_CONFIG = {
         // Main Sphere Effect (Breathing Glow)
         sphere: {
+            // [Color] Main Sphere: #00FF00 (Vivid Green / 라임 그린)
             color: '#00FF00',        // Green - TEST
             baseSize: 1.05,          // 5% larger than tonefield
             maxOpacity: 0.1,         // 10% opacity at peak
@@ -375,6 +438,7 @@ const ToneFieldMesh = React.memo(({
         },
         // Impact Ring Effect (Initial strike)
         ring: {
+            // [Color] Impact Ring: #000000 (Black / 블랙)
             color: '#000000',        // Black - TEST
             maxOpacity: 0.4,         // 40% opacity at start
             duration: 0.3,           // Quick 0.3s flash
@@ -495,12 +559,12 @@ const ToneFieldMesh = React.memo(({
 
         // ★ Latency Optimization: Audio First!
         // Execute Audio Trigger immediately before any other logic (State updates, Visuals, Analytics)
-        if (playNote) {
-            // Include Override Logic for Snare (Use activeSnare prop if available)
-            const labelToPlay = activeSnare || note.label;
-            const volume = snareVolume !== undefined ? snareVolume : 0.6;
-            playNote(labelToPlay, volume);
-        }
+        // if (playNote) {
+        //     // Include Override Logic for Snare (Use activeSnare prop if available)
+        //     const labelToPlay = activeSnare || note.label;
+        //     const volume = snareVolume !== undefined ? snareVolume : 0.6;
+        //     playNote(labelToPlay, volume);
+        // }
 
         // Trigger Visual Effect (Parallel)
         triggerPulse();
@@ -522,7 +586,10 @@ const ToneFieldMesh = React.memo(({
                 {/* 1. Tone Field Body */}
                 {/* 1-a. Interaction Mesh (Invisible Hit Box) - Always handles events */}
                 {/* Placed at z=0.2 to be IN FRONT of the visual dot (z=0.1) for reliable interaction */}
+                {/* 1-a. Interaction Mesh (Invisible Hit Box) - Always handles events */}
+                {/* Placed at z=0.2 to be IN FRONT of the visual dot (z=0.1) for reliable interaction */}
                 <mesh
+                    userData={{ isToneField: true, noteId: note.id }} // ★ NEW: Identifier for Raycaster
                     onPointerDown={handlePointerDown}
                     onPointerUp={handlePointerUp}
                     onPointerLeave={handlePointerUp}
@@ -1488,6 +1555,24 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
         }
     }));
 
+
+    // ★ SAFE Implementation: State-Based Slide Trigger
+    // Instead of forcing audio playback (which risks double-triggering or noise),
+    // we simply signal the 'demo' state for the target note.
+    // The ToneFieldMesh component already has a useEffect listening to 'demoActive',
+    // which handles playNote(), visual Pulse, and Snare overrides perfectly and safely.
+    const handleSlideInteraction = useCallback((id: number) => {
+        // 1. Trigger Visuals + Audio (Via Prop Signal)
+        setDemoNoteId(id);
+
+        // Auto-reset the signal after a short delay so it can be re-triggered if needed
+        // (Though TouchInputManager handles the "enter new note" check, we need to clear this state)
+        setTimeout(() => setDemoNoteId(null), 150);
+
+        // 2. Trigger Resonance & Analytics (Side Effects)
+        handleToneFieldClick(id);
+    }, [handleToneFieldClick]);
+
     return (
         <div
             ref={containerRef}
@@ -1598,8 +1683,15 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
                     enablePan={enablePan}
                     sceneSize={sceneSize}
                     cameraTargetY={cameraTargetY}
-                    cameraZoom={cameraZoom} // Pass the prop down
+                    cameraZoom={cameraZoom} // Pass zoom prop
                 />
+
+                {/* ★ NEW: Continuous Touch Manager */}
+                <TouchInputManager
+                    active={true}
+                    onNoteTrigger={handleSlideInteraction}
+                />
+
 
                 <group>
                     {/* CyberBoat (Tech Sailboat) - always mounted, handles its own vis/anim */}
