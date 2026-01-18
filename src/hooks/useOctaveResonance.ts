@@ -11,6 +11,18 @@ export interface ResonanceSettings {
 // Global Cache for AudioBuffers (Persists across component unmounts)
 const globalAudioBuffers = new Map<string, AudioBuffer>();
 
+// ★ Voice Management System Types
+interface ActiveVoice {
+    id: number;
+    source: AudioBufferSourceNode;
+    gainNode: GainNode;
+    startTime: number;
+    noteName: string;
+}
+
+// Global Voice Counter for unique IDs
+let voiceIdCounter = 0;
+
 interface UseOctaveResonanceProps {
     getAudioContext?: () => AudioContext | null;
     getMasterGain?: () => GainNode | null;
@@ -21,6 +33,54 @@ export const useOctaveResonance = ({ getAudioContext, getMasterGain }: UseOctave
     // but for fallback we might still want one? 
     // Actually, to fix the mobile issue, we should AVOID creating a local context if one is supplied.
     const localAudioContextRef = useRef<AudioContext | null>(null);
+
+    // ★ Voice Management State (Local to hook, but works per component instance)
+    // Note: If multiple components use this hook, we might need a global voice manager.
+    // For now, Digipan3D is usually single instance, so a Ref is okay.
+    // But to be safe across re-renders, we use a Ref to hold the array.
+    const activeVoices = useRef<ActiveVoice[]>([]);
+
+    // Dynamic Polyphony Limit (Detected on mount)
+    const MAX_POLYPHONY = useRef(32); // Default Safe Limit
+
+    useEffect(() => {
+        // Simple User Agent Check for Dynamic Scaling
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        MAX_POLYPHONY.current = isMobile ? 32 : 64;
+        console.log(`[Polyphony Manager] Configured Limit: ${MAX_POLYPHONY.current} voices (${isMobile ? 'Mobile' : 'Desktop'})`);
+    }, []);
+
+    // Helper: Voice Stealing Algorithm (LRU - Least Recently Used / Oldest)
+    const managePolyphony = useCallback((currentTime: number) => {
+        const limit = MAX_POLYPHONY.current;
+        const voices = activeVoices.current;
+
+        // If we have room, do nothing
+        if (voices.length < limit) return;
+
+        // We need to free up slots. How many?
+        // Usually 1 is enough, but looping is safer if we are way over.
+        const voicesToSteal = voices.length - limit + 1; // Steal 1 to make room for new one
+
+        for (let i = 0; i < voicesToSteal; i++) {
+            // The array is pushed in order, so index 0 is always the oldest.
+            const oldestVoice = voices[0];
+            if (oldestVoice) {
+                // Smooth Steal: Quick fade out (10ms) to avoid click
+                try {
+                    const fadeTime = 0.01;
+                    oldestVoice.gainNode.gain.cancelScheduledValues(currentTime);
+                    oldestVoice.gainNode.gain.setValueAtTime(oldestVoice.gainNode.gain.value, currentTime);
+                    oldestVoice.gainNode.gain.linearRampToValueAtTime(0, currentTime + fadeTime);
+                    oldestVoice.source.stop(currentTime + fadeTime);
+                } catch (e) {
+                    // Ignore errors (node might be already stopped)
+                }
+                // Remove immediately from list
+                voices.shift();
+            }
+        }
+    }, []);
 
     // Helper to get the active context (Shared or Local)
     const getContext = useCallback(() => {
@@ -190,7 +250,31 @@ export const useOctaveResonance = ({ getAudioContext, getMasterGain }: UseOctave
         const totalTime = performance.now() - playStart;
         console.log(`[Debug-Resonance] 총 처리 시간: ${totalTime.toFixed(1)}ms`);
         console.log(`[Debug-Resonance] ===== 하모닉 재생 스케줄 완료 =====`);
-    }, [getContext, loadBuffer, getMasterGain]);
+
+        // ★ [Voice Management] Register Active Voice
+        // 1. Enforce Limit First
+        managePolyphony(now);
+
+        // 2. Add new voice
+        const voiceId = ++voiceIdCounter;
+        const voice: ActiveVoice = {
+            id: voiceId,
+            source: source,
+            gainNode: gainNode,
+            startTime: startTime,
+            noteName: noteName
+        };
+        activeVoices.current.push(voice);
+
+        // 3. Self-cleanup on ended
+        source.onended = () => {
+            // Remove from active list
+            activeVoices.current = activeVoices.current.filter(v => v.id !== voiceId);
+            // Disconnect nodes to free memory
+            // gainNode.disconnect(); // Optional, GC usually handles this but good practice
+        };
+
+    }, [getContext, loadBuffer, getMasterGain, managePolyphony]);
 
     // Smart Preloading Function
     const preloadNotes = useCallback(async (noteNames: string[]) => {

@@ -109,22 +109,27 @@ const TouchInputManager = ({ active, onNoteTrigger }: { active: boolean, onNoteT
     const { camera, scene, pointer, raycaster } = useThree();
     const lastTriggeredRef = useRef<number | null>(null);
     const isPointerDownRef = useRef(false);
+    const justPressedRef = useRef(false); // ★ NEW: Track initial press frame for Dedup
 
     // Global Pointer State Tracking (Robust across DOM elements)
     useEffect(() => {
-        const handleDown = () => { isPointerDownRef.current = true; };
+        const handleDown = () => {
+            isPointerDownRef.current = true;
+            justPressedRef.current = true; // Signal effectively "This is Frame 0"
+        };
         // Reset on Up/Cancel/Leave to be safe
         const handleUp = () => {
             isPointerDownRef.current = false;
             lastTriggeredRef.current = null;
+            justPressedRef.current = false;
         };
 
         // Listen on window to catch releases outside the canvas
-        window.addEventListener('pointerdown', handleDown);
+        window.addEventListener('pointerdown', handleDown, { capture: true }); // Capture to see it before React?
         window.addEventListener('pointerup', handleUp);
         window.addEventListener('pointercancel', handleUp);
         return () => {
-            window.removeEventListener('pointerdown', handleDown);
+            window.removeEventListener('pointerdown', handleDown, { capture: true });
             window.removeEventListener('pointerup', handleUp);
             // window.removeEventListener('pointercancel', handleUp);
         };
@@ -138,14 +143,28 @@ const TouchInputManager = ({ active, onNoteTrigger }: { active: boolean, onNoteT
 
         // Filter for objects that are specifically ToneFields
         const intersects = raycaster.intersectObjects(scene.children, true);
-
-        // Debug Log (Throttled or just for one frame if needed, but for now simple log)
         const hit = intersects.find(i => i.object.userData?.isToneField);
-        // console.log('Raycast | PointerDown:', isPointerDownRef.current, 'Hits:', intersects.length, 'ToneField:', hit?.object.userData.noteId);
 
+        // ★ DEDUP LOGIC: Just Pressed?
+        if (justPressedRef.current) {
+            justPressedRef.current = false; // Clear flag immediately
+
+            // If we hit a note on the very first frame of a press, 
+            // we assume ToneFieldMesh.onPointerDown handled it (Native Tap).
+            // So we record it as "Last Triggered" but speechlessly SKIP triggering audio.
+            if (hit) {
+                const noteId = hit.object.userData.noteId;
+                lastTriggeredRef.current = noteId;
+                // console.log('TouchInputManager: Skipped Initial Tap', noteId);
+            } else {
+                lastTriggeredRef.current = null;
+            }
+            return; // Exit this frame
+        }
+
+        // Standard Slide Logic (Subsequent Frames)
         if (hit) {
             const noteId = hit.object.userData.noteId;
-            // console.log('Hit Note:', noteId, 'Last:', lastTriggeredRef.current);
             // Trigger only if it's a NEW note (different from the last one triggered in this gesture)
             if (noteId !== lastTriggeredRef.current) {
                 // console.log('🎵 Triggering Note via Slide:', noteId);
@@ -154,9 +173,7 @@ const TouchInputManager = ({ active, onNoteTrigger }: { active: boolean, onNoteT
             }
         } else {
             // console.log('No Note Hit');
-            // If we drift off any note, reset lastTriggered so we can re-trigger the same note if we slide back in?
-            // Or keep it to prevent re-triggering the same note immediately if we slide out and back in very quickly?
-            // Let's reset it to allow re-entry triggering.
+            // Allow re-entry triggering if we slide out
             lastTriggeredRef.current = null;
         }
     });
@@ -557,12 +574,12 @@ const ToneFieldMesh = React.memo(({
 
         // ★ Latency Optimization: Audio First!
         // Execute Audio Trigger immediately before any other logic (State updates, Visuals, Analytics)
-        // if (playNote) {
-        //     // Include Override Logic for Snare (Use activeSnare prop if available)
-        //     const labelToPlay = activeSnare || note.label;
-        //     const volume = snareVolume !== undefined ? snareVolume : 0.6;
-        //     playNote(labelToPlay, volume);
-        // }
+        if (playNote) {
+            // Include Override Logic for Snare (Use activeSnare prop if available)
+            const labelToPlay = activeSnare || note.label;
+            const volume = snareVolume !== undefined ? snareVolume : 0.6;
+            playNote(labelToPlay, volume);
+        }
 
         // Trigger Visual Effect (Parallel)
         triggerPulse();
