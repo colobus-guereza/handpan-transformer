@@ -413,16 +413,14 @@ const ToneFieldMesh = React.memo(({
     // Trigger Demo Effect
     React.useEffect(() => {
         if (demoActive) {
-            // Play Sound via preloaded Howler (instant playback)
-            if (playNote) {
-                const volume = snareVolume !== undefined ? snareVolume : 0.6;
-                playNote(note.label, volume);
-            }
+            // ★ Audio Decoupling Refactor:
+            // Audio is now triggered centrally by Digipan3D (TouchInputManager or triggerNote).
+            // ToneFieldMesh only handles the Visual Pulse effect here.
 
             // Trigger Visual Pulse
             triggerPulse();
         }
-    }, [demoActive, note.label, playNote]);
+    }, [demoActive]);
 
     // ========================================
     // CLICK EFFECT CONFIGURATION
@@ -1543,35 +1541,60 @@ const Digipan3D = React.forwardRef<Digipan3DHandle, Digipan3DProps>(({
         toggleIdleBoat: () => setShowIdleBoat(prev => !prev),
         toggleTouchText: () => { /* Now controlled via showTouchText prop in reelpan */ },
         triggerNote: (noteId: number) => {
-            // Visual feedback - This sets demoActive=true for the matching ToneFieldMesh
-            // ToneFieldMesh's useEffect will then automatically play the audio
+            // 1. Play Audio (Centralized)
+            const note = notes.find(n => n.id === noteId);
+            if (note && playNote) {
+                let labelToPlay = note.label;
+                let volume = 0.6;
+
+                if (note.label.includes('Snare')) {
+                    const override = activeSnares[note.label];
+                    const volOverride = snareVolumes[note.label];
+                    if (override) labelToPlay = override;
+                    if (volOverride !== undefined) volume = volOverride;
+                }
+                playNote(labelToPlay, volume);
+            }
+
+            // 2. Visual feedback
             setDemoNoteId(noteId);
             setTimeout(() => setDemoNoteId(null), 150);
-
-            // NOTE: Do NOT call playNote here!
-            // ToneFieldMesh listens to `demoActive` prop (demoNoteId === note.id)
-            // and its useEffect (line 307-317) already calls playNote when demoActive becomes true.
-            // Calling playNote here would cause DOUBLE audio playback and distortion!
         }
     }));
 
 
     // ★ SAFE Implementation: State-Based Slide Trigger
-    // Instead of forcing audio playback (which risks double-triggering or noise),
-    // we simply signal the 'demo' state for the target note.
-    // The ToneFieldMesh component already has a useEffect listening to 'demoActive',
-    // which handles playNote(), visual Pulse, and Snare overrides perfectly and safely.
+    // Refactored: Decoupled Audio from Visual State for High Performance
+    // We now trigger audio IMMEDIATELY here, then signal visuals via state.
     const handleSlideInteraction = useCallback((id: number) => {
-        // 1. Trigger Visuals + Audio (Via Prop Signal)
+        const note = notes.find(n => n.id === id);
+        if (!note) return;
+
+        // 1. Play Audio Immediately (No State Lag)
+        if (playNote) {
+            let labelToPlay = note.label;
+            let volume = 0.6;
+
+            // Snare Check
+            if (note.label.includes('Snare')) {
+                const override = activeSnares[note.label];
+                if (override) labelToPlay = override;
+
+                const volOverride = snareVolumes[note.label];
+                if (volOverride !== undefined) volume = volOverride;
+            }
+            playNote(labelToPlay, volume);
+        }
+
+        // 2. Trigger Visuals (Via Prop Signal)
         setDemoNoteId(id);
 
         // Auto-reset the signal after a short delay so it can be re-triggered if needed
-        // (Though TouchInputManager handles the "enter new note" check, we need to clear this state)
         setTimeout(() => setDemoNoteId(null), 150);
 
-        // 2. Trigger Resonance & Analytics (Side Effects)
+        // 3. Trigger Resonance & Analytics (Side Effects)
         handleToneFieldClick(id);
-    }, [handleToneFieldClick]);
+    }, [notes, activeSnares, snareVolumes, playNote, handleToneFieldClick]);
 
     return (
         <div
